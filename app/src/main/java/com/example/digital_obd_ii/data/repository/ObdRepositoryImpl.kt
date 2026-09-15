@@ -1,0 +1,74 @@
+package com.example.digital_obd_ii.data.repository
+
+import android.bluetooth.BluetoothDevice
+import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
+import com.example.digital_obd_ii.data.obd.Elm327Init
+import com.example.digital_obd_ii.data.obd.ObdCommand
+import com.example.digital_obd_ii.data.obd.ObdPollingEngine
+import com.example.digital_obd_ii.domain.model.VehicleSnapshot
+import com.example.digital_obd_ii.domain.repository.ObdRepository
+import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
+import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class ObdRepositoryImpl @Inject constructor(
+    private val transport: BluetoothConnectionManager,
+    private val pollingEngine: ObdPollingEngine,
+    private val calculateGear: CalculateIdealGearUseCase,
+    private val calculateFuel: CalculateFuelConsumptionUseCase,
+    private val profileRepository: com.example.digital_obd_ii.domain.repository.ProfileRepository
+) : ObdRepository {
+
+    override suspend fun connect(device: BluetoothDevice): Result<Unit> {
+        val result = transport.connect(device)
+        if (result.isSuccess) {
+            Elm327Init.commands.forEach { transport.send(it) }
+        }
+        return result
+    }
+
+    override fun observeVehicleData(): Flow<VehicleSnapshot> {
+        val commands = listOf(
+            ObdCommand.Rpm, 
+            ObdCommand.Speed,
+            ObdCommand.CoolantTemp, 
+            ObdCommand.ControlModuleVoltage,
+            ObdCommand.MafRate,
+            ObdCommand.ThrottlePosition,
+            ObdCommand.FuelRate
+        )
+
+        return kotlinx.coroutines.flow.combine(
+            pollingEngine.observe(commands),
+            profileRepository.getProfile()
+        ) { data, profile ->
+            val rpm = data[ObdCommand.Rpm]?.toInt() ?: 0
+            val speed = data[ObdCommand.Speed]?.toInt() ?: 0
+            val maf = data[ObdCommand.MafRate] ?: 0.0
+            val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
+            val obdFuelRate = data[ObdCommand.FuelRate] // L/h direto do OBD
+            
+            // Prioriza FuelRate do OBD (PID 5E), senão cai no cálculo via MAF
+            val lph = obdFuelRate ?: calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
+            val kml = calculateFuel.kmPerLiter(speed, lph)
+
+            val gearRec = calculateGear(rpm, speed, throttle, profile)
+
+            VehicleSnapshot(
+                speedKmh = speed,
+                rpm = rpm,
+                coolantTempC = data[ObdCommand.CoolantTemp]?.toInt() ?: 0,
+                ecuVoltage = data[ObdCommand.ControlModuleVoltage] ?: 0.0,
+                idealGear = gearRec.idealGear,
+                instantConsumptionKmL = kml,
+                throttlePosition = throttle
+            )
+        }
+    }
+
+    override fun disconnect() = transport.disconnect()
+
+    override fun isConnected(): Boolean = transport.isConnected()
+}
