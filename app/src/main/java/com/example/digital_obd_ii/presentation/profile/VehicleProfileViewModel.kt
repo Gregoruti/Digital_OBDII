@@ -106,6 +106,15 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(rpmBarY = value)) }
     }
 
+    // PERFORMANCE SPS (v1.8.7)
+    fun updatePollingInterval(key: String, ms: Int) {
+        _uiState.update { state ->
+            val currentMap = state.profile.pollingIntervals.toMutableMap()
+            currentMap[key] = ms
+            state.copy(profile = state.profile.copy(pollingIntervals = currentMap))
+        }
+    }
+
     fun updateRpmColor(key: String, color: Long) {
         _uiState.update { state ->
             val p = state.profile

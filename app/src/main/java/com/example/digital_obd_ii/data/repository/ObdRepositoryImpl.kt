@@ -10,6 +10,7 @@ import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -24,7 +25,12 @@ class ObdRepositoryImpl @Inject constructor(
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
         if (result.isSuccess) {
-            Elm327Init.commands.forEach { transport.send(it) }
+            // Inicialização Robusta v1.8.7
+            Elm327Init.bootSequence.forEach { transport.send(it) }
+            
+            // Persiste o endereço para Auto-Conexão v1.8.6
+            val profile = profileRepository.getProfileSync()
+            profileRepository.saveProfile(profile.copy(lastConnectedDeviceAddress = device.address))
         }
         return result
     }
@@ -40,31 +46,29 @@ class ObdRepositoryImpl @Inject constructor(
             ObdCommand.FuelRate
         )
 
-        return kotlinx.coroutines.flow.combine(
-            pollingEngine.observe(commands),
-            profileRepository.getProfile()
-        ) { data, profile ->
-            val rpm = data[ObdCommand.Rpm]?.toInt() ?: 0
-            val speed = data[ObdCommand.Speed]?.toInt() ?: 0
-            val maf = data[ObdCommand.MafRate] ?: 0.0
-            val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
-            val obdFuelRate = data[ObdCommand.FuelRate] // L/h direto do OBD
-            
-            // Prioriza FuelRate do OBD (PID 5E), senão cai no cálculo via MAF
-            val lph = obdFuelRate ?: calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
-            val kml = calculateFuel.kmPerLiter(speed, lph)
+        // Fluxo reativo ao perfil para atualizar intervalos de polling em tempo real
+        return profileRepository.getProfile().flatMapLatest { profile ->
+            pollingEngine.observe(commands, profile).map { data ->
+                val rpm = data[ObdCommand.Rpm]?.toInt() ?: 0
+                val speed = data[ObdCommand.Speed]?.toInt() ?: 0
+                val maf = data[ObdCommand.MafRate] ?: 0.0
+                val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
+                val obdFuelRate = data[ObdCommand.FuelRate]
+                
+                val lph = obdFuelRate ?: calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
+                val kml = calculateFuel.kmPerLiter(speed, lph)
+                val gearRec = calculateGear(rpm, speed, throttle, profile)
 
-            val gearRec = calculateGear(rpm, speed, throttle, profile)
-
-            VehicleSnapshot(
-                speedKmh = speed,
-                rpm = rpm,
-                coolantTempC = data[ObdCommand.CoolantTemp]?.toInt() ?: 0,
-                ecuVoltage = data[ObdCommand.ControlModuleVoltage] ?: 0.0,
-                idealGear = gearRec.idealGear,
-                instantConsumptionKmL = kml,
-                throttlePosition = throttle
-            )
+                VehicleSnapshot(
+                    speedKmh = speed,
+                    rpm = rpm,
+                    coolantTempC = data[ObdCommand.CoolantTemp]?.toInt() ?: 0,
+                    ecuVoltage = data[ObdCommand.ControlModuleVoltage] ?: 0.0,
+                    idealGear = gearRec.idealGear,
+                    instantConsumptionKmL = kml,
+                    throttlePosition = throttle
+                )
+            }
         }
     }
 

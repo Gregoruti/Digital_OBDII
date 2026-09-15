@@ -41,7 +41,7 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.startCollecting()
         while(true) {
-            currentTime.value = SimpleDateFormat("HH.mm", Locale.getDefault()).format(Date())
+            currentTime.value = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()) // v1.8.8: ":" separador oficial
             kotlinx.coroutines.delay(1000)
         }
     }
@@ -134,7 +134,7 @@ fun DashboardScreen(
                 "VOLTS" -> String.format("%.1f", uiState.snapshot.ecuVoltage)
                 "CLOCK" -> currentTime.value
                 "GEARS" -> if (uiState.snapshot.idealGear == 0) "N" else uiState.snapshot.idealGear.toString()
-                "TRIP_TIME" -> formatTime(uiState.trip.elapsedMillis)
+                "TRIP_TIME" -> formatTime(uiState.trip.elapsedMillis) // v1.8.8: formatTime agora usa ":"
                 "TRIP_DIST" -> String.format("%.1f", uiState.trip.distanceKm)
                 "TRIP_FUEL" -> String.format("%.1f", uiState.trip.fuelConsumedL)
                 else -> ""
@@ -180,5 +180,5 @@ fun DashboardScreen(
 private fun formatTime(millis: Long): String {
     val h = TimeUnit.MILLISECONDS.toHours(millis)
     val m = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
-    return String.format("%01d.%02d", h, m)
+    return String.format("%01d:%02d", h, m) // v1.8.8: ":" para tempo
 }

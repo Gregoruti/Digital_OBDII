@@ -11,6 +11,7 @@ import com.example.digital_obd_ii.domain.model.FactoryDefaults
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -53,15 +54,29 @@ class ProfileRepositoryImpl @Inject constructor(
         val COLOR_DIMMED_RED = longPreferencesKey("color_dimmed_red")
         val COLOR_BLINK_ACTIVE = longPreferencesKey("color_blink_active")
         val COLOR_BLINK_DIMMED = longPreferencesKey("color_blink_dimmed")
+
+        // SPS (v1.8.7)
+        val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")
+        val LAST_BT_ADDRESS = stringPreferencesKey("last_bt_address")
     }
 
-    private val defaultElements = FactoryDefaults.ELEMENTS_MAP
-
     override fun getProfile(): Flow<VehicleProfile> = context.dataStore.data.map { preferences ->
-        val elementsStr = preferences[PreferencesKeys.ELEMENTS_CONFIG]
-        val elements = if (elementsStr != null) deserializeElements(elementsStr) else defaultElements
+        mapProfile(preferences)
+    }
 
-        VehicleProfile(
+    override suspend fun getProfileSync(): VehicleProfile {
+        val preferences = context.dataStore.data.first()
+        return mapProfile(preferences)
+    }
+
+    private fun mapProfile(preferences: Preferences): VehicleProfile {
+        val elementsStr = preferences[PreferencesKeys.ELEMENTS_CONFIG]
+        val elements = if (elementsStr != null) deserializeElements(elementsStr) else FactoryDefaults.ELEMENTS_MAP
+
+        val spsStr = preferences[PreferencesKeys.POLLING_INTERVALS]
+        val sps = if (spsStr != null) deserializeSps(spsStr) else FactoryDefaults.POLLING_INTERVALS
+
+        return VehicleProfile(
             name = preferences[PreferencesKeys.NAME] ?: "Honda Civic 1.8 2011",
             fuelType = try { FuelType.valueOf(preferences[PreferencesKeys.FUEL_TYPE] ?: FuelType.GASOLINE.name) } catch (e: Exception) { FuelType.GASOLINE },
             gearRatios = (preferences[PreferencesKeys.GEAR_RATIOS] ?: "115.0,70.0,45.0,35.0,28.0").split(",").mapNotNull { it.toDoubleOrNull() },
@@ -90,7 +105,10 @@ class ProfileRepositoryImpl @Inject constructor(
             colorActiveRed = preferences[PreferencesKeys.COLOR_ACTIVE_RED] ?: FactoryDefaults.COLOR_ACTIVE_RED,
             colorDimmedRed = preferences[PreferencesKeys.COLOR_DIMMED_RED] ?: FactoryDefaults.COLOR_DIMMED_RED,
             colorBlinkActive = preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] ?: FactoryDefaults.COLOR_BLINK_ON,
-            colorBlinkDimmed = preferences[PreferencesKeys.COLOR_BLINK_DIMMED] ?: FactoryDefaults.COLOR_BLINK_OFF
+            colorBlinkDimmed = preferences[PreferencesKeys.COLOR_BLINK_DIMMED] ?: FactoryDefaults.COLOR_BLINK_OFF,
+
+            pollingIntervals = sps,
+            lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS]
         )
     }
 
@@ -126,6 +144,9 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.COLOR_DIMMED_RED] = profile.colorDimmedRed
             preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] = profile.colorBlinkActive
             preferences[PreferencesKeys.COLOR_BLINK_DIMMED] = profile.colorBlinkDimmed
+
+            preferences[PreferencesKeys.POLLING_INTERVALS] = serializeSps(profile.pollingIntervals)
+            profile.lastConnectedDeviceAddress?.let { preferences[PreferencesKeys.LAST_BT_ADDRESS] = it }
         }
     }
 
@@ -140,7 +161,22 @@ class ProfileRepositoryImpl @Inject constructor(
                 parts[0] to ElementConfig(parts[1].toFloat(), parts[2].toFloat(), parts[3].toFloat())
             }
         } catch (e: Exception) {
-            defaultElements
+            FactoryDefaults.ELEMENTS_MAP
+        }
+    }
+
+    private fun serializeSps(map: Map<String, Int>): String {
+        return map.entries.joinToString("|") { "${it.key}:${it.value}" }
+    }
+
+    private fun deserializeSps(str: String): Map<String, Int> {
+        return try {
+            str.split("|").associate {
+                val parts = it.split(":")
+                parts[0] to parts[1].toInt()
+            }
+        } catch (e: Exception) {
+            FactoryDefaults.POLLING_INTERVALS
         }
     }
 }

@@ -45,7 +45,8 @@ object CivicColors {
 }
 
 /**
- * Mapa de Segmentos
+ * Mapa de Segmentos v1.8.8
+ * Adicionado: ':' (Dois pontos para Tempo/Relógio)
  */
 val digitSegments = mapOf(
     '0' to booleanArrayOf(true, true, true, true, true, true, false),
@@ -59,11 +60,13 @@ val digitSegments = mapOf(
     '8' to booleanArrayOf(true, true, true, true, true, true, true),
     '9' to booleanArrayOf(true, true, true, true, false, true, true),
     ' ' to booleanArrayOf(false, false, false, false, false, false, false),
-    '-' to booleanArrayOf(false, false, false, false, false, false, true)
+    '-' to booleanArrayOf(false, false, false, false, false, false, true),
+    ':' to booleanArrayOf(false, false, false, false, false, false, false) // Especial: Tratado via draw dots
 )
 
 /**
- * MOTOR DE RENDERIZAÇÃO PIXEL-PERFECT
+ * MOTOR DE RENDERIZAÇÃO PIXEL-PERFECT v1.8.8
+ * Correção: Remoção do fundo '8' fixo para evitar bug de zeros cheios.
  */
 fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEngine7SegPx(
     char: Char, xPx: Float, yPx: Float, wPx: Float, hPx: Float, tPx: Float, skewDeg: Float,
@@ -89,6 +92,7 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEngine7SegPx(
         drawPath(path = path, color = color)
     }
 
+    // Caso Especial: Letra 'N' (Gears)
     if (isN || char == 'N') {
         val isActive = char == 'N'
         drawPoly(listOf(Offset(0f, 0f), Offset(tPx, 0f), Offset(tPx, hPx), Offset(0f, hPx)), isActive)
@@ -102,24 +106,29 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEngine7SegPx(
     val hh = hPx / 2f
     val t2 = tPx / 2f
 
-    fun renderSegments(states: BooleanArray, overrideActive: Boolean = false) {
-        drawPoly(listOf(Offset(gap+t2, 0f), Offset(wPx-gap-t2, 0f), Offset(wPx-gap, t2), Offset(wPx-gap-t2, tPx), Offset(gap+t2, tPx), Offset(gap, t2)), overrideActive || states[0])
-        drawPoly(listOf(Offset(wPx, gap+t2), Offset(wPx, hh-gap-t2), Offset(wPx-t2, hh-gap), Offset(wPx-tPx, hh-gap-t2), Offset(wPx-tPx, gap+t2), Offset(wPx-t2, gap)), overrideActive || states[1])
-        drawPoly(listOf(Offset(wPx, hh+gap+t2), Offset(wPx, hPx-gap-t2), Offset(wPx-t2, hPx-gap), Offset(wPx-tPx, hPx-gap-t2), Offset(wPx-tPx, hh+gap+t2), Offset(wPx-t2, hh+gap)), overrideActive || states[2])
-        drawPoly(listOf(Offset(gap+t2, hPx), Offset(wPx-gap-t2, hPx), Offset(wPx-gap, hPx-t2), Offset(wPx-gap-t2, hPx-tPx), Offset(gap+t2, hPx-tPx), Offset(gap, hPx-t2)), overrideActive || states[3])
-        drawPoly(listOf(Offset(0f, hh+gap+t2), Offset(0f, hPx-gap-t2), Offset(t2, hPx-gap), Offset(tPx, hPx-gap-t2), Offset(tPx, hh+gap+t2), Offset(t2, hh+gap)), overrideActive || states[4])
-        drawPoly(listOf(Offset(0f, gap+t2), Offset(0f, hh-gap-t2), Offset(t2, hh-gap), Offset(tPx, hh-gap-t2), Offset(tPx, gap+t2), Offset(t2, gap)), overrideActive || states[5])
-        drawPoly(listOf(Offset(gap+t2, hh), Offset(gap+tPx, hh-t2), Offset(wPx-gap-tPx, hh-t2), Offset(wPx-gap-t2, hh), Offset(wPx-gap-tPx, hh+t2), Offset(gap+tPx, hh+t2)), overrideActive || states[6])
+    fun renderSegments(states: BooleanArray) {
+        // Topo (0), DirSup (1), DirInf (2), Base (3), EsqInf (4), EsqSup (5), Centro (6)
+        drawPoly(listOf(Offset(gap+t2, 0f), Offset(wPx-gap-t2, 0f), Offset(wPx-gap, t2), Offset(wPx-gap-t2, tPx), Offset(gap+t2, tPx), Offset(gap, t2)), states[0])
+        drawPoly(listOf(Offset(wPx, gap+t2), Offset(wPx, hh-gap-t2), Offset(wPx-t2, hh-gap), Offset(wPx-tPx, hh-gap-t2), Offset(wPx-tPx, gap+t2), Offset(wPx-t2, gap)), states[1])
+        drawPoly(listOf(Offset(wPx, hh+gap+t2), Offset(wPx, hPx-gap-t2), Offset(wPx-t2, hPx-gap), Offset(wPx-tPx, hPx-gap-t2), Offset(wPx-tPx, hh+gap+t2), Offset(wPx-t2, hh+gap)), states[2])
+        drawPoly(listOf(Offset(gap+t2, hPx), Offset(wPx-gap-t2, hPx), Offset(wPx-gap, hPx-t2), Offset(wPx-gap-t2, hPx-tPx), Offset(gap+t2, hPx-tPx), Offset(gap, hPx-t2)), states[3])
+        drawPoly(listOf(Offset(0f, hh+gap+t2), Offset(0f, hPx-gap-t2), Offset(t2, hPx-gap), Offset(tPx, hPx-gap-t2), Offset(tPx, hh+gap+t2), Offset(t2, hh+gap)), states[4])
+        drawPoly(listOf(Offset(0f, gap+t2), Offset(0f, hh-gap-t2), Offset(t2, hh-gap), Offset(tPx, hh-gap-t2), Offset(tPx, gap+t2), Offset(t2, gap)), states[5])
+        drawPoly(listOf(Offset(gap+t2, hh), Offset(gap+tPx, hh-t2), Offset(wPx-gap-tPx, hh-t2), Offset(wPx-gap-t2, hh), Offset(wPx-gap-tPx, hh+t2), Offset(gap+tPx, hh+t2)), states[6])
     }
 
-    renderSegments(digitSegments['8']!!, overrideActive = false)
-    if (char != ' ') renderSegments(segs)
+    // v1.8.8: Renderiza o Ghost (fundo apagado) APENAS para os segmentos que não estão ativos no char atual
+    // Isso garante que o efeito de "display desligado" exista sem bugar os zeros.
+    val ghostStates = BooleanArray(7) { i -> !segs[i] }
+    renderSegments(ghostStates) // Renderiza fundo apagado
+    renderSegments(segs)        // Renderiza segmentos acesos
 
     drawContext.canvas.restore()
 }
 
 /**
- * Componente de Texto 7-Segmentos
+ * Componente de Texto 7-Segmentos v1.8.8
+ * Suporte a ':' (Dois pontos) e correção de Zeros à Esquerda.
  */
 @Composable
 fun SevenSegmentText(
@@ -134,10 +143,11 @@ fun SevenSegmentText(
     padLength: Int = 0
 ) {
     Canvas(modifier = modifier) {
-        val strNoDots = text.replace(".", "").replace(",", "")
+        // Limpeza de string para cálculo de padding (ignora pontuação)
+        val strClean = text.replace(".", "").replace(",", "").replace(":", "")
         var paddedText = text
         
-        val missing = padLength - strNoDots.length
+        val missing = padLength - strClean.length
         if (missing > 0) {
             paddedText = " ".repeat(missing) + text
         }
@@ -146,37 +156,55 @@ fun SevenSegmentText(
         var curX = 0f
 
         for (char in paddedText) {
-            if (char == '.' || char == ',') {
-                drawContext.canvas.save()
-                val skewRad = Math.toRadians(skewAngleDeg.toDouble()).toFloat()
-                val tanSkew = tan(skewRad)
-                
-                drawContext.canvas.translate(curX - (charTotalWidth * 0.2f), 0f)
-                drawContext.canvas.nativeCanvas.skew(tanSkew, 0f)
-                
-                drawPath(
-                    path = Path().apply {
-                        moveTo(0f, digitHeight - thickness)
-                        lineTo(thickness * 1.5f, digitHeight - thickness)
-                        lineTo(thickness * 1.5f, digitHeight)
-                        lineTo(0f, digitHeight)
-                        close()
-                    },
-                    color = activeColor
-                )
-                drawContext.canvas.restore()
-                curX += charTotalWidth * 0.5f 
-                continue
+            when (char) {
+                '.', ',' -> {
+                    drawContext.canvas.save()
+                    val skewRad = Math.toRadians(skewAngleDeg.toDouble()).toFloat()
+                    val tanSkew = tan(skewRad)
+                    drawContext.canvas.translate(curX - (charTotalWidth * 0.2f), 0f)
+                    drawContext.canvas.nativeCanvas.skew(tanSkew, 0f)
+                    
+                    drawPath(
+                        path = Path().apply {
+                            moveTo(0f, digitHeight - thickness)
+                            lineTo(thickness * 1.5f, digitHeight - thickness)
+                            lineTo(thickness * 1.5f, digitHeight)
+                            lineTo(0f, digitHeight)
+                            close()
+                        },
+                        color = activeColor
+                    )
+                    drawContext.canvas.restore()
+                    curX += charTotalWidth * 0.4f 
+                }
+                ':' -> {
+                    // DOIS PONTOS (v1.8.8)
+                    drawContext.canvas.save()
+                    val skewRad = Math.toRadians(skewAngleDeg.toDouble()).toFloat()
+                    val tanSkew = tan(skewRad)
+                    drawContext.canvas.translate(curX, 0f)
+                    drawContext.canvas.nativeCanvas.skew(tanSkew, 0f)
+                    
+                    val dotSize = thickness * 1.2f
+                    // Ponto Superior
+                    drawRect(color = activeColor, topLeft = Offset(0f, digitHeight * 0.3f), size = androidx.compose.ui.geometry.Size(dotSize, dotSize))
+                    // Ponto Inferior
+                    drawRect(color = activeColor, topLeft = Offset(0f, digitHeight * 0.7f), size = androidx.compose.ui.geometry.Size(dotSize, dotSize))
+                    
+                    drawContext.canvas.restore()
+                    curX += charTotalWidth * 0.6f
+                }
+                else -> {
+                    drawEngine7SegPx(char, curX, 0f, digitWidth, digitHeight, thickness, skewAngleDeg, activeColor, ghostColor, char == 'N')
+                    curX += charTotalWidth
+                }
             }
-
-            drawEngine7SegPx(char, curX, 0f, digitWidth, digitHeight, thickness, skewAngleDeg, activeColor, ghostColor, char == 'N')
-            curX += charTotalWidth
         }
     }
 }
 
 /**
- * Gauge de RPM Dinâmico v3 (Ângulo Progressivo e Largura Segura)
+ * Gauge de RPM Dinâmico v3
  */
 @Composable
 fun ArchedRpmGauge(
@@ -211,7 +239,6 @@ fun ArchedRpmGauge(
         val redlineStart = if (isShiftLightMode) 2500f else 7000f
         val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
 
-        // Ajuste de LARGURA DINÂMICA: Se for reta (curvature=0), reduzimos a largura útil para caber no background
         val marginPercent = if (curvature <= 0) 0.15f else 0f
         val drawingWidth = size.width * (1f - (marginPercent * 2))
         val startOffsetX = size.width * marginPercent
@@ -231,12 +258,9 @@ fun ArchedRpmGauge(
             }
 
             if (curvature > 0) {
-                // RENDERIZAÇÃO ARQUEADA PROGRESSIVA
                 val cx = size.width / 2f
                 val r = size.width * 1.4f
                 val cy = r + 50f
-                
-                // Mapeia o ângulo conforme o slider (ex: 30 graus de abertura total)
                 val totalSweepRad = Math.toRadians(curvature.toDouble())
                 val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
                 val angle = (startRad + fraction * totalSweepRad).toFloat()
@@ -250,7 +274,6 @@ fun ArchedRpmGauge(
 
                 drawLine(color = color, start = Offset(x1, y1), end = Offset(x2, y2), strokeWidth = barWidth, cap = StrokeCap.Butt)
             } else {
-                // RENDERIZAÇÃO RETA (Respeitando margens seguras)
                 val x = startOffsetX + (drawingWidth * fraction)
                 drawLine(color = color, start = Offset(x, 0f), end = Offset(x, barHeight), strokeWidth = barWidth, cap = StrokeCap.Butt)
             }

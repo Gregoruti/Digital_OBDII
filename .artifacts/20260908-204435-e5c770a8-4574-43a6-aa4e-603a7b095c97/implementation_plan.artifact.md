@@ -1,50 +1,53 @@
-# Plano de Implementação - MVP-05.9: Início Rápido e Persistência Bluetooth
+# Plano de Implementação - MVP-05.10: Otimização de Protocolo e Amostragem (SPS)
 
-Este plano detalha a inversão do fluxo do app para carregar o Dashboard imediatamente ao abrir, utilizando o último adaptador OBD-II pareado.
+Este plano detalha a robustez da comunicação ELM327 e o controle granular da taxa de atualização dos sensores para garantir fluidez máxima nos gauges e precisão nos cálculos.
 
 ## User Review Required
 
-- **Auto-Conexão**: Ao abrir o Dashboard, o app tentará se conectar automaticamente ao último MAC Address salvo. Se falhar, mostrará um ícone de alerta ou erro.
-- **Navegação**: O usuário precisará entrar em Perfil -> Bluetooth para trocar de adaptador.
+- **Intervalos de Polling**: O usuário poderá definir o delay (em ms) entre as requisições de cada sensor.
+    - RPM (Ideal: 0-20ms)
+    - Velocidade (Ideal: 50-100ms)
+    - MAF (Ideal: 50ms para precisão de consumo)
+    - Outros (Ideal: 500-1000ms)
+- **Watchdog de Protocolo**: Implementar um verificador que reenvia `AT E0` e `AT H0` caso o buffer apresente sujeira (eco) persistente.
 
 ## Proposed Changes
+
+### [Data - OBD]
+
+#### [Elm327Init.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/data/obd/Elm327Init.kt)
+- Atualizar sequência de boot: `AT Z` -> `AT E0` -> `AT L0` -> `AT H0` -> `AT SP 0`.
+- Adicionar verificador de integridade de resposta.
+
+#### [ObdPollingEngine.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/data/obd/ObdPollingEngine.kt)
+- Refatorar o loop de polling para respeitar os intervalos configurados no Perfil para cada PID.
+- Implementar prioridade para o RPM (intercalação: RPM -> Vel -> RPM -> MAF -> RPM -> Outros).
 
 ### [Domain - Model]
 
 #### [VehicleProfile.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/domain/model/VehicleProfile.kt)
-- Adicionar `lastConnectedDeviceAddress: String? = null`.
-- Adicionar `lastConnectedDeviceName: String? = null`.
+- Adicionar `pollingIntervals: Map<String, Int>` (em milissegundos).
 
-### [Presentation - Navigation]
+### [Presentation - Settings]
 
-#### [AppNavHost.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/navigation/AppNavHost.kt)
-- Alterar `startDestination` de `Screen.DeviceList` para `Screen.Dashboard`.
-
-### [Presentation - Dashboard]
-
-#### [DashboardViewModel.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/dashboard/DashboardViewModel.kt)
-- Ao carregar o perfil, se houver um `lastConnectedDeviceAddress`, chamar o repositório para iniciar a conexão Bluetooth automaticamente.
-
-#### [DashboardScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/dashboard/ui/DashboardScreen.kt)
-- Adicionar feedback visual se a auto-conexão estiver em curso ou se falhar.
+#### [PerformanceSettingsScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/profile/ui/PerformanceSettingsScreen.kt) [NEW]
+- Sliders/Inputs para configurar o delay de cada sensor.
+- Visualização de "Samples per Second" estimada baseada no delay escolhido.
 
 ### [Presentation - Profile]
 
 #### [VehicleProfileScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/profile/ui/VehicleProfileScreen.kt)
-- Adicionar um novo `IconButton` no TopAppBar com o ícone `Icons.Default.Bluetooth`.
-- Este botão navega para `Screen.DeviceList`.
+- Adicionar botão para acessar "Ajustes de Performance".
 
 ---
 
-## Verificação Técnica
+## Verificação Técnica (Etapas)
 
-1.  **Etapa 1**: Atualizar modelo de dados para salvar o MAC Address do Bluetooth.
-2.  **Etapa 2**: Alterar rota inicial na Navegação.
-3.  **Etapa 3**: Implementar gatilho de auto-conexão no DashboardViewModel.
-4.  **Etapa 4**: Integrar botão de Bluetooth no menu de configurações.
+1.  **Etapa 1**: Nova sequência de comandos AT e detecção de Eco.
+2.  **Etapa 2**: Expansão do Perfil com intervalos de amostragem.
+3.  **Etapa 3**: Motor de Polling por Prioridade (RPM First).
+4.  **Etapa 4**: Tela de Ajustes de Performance.
 
 ## Plano de Verificação Manual
-- Selecionar um dispositivo Bluetooth manualmente uma última vez.
-- Fechar o app totalmente.
-- Abrir o app: ele deve cair direto no Dashboard e começar a piscar "Conectando" ou mostrar dados se o adaptador estiver por perto.
-- Ir em Perfil -> Ícone Bluetooth e verificar se a lista de dispositivos abre corretamente.
+- Analisar os logs do Bluetooth: os comandos devem vir sem o eco da pergunta (`AT E0` ativo) e sem o cabeçalho `0xE8` (`AT H0` ativo).
+- Alterar o delay do RPM para 500ms e observar o gauge ficar "lento". Voltar para 0ms e observar a fluidez total.

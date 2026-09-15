@@ -2,7 +2,7 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v1.8.2 - Proteção absoluta contra coordenadas fantasm_as e cores calibradas.
+ * v1.8.7 - Inclusão de Intervalos de Polling (SPS).
  */
 object FactoryDefaults {
     val RPM = ElementConfig(415f, 200f, 1.00f)
@@ -23,13 +23,23 @@ object FactoryDefaults {
         "TRIP_DIST" to TRIP_DIST, "TRIP_FUEL" to TRIP_FUEL
     )
 
-    // Cores Padrão (Long para evitar erros de casting)
+    // Cores Padrão
     const val COLOR_ACTIVE_BLUE: Long = 0xFF2B35B0
     const val COLOR_DIMMED_BLUE: Long = 0x331A2285
     const val COLOR_ACTIVE_RED: Long = 0xFFF71C10
     const val COLOR_DIMMED_RED: Long = 0x33C71007
     const val COLOR_BLINK_ON: Long = 0xFFFF0000
     const val COLOR_BLINK_OFF: Long = 0xFF000000
+
+    // SPS Padrão (ms)
+    val POLLING_INTERVALS = mapOf(
+        "RPM" to 0,      // Máximo possível
+        "SPEED" to 50,
+        "MAF" to 50,
+        "VOLTS" to 500,
+        "TEMP" to 1000,
+        "FUEL_RATE" to 500
+    )
 }
 
 /**
@@ -69,7 +79,13 @@ data class VehicleProfile(
     val colorActiveRed: Long = FactoryDefaults.COLOR_ACTIVE_RED,
     val colorDimmedRed: Long = FactoryDefaults.COLOR_DIMMED_RED,
     val colorBlinkActive: Long = FactoryDefaults.COLOR_BLINK_ON,
-    val colorBlinkDimmed: Long = FactoryDefaults.COLOR_BLINK_OFF
+    val colorBlinkDimmed: Long = FactoryDefaults.COLOR_BLINK_OFF,
+
+    // TAXA DE ATUALIZAÇÃO (v1.8.7)
+    val pollingIntervals: Map<String, Int> = FactoryDefaults.POLLING_INTERVALS,
+    
+    // PERSISTÊNCIA BT (v1.8.6)
+    val lastConnectedDeviceAddress: String? = null
 )
 
 data class ElementConfig(

@@ -22,6 +22,8 @@ import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
 
 import androidx.compose.material.icons.filled.Bluetooth
 
+import androidx.compose.material.icons.filled.Speed
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleProfileScreen(
@@ -29,7 +31,8 @@ fun VehicleProfileScreen(
     onTerminalClick: () -> Unit,
     onDashboardClick: () -> Unit,
     onVisualClick: () -> Unit,
-    onBluetoothClick: () -> Unit, // NOVA NAVEGAÇÃO
+    onBluetoothClick: () -> Unit,
+    onPerformanceClick: () -> Unit, // NOVA NAVEGAÇÃO v1.8.7
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -49,7 +52,10 @@ fun VehicleProfileScreen(
                 title = { Text("Perfil do Veículo") },
                 actions = {
                     IconButton(onClick = { onBluetoothClick() }) {
-                        Icon(Icons.Default.Bluetooth, contentDescription = "Conectar Bluetooth")
+                        Icon(Icons.Default.Bluetooth, contentDescription = "Bluetooth")
+                    }
+                    IconButton(onClick = { onPerformanceClick() }) {
+                        Icon(Icons.Default.Speed, contentDescription = "Performance")
                     }
                     IconButton(onClick = { onVisualClick() }) {
                         Icon(Icons.Default.Settings, contentDescription = "Personalizar Visual")
