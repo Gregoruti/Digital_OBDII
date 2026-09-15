@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [1.8.9] - 2026-09-08
+### Adicionado
+- **Precisão de SPS**: Slider de performance com escala cirúrgica (1-20ms linear) para fluidez máxima.
+- **Motor Gráfico v3.2**: Suporte a separador de dois pontos (`:`) e correção do bug de "zeros cheios" (ghosting).
+- **Inicialização OBD Robusta**: Sequência AT (Z, E0, L0, H0, SP0) com Watchdog preventivo.
+
 ## [1.8.6] - 2026-09-08
 ### Adicionado
 - **Fluxo de Início Rápido**: O Dashboard agora é a tela de entrada do aplicativo.

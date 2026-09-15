@@ -5,10 +5,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,10 +22,6 @@ import com.example.digital_obd_ii.domain.model.FuelType
 import com.example.digital_obd_ii.presentation.components.VersionBadge
 import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
 
-import androidx.compose.material.icons.filled.Bluetooth
-
-import androidx.compose.material.icons.filled.Speed
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleProfileScreen(
@@ -32,7 +30,7 @@ fun VehicleProfileScreen(
     onDashboardClick: () -> Unit,
     onVisualClick: () -> Unit,
     onBluetoothClick: () -> Unit,
-    onPerformanceClick: () -> Unit, // NOVA NAVEGAÇÃO v1.8.7
+    onPerformanceClick: () -> Unit,
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -51,11 +49,11 @@ fun VehicleProfileScreen(
             TopAppBar(
                 title = { Text("Perfil do Veículo") },
                 actions = {
+                    IconButton(onClick = { onPerformanceClick() }) {
+                        Icon(Icons.Default.TrendingUp, contentDescription = "Performance")
+                    }
                     IconButton(onClick = { onBluetoothClick() }) {
                         Icon(Icons.Default.Bluetooth, contentDescription = "Bluetooth")
-                    }
-                    IconButton(onClick = { onPerformanceClick() }) {
-                        Icon(Icons.Default.Speed, contentDescription = "Performance")
                     }
                     IconButton(onClick = { onVisualClick() }) {
                         Icon(Icons.Default.Settings, contentDescription = "Personalizar Visual")
