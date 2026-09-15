@@ -36,6 +36,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 
+/**
+ * Tela de Personalização Visual v1.8.5
+ * Adicionado: Simulador de Condução e Cores Hexadecimais.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisualSettingsScreen(

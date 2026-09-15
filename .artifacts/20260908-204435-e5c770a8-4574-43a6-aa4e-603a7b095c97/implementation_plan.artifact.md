@@ -1,62 +1,50 @@
-# Plano de Implementação - MVP-05.8: Barra de RPM Personalizável e Modo Shift Light
+# Plano de Implementação - MVP-05.9: Início Rápido e Persistência Bluetooth
 
-Este plano detalha a criação do sistema de "Modo Troca de Marchas" e a personalização geométrica/cromática total da barra de RPM.
+Este plano detalha a inversão do fluxo do app para carregar o Dashboard imediatamente ao abrir, utilizando o último adaptador OBD-II pareado.
 
 ## User Review Required
 
-- **Lógica de Blink**: O painel piscará a 10Hz quando o RPM atingir 85% do valor da tabela econômica (ex: 2.295 RPM para 1ª -> 2ª).
-- **Escala Shift Light**: Quando o modo está ativo, a barra termina em 3.200 RPM, dando muito mais resolução para trocas econômicas.
-- **Geometria Dinâmica**: O usuário pode transformar a barra de um Arco (30°) para uma Linha Reta (0°).
+- **Auto-Conexão**: Ao abrir o Dashboard, o app tentará se conectar automaticamente ao último MAC Address salvo. Se falhar, mostrará um ícone de alerta ou erro.
+- **Navegação**: O usuário precisará entrar em Perfil -> Bluetooth para trocar de adaptador.
 
 ## Proposed Changes
 
 ### [Domain - Model]
 
 #### [VehicleProfile.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/domain/model/VehicleProfile.kt)
-- Adicionar `isShiftLightMode: Boolean`.
-- Adicionar `rpmBarConfig`:
-    - `curvatureAngle: Float` (0 = Reta, 30+ = Arco).
-    - `barWidth: Float`, `barHeight: Float`.
-    - `posY: Float`.
-    - `colorActiveBlue: Int`, `colorDimmedBlue: Int`.
-    - `colorActiveRed: Int`, `colorDimmedRed: Int`.
-    - `colorBlink: Int`.
+- Adicionar `lastConnectedDeviceAddress: String? = null`.
+- Adicionar `lastConnectedDeviceName: String? = null`.
 
-### [Presentation - Components]
+### [Presentation - Navigation]
 
-#### [Gauges.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/components/Gauges.kt)
-- Refatorar `ArchedRpmGauge` para:
-    - Aceitar `curvatureAngle`. Se 0, desenha em linha horizontal.
-    - Implementar lógica de `Blink` (usando animação de alfa infinita de 100ms/10Hz).
-    - Adaptar escala máxima (8.000 vs 3.200) dinamicamente.
-
-### [Presentation - Settings]
-
-#### [VisualSettingsScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/profile/ui/VisualSettingsScreen.kt)
-- Adicionar Seção "Configuração da Barra de RPM":
-    - Switch "Modo Troca de Marchas".
-    - Sliders: Curvatura, Largura da Barra, Altura da Barra, Posição Y.
-    - Seletores de Cores (via Hex ou pré-definidos).
+#### [AppNavHost.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/navigation/AppNavHost.kt)
+- Alterar `startDestination` de `Screen.DeviceList` para `Screen.Dashboard`.
 
 ### [Presentation - Dashboard]
 
+#### [DashboardViewModel.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/dashboard/DashboardViewModel.kt)
+- Ao carregar o perfil, se houver um `lastConnectedDeviceAddress`, chamar o repositório para iniciar a conexão Bluetooth automaticamente.
+
 #### [DashboardScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/dashboard/ui/DashboardScreen.kt)
-- Integrar lógica de 85% da Tabela Honda:
-    - 1ª->2ª: Alvo 2700 | Blink >= 2295
-    - 2ª->3ª: Alvo 2900 | Blink >= 2465
-    - 3ª->4ª: Alvo 2800 | Blink >= 2380
-    - 4ª->5ª: Alvo 2900 | Blink >= 2465
+- Adicionar feedback visual se a auto-conexão estiver em curso ou se falhar.
+
+### [Presentation - Profile]
+
+#### [VehicleProfileScreen.kt](file:///D:/Softwares/Digital_OBDII/app/src/main/java/com/example/digital_obd_ii/presentation/profile/ui/VehicleProfileScreen.kt)
+- Adicionar um novo `IconButton` no TopAppBar com o ícone `Icons.Default.Bluetooth`.
+- Este botão navega para `Screen.DeviceList`.
 
 ---
 
-## Verificação Técnica (Etapas)
+## Verificação Técnica
 
-1.  **Etapa 1**: Expansão do Modelo de Dados e DataStore.
-2.  **Etapa 2**: Motor Geométrico da Barra (Reta vs Arco).
-3.  **Etapa 3**: Lógica de Blink e Escala Shift Light (3.200 RPM).
-4.  **Etapa 4**: Menu de Customização de Cores e Posição Y.
+1.  **Etapa 1**: Atualizar modelo de dados para salvar o MAC Address do Bluetooth.
+2.  **Etapa 2**: Alterar rota inicial na Navegação.
+3.  **Etapa 3**: Implementar gatilho de auto-conexão no DashboardViewModel.
+4.  **Etapa 4**: Integrar botão de Bluetooth no menu de configurações.
 
 ## Plano de Verificação Manual
-- Ativar Modo Shift Light e acelerar (ou simular) até 2.300 RPM em 1ª marcha: a barra deve piscar em vermelho/cor escolhida.
-- Mudar Curvatura para 0: a barra deve ficar perfeitamente horizontal.
-- Alterar Posição Y: a barra deve subir ou descer no Dashboard.
+- Selecionar um dispositivo Bluetooth manualmente uma última vez.
+- Fechar o app totalmente.
+- Abrir o app: ele deve cair direto no Dashboard e começar a piscar "Conectando" ou mostrar dados se o adaptador estiver por perto.
+- Ir em Perfil -> Ícone Bluetooth e verificar se a lista de dispositivos abre corretamente.

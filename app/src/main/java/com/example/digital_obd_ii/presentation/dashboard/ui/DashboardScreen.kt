@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -23,12 +24,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.digital_obd_ii.presentation.components.*
 import com.example.digital_obd_ii.presentation.dashboard.DashboardViewModel
 import com.example.digital_obd_ii.ui.theme.*
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Composable
 fun DashboardScreen(
+    onSettingsClick: () -> Unit, // NOVA NAVEGAÇÃO v1.8.6
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,7 +85,7 @@ fun DashboardScreen(
             )
         }
 
-        // 1. RPM Bar (v1.8.2 Enhanced Colors)
+        // 1. RPM Bar
         ArchedRpmGauge(
             currentRpm = uiState.snapshot.rpm.toFloat(),
             isShiftLightMode = uiState.profile.isShiftLightMode,
@@ -104,7 +107,7 @@ fun DashboardScreen(
                 .align(Alignment.TopCenter)
         )
 
-        // 2. Versão
+        // 2. Versão (Canto Superior Esquerdo)
         VersionBadge(
             color = CivicColors.GrayBezel.copy(alpha = 0.3f),
             modifier = Modifier
@@ -112,17 +115,16 @@ fun DashboardScreen(
                 .padding(16.dp * screenScale.avgScale)
         )
 
-        // 3. Ajustes
-        IconButton(
-            onClick = { /* Navegação */ },
+        // 3. BOTÃO DE CONFIGURAÇÕES INVISÍVEL (v1.8.6)
+        // Sobreposto ao ícone de engrenagem do background no canto superior direito
+        Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(8.dp * screenScale.avgScale)
-        ) {
-            Icon(Icons.Default.Settings, null, tint = CivicColors.GrayBezel.copy(alpha = 0.3f))
-        }
+                .size(80.dp * screenScale.avgScale)
+                .clickable { onSettingsClick() }
+        )
 
-        // 4. Elementos Dinâmicos
+        // 4. Elementos Dinâmicos Normalizados
         uiState.profile.elements.forEach { (key, config) ->
             val value = when(key) {
                 "RPM" -> uiState.snapshot.rpm.toString()
@@ -144,7 +146,12 @@ fun DashboardScreen(
                 else -> CivicColors.White
             }
 
-            Box(modifier = Modifier.offset(x = config.x.toScaledX(screenScale.scaleX), y = config.y.toScaledY(screenScale.scaleY))) {
+            Box(
+                modifier = Modifier.offset(
+                    x = config.x.toScaledX(screenScale.scaleX),
+                    y = config.y.toScaledY(screenScale.scaleY)
+                )
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SevenSegmentText(
                         text = value,
@@ -155,9 +162,14 @@ fun DashboardScreen(
                         activeColor = color,
                         padLength = pad
                     )
+                    
                     if (key == "TEMP" && uiState.snapshot.coolantTempC > 100) {
                         Spacer(modifier = Modifier.width(8.dp * screenScale.avgScale))
-                        Icon(Icons.Default.Thermostat, null, tint = CivicColors.RedMain, modifier = Modifier.size(24.dp * screenScale.avgScale))
+                        Icon(
+                            Icons.Default.Thermostat, null, 
+                            tint = CivicColors.RedMain, 
+                            modifier = Modifier.size(24.dp * screenScale.avgScale)
+                        )
                     }
                 }
             }

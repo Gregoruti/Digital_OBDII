@@ -1,5 +1,12 @@
 # CHANGELOG - Digital OBD-II
 
+## [1.8.5] - 2026-09-08
+### Adicionado
+- **Simulador de Condução Real**: Slider de velocidade integrado ao preview para validar marchas e blink.
+- **Controle de Cores Hex**: Seletores de cor via código hexadecimal (#AARRGGBB) para precisão profissional.
+- **Geometria Progressiva**: Slider de ângulo agora permite transição suave entre Arco e Reta.
+- **Segurança de Versão**: Inicialização do repositório Git local e checkpoint v1.8.4.
+
 ## [1.7.9] - 2026-09-08
 ### Corrigido
 - **Calibração de Fábrica Estrita**: Forçada a carga dos valores exatos da Tabela Oficial (RPM em X:415, Y:200, Escala: 1.00).

@@ -25,7 +25,7 @@ sealed class Screen(val route: String) {
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.DeviceList.route
+    startDestination: String = Screen.Dashboard.route // INÍCIO RÁPIDO: Dashboard como tela inicial
 ) {
     NavHost(
         navController = navController,
@@ -34,32 +34,28 @@ fun AppNavHost(
     ) {
         composable(Screen.DeviceList.route) {
             DeviceListScreen(onDeviceConnected = {
-                navController.navigate(Screen.Profile.route)
+                navController.navigate(Screen.Dashboard.route) {
+                    popUpTo(Screen.DeviceList.route) { inclusive = true }
+                }
             })
         }
         composable(Screen.Profile.route) {
-            VehicleProfileScreen(onBack = {
-                navController.popBackStack()
-            }, onTerminalClick = {
-                navController.navigate(Screen.Terminal.route)
-            }, onDashboardClick = {
-                navController.navigate(Screen.Dashboard.route)
-            }, onVisualClick = {
-                navController.navigate(Screen.VisualSettings.route)
-            })
+            VehicleProfileScreen(
+                onBack = { navController.popBackStack() },
+                onTerminalClick = { navController.navigate(Screen.Terminal.route) },
+                onDashboardClick = { navController.navigate(Screen.Dashboard.route) },
+                onVisualClick = { navController.navigate(Screen.VisualSettings.route) },
+                onBluetoothClick = { navController.navigate(Screen.DeviceList.route) } // NOVA NAVEGAÇÃO
+            )
         }
         composable(Screen.VisualSettings.route) {
-            VisualSettingsScreen(onBack = {
-                navController.popBackStack()
-            })
+            VisualSettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Terminal.route) {
-            ObdTerminalScreen(onBack = {
-                navController.popBackStack()
-            })
+            ObdTerminalScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Dashboard.route) {
-            DashboardScreen()
+            DashboardScreen(onSettingsClick = { navController.navigate(Screen.Profile.route) })
         }
     }
 }
