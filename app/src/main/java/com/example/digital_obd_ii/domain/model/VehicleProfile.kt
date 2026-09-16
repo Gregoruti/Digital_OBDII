@@ -23,6 +23,20 @@ object FactoryDefaults {
         "TRIP_DIST" to TRIP_DIST, "TRIP_FUEL" to TRIP_FUEL
     )
 
+    // PRESETS DE MULTIMIDIA (Escala Reduzida v1.8.8)
+    val MULTIMEDIA_ELEMENTS_MAP = mapOf(
+        "RPM" to RPM.copy(scale = 0.70f),
+        "SPEED" to SPEED.copy(scale = 0.50f),
+        "TEMP" to TEMP.copy(scale = 0.50f),
+        "KML" to KML.copy(scale = 0.50f),
+        "VOLTS" to VOLTS.copy(scale = 0.50f),
+        "CLOCK" to CLOCK.copy(scale = 0.50f),
+        "GEARS" to GEARS.copy(scale = 0.50f),
+        "TRIP_TIME" to TRIP_TIME.copy(scale = 0.40f),
+        "TRIP_DIST" to TRIP_DIST.copy(scale = 0.40f),
+        "TRIP_FUEL" to TRIP_FUEL.copy(scale = 0.40f)
+    )
+
     // Cores Padrão
     const val COLOR_ACTIVE_BLUE: Long = 0xFF2B35B0
     const val COLOR_DIMMED_BLUE: Long = 0x331A2285
@@ -73,6 +87,7 @@ data class VehicleProfile(
     val rpmBarWidth: Float = 22f,
     val rpmBarHeight: Float = 40f,
     val rpmBarY: Float = 100f,
+    val shiftLightBlinkMs: Int = 100,
     
     val colorActiveBlue: Long = FactoryDefaults.COLOR_ACTIVE_BLUE,
     val colorDimmedBlue: Long = FactoryDefaults.COLOR_DIMMED_BLUE,
@@ -98,4 +113,9 @@ enum class FuelType(val label: String, val afr: Double, val density: Double) {
     GASOLINE("Gasolina", 14.7, 0.745),
     ETHANOL("Etanol", 9.0, 0.789),
     DIESEL("Diesel", 14.5, 0.832)
+}
+
+enum class DevicePreset(val label: String) {
+    TABLET("Tablet (Padrão)"),
+    MULTIMEDIA("Multimídia (Menor)")
 }

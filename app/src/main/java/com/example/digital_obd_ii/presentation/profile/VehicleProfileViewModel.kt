@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digital_obd_ii.domain.model.ElementConfig
 import com.example.digital_obd_ii.domain.model.FuelType
+import com.example.digital_obd_ii.domain.model.DevicePreset
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.FactoryDefaults
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
@@ -106,6 +107,10 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(rpmBarY = value)) }
     }
 
+    fun updateShiftLightBlinkMs(value: Int) {
+        _uiState.update { it.copy(profile = it.profile.copy(shiftLightBlinkMs = value)) }
+    }
+
     // PERFORMANCE SPS (v1.8.7)
     fun updatePollingInterval(key: String, ms: Int) {
         _uiState.update { state ->
@@ -139,11 +144,16 @@ class VehicleProfileViewModel @Inject constructor(
         }
     }
 
-    fun restoreFactorySettings() {
+    fun restoreFactorySettings(preset: DevicePreset = DevicePreset.TABLET) {
+        val targetElements = when(preset) {
+            DevicePreset.TABLET -> FactoryDefaults.ELEMENTS_MAP
+            DevicePreset.MULTIMEDIA -> FactoryDefaults.MULTIMEDIA_ELEMENTS_MAP
+        }
+        
         _uiState.update { state ->
             state.copy(
                 profile = state.profile.copy(
-                    elements = FactoryDefaults.ELEMENTS_MAP,
+                    elements = targetElements,
                     digitWidth = 60f,
                     digitHeight = 110f,
                     digitThickness = 14f,

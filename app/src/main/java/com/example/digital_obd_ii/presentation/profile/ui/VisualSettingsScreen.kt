@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.digital_obd_ii.domain.model.DevicePreset
 import com.example.digital_obd_ii.presentation.components.*
 import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +55,10 @@ fun VisualSettingsScreen(
     // SIMULADOR DE CONDUÇÃO REAL (v1.8.4)
     var simRpm by remember { mutableFloatStateOf(1500f) }
     var simSpeed by remember { mutableFloatStateOf(0f) }
+    
+    // Novo Estado para o Reset de Fábrica (v1.8.8)
+    var selectedPreset by remember { mutableStateOf(DevicePreset.TABLET) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
     // Lógica de Marcha Simulada (Baseada em Ratio do Perfil)
     val simGear = remember(simRpm, simSpeed, uiState.profile) {
@@ -131,7 +136,7 @@ fun VisualSettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.restoreFactorySettings() }) {
+                    IconButton(onClick = { showResetDialog = true }) {
                         Icon(Icons.Default.Refresh, "Restaurar")
                     }
                     IconButton(onClick = { viewModel.saveProfile() }) {
@@ -141,6 +146,38 @@ fun VisualSettingsScreen(
             )
         }
     ) { padding ->
+        if (showResetDialog) {
+            AlertDialog(
+                onDismissRequest = { showResetDialog = false },
+                title = { Text("Reset de Fábrica") },
+                text = {
+                    Column {
+                        Text("Deseja restaurar as escalas originais?")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Dispositivo Alvo:", style = MaterialTheme.typography.labelLarge)
+                        DevicePreset.values().forEach { preset ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().clickable { selectedPreset = preset }
+                            ) {
+                                RadioButton(selected = selectedPreset == preset, onClick = { selectedPreset = preset })
+                                Text(preset.label)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.restoreFactorySettings(selectedPreset)
+                        showResetDialog = false
+                    }) { Text("Restaurar") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetDialog = false }) { Text("Cancelar") }
+                }
+            )
+        }
+
         Row(modifier = Modifier.padding(padding).fillMaxSize()) {
             
             // Coluna de Controles (Esquerda)
@@ -179,6 +216,20 @@ fun VisualSettingsScreen(
                     ControlSlider("Ângulo (0=Reta)", uiState.profile.rpmBarCurvature, 0f, 60f) { viewModel.updateRpmBarCurvature(it) }
                     ControlSlider("Altura", uiState.profile.rpmBarHeight, 10f, 100f) { viewModel.updateRpmBarHeight(it) }
                     ControlSlider("Posição Y", uiState.profile.rpmBarY, 0f, 400f) { viewModel.updateRpmBarY(it) }
+                }
+
+                item {
+                    HorizontalDivider()
+                    Text("Performance e Fluidez", style = MaterialTheme.typography.titleMedium)
+                    Text("Ajuste a taxa de atualização (ms). Menor = mais rápido.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    
+                    val rpmMs = uiState.profile.pollingIntervals["RPM"] ?: 0
+                    ControlSlider("Polling RPM (ms)", rpmMs.toFloat(), 0f, 200f) { viewModel.updatePollingInterval("RPM", it.toInt()) }
+                    
+                    val speedMs = uiState.profile.pollingIntervals["SPEED"] ?: 50
+                    ControlSlider("Polling Velocidade (ms)", speedMs.toFloat(), 0f, 200f) { viewModel.updatePollingInterval("SPEED", it.toInt()) }
+                    
+                    ControlSlider("Frequência Blink (ms)", uiState.profile.shiftLightBlinkMs.toFloat(), 50f, 500f) { viewModel.updateShiftLightBlinkMs(it.toInt()) }
                 }
 
                 item {
@@ -227,6 +278,7 @@ fun VisualSettingsScreen(
                         barWidth = uiState.profile.rpmBarWidth * previewScale.avgScale,
                         barHeight = uiState.profile.rpmBarHeight * previewScale.avgScale,
                         isBlinking = isSimBlinking,
+                        blinkIntervalMs = uiState.profile.shiftLightBlinkMs,
                         colorConfig = RpmColorConfig(
                             activeBlue = Color(uiState.profile.colorActiveBlue),
                             dimmedBlue = Color(uiState.profile.colorDimmedBlue),

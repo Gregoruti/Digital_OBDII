@@ -214,12 +214,18 @@ fun ArchedRpmGauge(
     barWidth: Float = 22f,
     barHeight: Float = 40f,
     isBlinking: Boolean = false,
+    blinkIntervalMs: Int = 100,
     colorConfig: RpmColorConfig = RpmColorConfig(),
     modifier: Modifier = Modifier
 ) {
+    // Animação suavizada para evitar "pulos" de barras (v1.9.1)
+    // Usando spring para resposta rápida e natural sem oscilação
     val animatedRpm by animateFloatAsState(
         targetValue = currentRpm,
-        animationSpec = tween(durationMillis = 100),
+        animationSpec = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioNoBouncy
+        ),
         label = "RpmAnimation"
     )
 
@@ -227,7 +233,7 @@ fun ArchedRpmGauge(
         initialValue = 1f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(100),
+            animation = tween(blinkIntervalMs),
             repeatMode = RepeatMode.Reverse
         ),
         label = "BlinkAlpha"

@@ -2,6 +2,9 @@ package com.example.digital_obd_ii.presentation.dashboard.ui
 
 import android.graphics.BitmapFactory
 import android.util.Base64
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +41,18 @@ fun DashboardScreen(
     val currentTime = remember { mutableStateOf("") }
     val context = LocalContext.current
 
+    // Animações para suavizar os valores digitais (v1.9.1)
+    val animatedRpm by animateIntAsState(
+        targetValue = uiState.snapshot.rpm,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "DigitalRpmAnimation"
+    )
+    val animatedSpeed by animateIntAsState(
+        targetValue = uiState.snapshot.speedKmh,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "DigitalSpeedAnimation"
+    )
+
     LaunchedEffect(Unit) {
         viewModel.startCollecting()
         while(true) {
@@ -47,12 +62,12 @@ fun DashboardScreen(
     }
 
     // LÓGICA DE BLINK SHIFT LIGHT (85% do Alvo Econômico Honda)
-    val isBlinking = remember(uiState.snapshot.rpm, uiState.snapshot.idealGear, uiState.profile.isShiftLightMode) {
+    val isBlinking = remember(animatedRpm, uiState.snapshot.idealGear, uiState.profile.isShiftLightMode) {
         if (!uiState.profile.isShiftLightMode) return@remember false
         
         val targets = mapOf(1 to 2700, 2 to 2900, 3 to 2800, 4 to 2900)
         val target = targets[uiState.snapshot.idealGear] ?: 3000
-        uiState.snapshot.rpm >= (target * 0.85f).toInt()
+        animatedRpm >= (target * 0.85f).toInt()
     }
 
     BoxWithConstraints(
@@ -87,12 +102,13 @@ fun DashboardScreen(
 
         // 1. RPM Bar
         ArchedRpmGauge(
-            currentRpm = uiState.snapshot.rpm.toFloat(),
+            currentRpm = animatedRpm.toFloat(),
             isShiftLightMode = uiState.profile.isShiftLightMode,
             curvature = uiState.profile.rpmBarCurvature,
             barWidth = uiState.profile.rpmBarWidth * screenScale.avgScale,
             barHeight = uiState.profile.rpmBarHeight * screenScale.avgScale,
             isBlinking = isBlinking,
+            blinkIntervalMs = uiState.profile.shiftLightBlinkMs,
             colorConfig = RpmColorConfig(
                 activeBlue = Color(uiState.profile.colorActiveBlue),
                 dimmedBlue = Color(uiState.profile.colorDimmedBlue),
@@ -127,8 +143,8 @@ fun DashboardScreen(
         // 4. Elementos Dinâmicos Normalizados
         uiState.profile.elements.forEach { (key, config) ->
             val value = when(key) {
-                "RPM" -> uiState.snapshot.rpm.toString()
-                "SPEED" -> uiState.snapshot.speedKmh.toString()
+                "RPM" -> animatedRpm.toString()
+                "SPEED" -> animatedSpeed.toString()
                 "TEMP" -> uiState.snapshot.coolantTempC.toString()
                 "KML" -> String.format("%.1f", uiState.trip.avgConsumptionKmL)
                 "VOLTS" -> String.format("%.1f", uiState.snapshot.ecuVoltage)
