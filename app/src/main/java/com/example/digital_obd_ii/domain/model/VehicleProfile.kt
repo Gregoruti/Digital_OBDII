@@ -76,7 +76,8 @@ data class VehicleProfile(
     val digitThickness: Float = 14f,
     val digitSkew: Float = -12f,
     
-    val backgroundPath: String? = null,
+    val backgroundPath: String? = "dashboard_bg_1.jpg",
+    val isCustomBackground: Boolean = false,
     
     // Mapa de Elementos
     val elements: Map<String, ElementConfig> = FactoryDefaults.ELEMENTS_MAP,

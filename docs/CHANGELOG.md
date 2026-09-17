@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.3.0] - 2026-09-08
+### Adicionado
+- **Galeria de Backgrounds**: Nova funcionalidade no menu de personalização que permite alternar entre múltiplos fundos nativos (`dashboard_bg_1.jpg`, `dashboard_bg_2.jpg`, etc.) via carrossel horizontal.
+- **Suporte Dinâmico de Assets**: Arquitetura preparada para receber novos backgrounds seguindo o padrão de nomenclatura sequencial.
+- **Toggle Custom/Nativo**: Separação clara entre o uso de imagens da galeria e uploads customizados do usuário.
+
 ## [2.2.0] - 2026-09-08
 ### Consolidado
 - **Marco de Estabilidade (Milestone)**: Consolidação de todas as melhorias de comunicação Bluetooth e Parser em uma arquitetura de referência.

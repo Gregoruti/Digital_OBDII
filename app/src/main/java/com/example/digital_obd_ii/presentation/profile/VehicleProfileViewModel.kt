@@ -113,8 +113,8 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(digitThickness = value)) }
     }
 
-    fun updateBackground(path: String?) {
-        _uiState.update { it.copy(profile = it.profile.copy(backgroundPath = path)) }
+    fun updateBackground(path: String?, isCustom: Boolean = false) {
+        _uiState.update { it.copy(profile = it.profile.copy(backgroundPath = path, isCustomBackground = isCustom)) }
     }
 
     fun updateIsShiftLightMode(value: Boolean) {

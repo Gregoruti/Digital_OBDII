@@ -79,15 +79,20 @@ fun DashboardScreen(
         val screenScale = calculateScreenScale(maxWidth.value, maxHeight.value)
 
         // 0. Background
-        val bgBitmap = remember(uiState.profile.backgroundPath) {
+        val bgBitmap = remember(uiState.profile.backgroundPath, uiState.profile.isCustomBackground) {
             try {
-                val inputStream = context.assets.open("dashboard_bg.jpg")
-                BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
-            } catch (e: Exception) {
-                uiState.profile.backgroundPath?.let { base64 ->
-                    val bytes = Base64.decode(base64, Base64.DEFAULT)
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+                if (uiState.profile.isCustomBackground) {
+                    uiState.profile.backgroundPath?.let { base64 ->
+                        val bytes = Base64.decode(base64, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+                    }
+                } else {
+                    val assetName = uiState.profile.backgroundPath ?: "dashboard_bg_1.jpg"
+                    val inputStream = context.assets.open(assetName)
+                    BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
                 }
+            } catch (e: Exception) {
+                null
             }
         }
 

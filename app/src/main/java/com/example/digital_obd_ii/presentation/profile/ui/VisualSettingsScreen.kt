@@ -9,8 +9,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -110,7 +114,7 @@ fun VisualSettingsScreen(
                         resized.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
                         Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT)
                     }
-                    viewModel.updateBackground(base64String)
+                    viewModel.updateBackground(base64String, isCustom = true)
                 } catch (e: Exception) {
                     snackbarHostState.showSnackbar("Erro ao processar imagem")
                 }
@@ -234,9 +238,47 @@ fun VisualSettingsScreen(
 
                 item {
                     HorizontalDivider()
-                    Text("Background", style = MaterialTheme.typography.titleMedium)
-                    Button(onClick = { imagePickerLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Mudar Background")
+                    Text("Backgrounds Disponíveis", style = MaterialTheme.typography.titleMedium)
+                    
+                    val backgrounds = listOf("dashboard_bg_1.jpg", "dashboard_bg_2.jpg")
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(backgrounds) { bg ->
+                            val isSelected = !uiState.profile.isCustomBackground && uiState.profile.backgroundPath == bg
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp, 60.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .border(
+                                        width = if (isSelected) 2.dp else 0.dp,
+                                        color = if (isSelected) CivicColors.BlueGlow else Color.Transparent,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .clickable { viewModel.updateBackground(bg, isCustom = false) }
+                            ) {
+                                AssetBackgroundPreview(bg)
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = CivicColors.BlueGlow,
+                                        modifier = Modifier.align(Alignment.Center).size(24.dp).background(Color.Black.copy(0.5f), RoundedCornerShape(12.dp))
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                    ) {
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Upload Customizado")
                     }
                 }
 
@@ -260,14 +302,20 @@ fun VisualSettingsScreen(
                     val previewScale = calculateScreenScale(maxWidth.value, maxHeight.value)
                     
                     // Background
-                    uiState.profile.backgroundPath?.let { base64 ->
-                        val bitmap = remember(base64) {
-                            try {
-                                val bytes = Base64.decode(base64, Base64.DEFAULT)
-                                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            } catch (e: Exception) { null }
+                    if (uiState.profile.isCustomBackground) {
+                        uiState.profile.backgroundPath?.let { base64 ->
+                            val bitmap = remember(base64) {
+                                try {
+                                    val bytes = Base64.decode(base64, Base64.DEFAULT)
+                                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                } catch (e: Exception) { null }
+                            }
+                            bitmap?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, alpha = 0.6f) }
                         }
-                        bitmap?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds, alpha = 0.6f) }
+                    } else {
+                        uiState.profile.backgroundPath?.let { assetName ->
+                            AssetBackgroundPreview(assetName, alpha = 0.6f)
+                        }
                     }
 
                     // RPM Bar (Simulada)
@@ -315,6 +363,26 @@ fun VisualSettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AssetBackgroundPreview(assetName: String, alpha: Float = 1.0f) {
+    val context = LocalContext.current
+    val bitmap = remember(assetName) {
+        try {
+            val inputStream = context.assets.open(assetName)
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) { null }
+    }
+    bitmap?.let {
+        Image(
+            bitmap = it.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+            alpha = alpha
+        )
     }
 }
 
