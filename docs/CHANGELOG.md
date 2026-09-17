@@ -1,5 +1,12 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.1.0] - 2026-09-08
+### Adicionado
+- **Motor de Conexão Resiliente**: Implementação de `Mutex` (thread-safety) e `withTimeoutOrNull` no transporte Bluetooth.
+- **Limpeza de Buffer (Pre-fetch)**: O app agora limpa qualquer byte residual do adaptador antes de enviar um novo comando, eliminando o "lixo" acumulado.
+- **Sequência Clone-Proof**: Adição de `AT D` (Reset Padrão), `AT S0` (Sem Espaços) e `AT AT 1` (Tempo Adaptativo) para suportar ELM327 de baixa qualidade.
+- **Parser Tolerante a Headers**: O parser agora consegue extrair dados mesmo que o comando `AT H0` falhe, buscando o eco do PID em qualquer posição da string.
+
 ## [2.0.0] - 2026-09-08
 ### Adicionado
 - **Boot Robusto v2.0**: Sequência de inicialização estrita com validação de respostas (ATZ, ATE0, ATL0, ATSP6, ATSH7DF e ativação 0100).

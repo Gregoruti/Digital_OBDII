@@ -13,19 +13,20 @@ object ObdResponseParser {
         }
 
         // Standard OBD Response: 41 0C 1A F8 -> Mode echo (41), PID echo (0C), Data (1A F8)
-        // Check for proper echo (41 for mode 01, 42 for mode 02...)
         val expectedEcho = try { (command.mode.toInt(16) + 0x40).toString(16).uppercase() } catch (e: Exception) { "" }
-        
-        if (!clean.startsWith(expectedEcho + command.pid)) {
-            // Se não começa com o eco correto, o dado está embaralhado ou é de outro PID
-            return null
-        }
+        val target = expectedEcho + command.pid
 
-        val hexPairs = clean.chunked(2)
-        if (hexPairs.size < 2 + command.expectedBytes) return null
+        // Se a resposta contém o eco do PID (mesmo que não no início, por conta de Headers)
+        if (!clean.contains(target)) return null
+
+        // Corta tudo antes do Eco para ignorar possíveis Headers residuais
+        val dataPart = clean.substringAfter(target)
+        
+        val hexPairs = dataPart.chunked(2)
+        if (hexPairs.size < command.expectedBytes) return null
         
         val dataBytes = try {
-            hexPairs.drop(2).take(command.expectedBytes).map { it.toInt(16) }
+            hexPairs.take(command.expectedBytes).map { it.toInt(16) }
         } catch (e: Exception) {
             return null
         }
