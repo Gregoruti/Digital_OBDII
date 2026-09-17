@@ -2,26 +2,30 @@ package com.example.digital_obd_ii.data.obd
 
 /**
  * Utilitário de inicialização do adaptador ELM327.
- * v1.8.7 - Sequência robusta para garantir buffer limpo e protocolo puro.
+ * v2.0 - Sequência de Inicialização Robusta e Validada.
  */
 object Elm327Init {
     
-    // Comandos de inicialização estritos
-    val bootSequence = listOf(
-        "AT Z",   // Reset total do chip
-        "AT E0",  // Desliga Eco (evita ler o comando enviado)
-        "AT L0",  // Desliga Linefeeds
-        "AT S0",  // Desliga Espaços (torna o parsing mais rápido e denso)
-        "AT H0",  // Desliga Headers (remove o prefixo 0xE8 das respostas)
-        "AT SP 0" // Seta protocolo para Automático
+    data class InitStep(
+        val command: String,
+        val expectedResponse: String? = null,
+        val description: String
+    )
+
+    // Sequência estrita conforme solicitado (v2.0)
+    val robustBootSequence = listOf(
+        InitStep("AT Z", "ELM327", "Reset do Adaptador"),
+        InitStep("AT E0", "OK", "Desativar Eco (Echo Off)"),
+        InitStep("AT L0", "OK", "Remover Linefeeds (LF Off)"),
+        InitStep("AT SP 6", "OK", "Travar Protocolo ISO 15765-4 (CAN 500kbps)"),
+        InitStep("AT SH 7DF", "OK", "Definir Header Broadcast (0x7DF)"),
+        InitStep("0100", "4100", "Ativação de Barramento (Mode 01 PID 00)")
     )
 
     // Comandos de manutenção (Watchdog)
-    // Devem ser enviados de tempos em tempos para garantir que o adaptador não resetou 
-    // ou "esqueceu" as configurações de silêncio (Eco/Headers).
     val maintenanceSequence = listOf(
         "AT E0",
-        "AT H0",
-        "AT S0"
+        "AT L0",
+        "AT SH 7DF"
     )
 }

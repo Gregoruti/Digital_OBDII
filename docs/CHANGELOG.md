@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.0.0] - 2026-09-08
+### Adicionado
+- **Boot Robusto v2.0**: Sequência de inicialização estrita com validação de respostas (ATZ, ATE0, ATL0, ATSP6, ATSH7DF e ativação 0100).
+- **Sincronização de Prompt**: O app agora aguarda estritamente o caractere `>` do ELM327 antes de enviar o próximo comando, evitando colisões de buffer.
+- **Protocolo CAN Fixo**: Otimização para Civic 1.8 (ISO 15765-4 11-bit/500kbps), eliminando o atraso do "Bus Search".
+
 ## [1.9.3] - 2026-09-08
 ### Adicionado
 - **Diagnóstico de Performance**: Nova interface de Benchmark em "Ajustes de Performance" com Logger em tempo real.

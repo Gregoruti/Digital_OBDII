@@ -26,8 +26,9 @@ class ObdRepositoryImpl @Inject constructor(
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
         if (result.isSuccess) {
-            // Inicialização Robusta v1.8.7
-            Elm327Init.bootSequence.forEach { transport.send(it) }
+            // Inicialização Robusta v2.0
+            val initResult = reinitializeAdapter()
+            if (initResult.isFailure) return Result.failure(initResult.exceptionOrNull() ?: Exception("Init failed"))
             
             // Persiste o endereço para Auto-Conexão v1.8.6
             val profile = profileRepository.getProfileSync()
@@ -75,7 +76,15 @@ class ObdRepositoryImpl @Inject constructor(
 
     override suspend fun reinitializeAdapter(): Result<Unit> {
         return try {
-            Elm327Init.bootSequence.forEach { transport.send(it) }
+            Elm327Init.robustBootSequence.forEach { step ->
+                val response = transport.send(step.command)
+                // Se definimos uma resposta esperada, validamos ela
+                step.expectedResponse?.let { expected ->
+                    if (!response.uppercase().contains(expected.uppercase())) {
+                        throw Exception("Falha no comando ${step.command}: Esperava $expected, recebeu $response")
+                    }
+                }
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -44,7 +44,7 @@ fun PerformanceSettingsScreen(
                 },
                 actions = {
                     IconButton(onClick = { viewModel.reinitializeAdapter() }) {
-                        Icon(Icons.Default.PlayArrow, "Reset Adaptador", tint = Color.Green)
+                        Icon(Icons.Default.PlayArrow, "Boot Robusto", tint = Color.Green)
                     }
                     if (uiState.isBenchmarking) {
                         IconButton(onClick = { viewModel.stopBenchmark() }) {
