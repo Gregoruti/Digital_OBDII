@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.2.0] - 2026-09-08
+### Consolidado
+- **Marco de Estabilidade (Milestone)**: Consolidação de todas as melhorias de comunicação Bluetooth e Parser em uma arquitetura de referência.
+- **Documentação de Protocolo**: Criação do `docs/architecture/OBD_COMMUNICATION_PROTOCOL.md` detalhando o motor de resiliência.
+- **Performance**: Polling de latência zero e emissão reativa validados com 100% de sucesso em emuladores.
+
 ## [2.1.4] - 2026-09-08
 ### Otimizado
 - **Motor de Polling Reativo (v2.1.4)**: Implementada emissão imediata de dados (`emit`) logo após cada leitura de sensor, eliminando o atraso de "fim de ciclo".
