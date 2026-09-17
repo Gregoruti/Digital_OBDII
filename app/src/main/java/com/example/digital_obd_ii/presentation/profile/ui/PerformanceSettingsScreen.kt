@@ -1,24 +1,30 @@
 package com.example.digital_obd_ii.presentation.profile.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.digital_obd_ii.domain.model.ObdLogEntry
 import com.example.digital_obd_ii.presentation.components.CivicColors
 import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
 
-/**
- * Tela de Ajustes de Performance e SPS v1.8.9
- * Nova Escala de Slider: 1-20ms (linear) -> 20ms+ (saltos de 10ms)
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerformanceSettingsScreen(
@@ -30,10 +36,24 @@ fun PerformanceSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ajustes de Performance") },
+                title = { Text("Performance & Benchmark") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.reinitializeAdapter() }) {
+                        Icon(Icons.Default.PlayArrow, "Reset Adaptador", tint = Color.Green)
+                    }
+                    if (uiState.isBenchmarking) {
+                        IconButton(onClick = { viewModel.stopBenchmark() }) {
+                            Icon(Icons.Default.Stop, "Parar Log", tint = Color.Red)
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.startBenchmark() }) {
+                            Icon(Icons.Default.BugReport, "Iniciar Diagnóstico", tint = CivicColors.BlueGlow)
+                        }
                     }
                 }
             )
@@ -46,6 +66,30 @@ fun PerformanceSettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (uiState.isBenchmarking) {
+                item {
+                    Text(
+                        "OBD Real-time Logger",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.Yellow
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black)
+                            .padding(8.dp)
+                    ) {
+                        LazyColumn(reverseLayout = false) {
+                            items(uiState.logs) { log ->
+                                LogLine(log)
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 Text(
                     "Taxa de Amostragem (ms)", 
@@ -53,7 +97,7 @@ fun PerformanceSettingsScreen(
                     color = CivicColors.BlueGlow
                 )
                 Text(
-                    "Calibre o delay entre as mensagens OBD. Para RPM, use valores baixos (1-20ms).",
+                    "Calibre o delay entre as mensagens OBD. Se o log acima mostrar 'GARBLED' ou 'TIMEOUT', aumente o delay.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -121,5 +165,49 @@ fun PerformanceSettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LogLine(log: ObdLogEntry) {
+    val color = when (log.status) {
+        ObdLogEntry.LogStatus.SUCCESS -> Color.Green
+        ObdLogEntry.LogStatus.GARBLED -> Color.Magenta
+        ObdLogEntry.LogStatus.TIMEOUT -> Color.Red
+        ObdLogEntry.LogStatus.OUT_OF_RANGE -> Color.Yellow
+        ObdLogEntry.LogStatus.ADAPTER_ERROR -> Color.Cyan
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            log.timeFormatted,
+            color = Color.Gray,
+            fontSize = 9.sp,
+            fontFamily = FontFamily.Monospace
+        )
+        Text(
+            "> ${log.command}",
+            color = Color.White,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier.width(60.dp)
+        )
+        Text(
+            log.rawResponse,
+            color = color.copy(alpha = 0.8f),
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            log.status.name.take(4),
+            color = color,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
     }
 }

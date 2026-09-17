@@ -7,31 +7,61 @@ import com.example.digital_obd_ii.domain.model.FuelType
 import com.example.digital_obd_ii.domain.model.DevicePreset
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.FactoryDefaults
+import com.example.digital_obd_ii.domain.model.ObdLogEntry
+import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class VehicleProfileUiState(
     val profile: VehicleProfile = VehicleProfile(),
     val isLoading: Boolean = false,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val logs: List<ObdLogEntry> = emptyList(),
+    val isBenchmarking: Boolean = false
 )
 
 @HiltViewModel
 class VehicleProfileViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val obdRepository: ObdRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VehicleProfileUiState())
     val uiState: StateFlow<VehicleProfileUiState> = _uiState.asStateFlow()
 
+    private var benchmarkJob: Job? = null
+
     init {
         loadProfile()
+    }
+
+    fun startBenchmark() {
+        if (benchmarkJob != null) return
+        _uiState.update { it.copy(isBenchmarking = true, logs = emptyList()) }
+        benchmarkJob = viewModelScope.launch {
+            obdRepository.diagnosticFlow.collect { entry ->
+                _uiState.update { state ->
+                    val newLogs = (listOf(entry) + state.logs).take(50)
+                    state.copy(logs = newLogs)
+                }
+            }
+        }
+    }
+
+    fun stopBenchmark() {
+        benchmarkJob?.cancel()
+        benchmarkJob = null
+        _uiState.update { it.copy(isBenchmarking = false) }
+    }
+
+    fun reinitializeAdapter() {
+        viewModelScope.launch {
+            obdRepository.reinitializeAdapter()
+        }
     }
 
     private fun loadProfile() {

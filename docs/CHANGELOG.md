@@ -1,5 +1,12 @@
 # CHANGELOG - Digital OBD-II
 
+## [1.9.3] - 2026-09-08
+### Adicionado
+- **Diagnóstico de Performance**: Nova interface de Benchmark em "Ajustes de Performance" com Logger em tempo real.
+- **Parser Inteligente v2.0**: Implementação de verificação de eco de PID e validação de range (min/max) para evitar dados "fantasmas" ou embaralhados.
+- **Watchdog de Recuperação**: Botão para re-inicialização forçada do adaptador ELM327 (ATZ + Boot Sequence) sem precisar reiniciar o app.
+- **Log de Status**: Identificação visual de erros: SUCCESS, GARBLED, TIMEOUT, OUT_OF_RANGE.
+
 ## [1.9.2] - 2026-09-08
 ### Corrigido
 - **Correção de Dependência**: Adição dos imports ausentes para `animateIntAsState`, `spring` e `Spring` em `DashboardScreen.kt`, resolvendo erro de compilação pós-migração para o Motor de Fluidez v1.9.1.

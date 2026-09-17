@@ -5,13 +5,12 @@ import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
 import com.example.digital_obd_ii.data.obd.Elm327Init
 import com.example.digital_obd_ii.data.obd.ObdCommand
 import com.example.digital_obd_ii.data.obd.ObdPollingEngine
+import com.example.digital_obd_ii.domain.model.ObdLogEntry
 import com.example.digital_obd_ii.domain.model.VehicleSnapshot
 import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class ObdRepositoryImpl @Inject constructor(
@@ -21,6 +20,8 @@ class ObdRepositoryImpl @Inject constructor(
     private val calculateFuel: CalculateFuelConsumptionUseCase,
     private val profileRepository: com.example.digital_obd_ii.domain.repository.ProfileRepository
 ) : ObdRepository {
+
+    override val diagnosticFlow: SharedFlow<ObdLogEntry> = pollingEngine.diagnosticFlow
 
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
@@ -69,6 +70,15 @@ class ObdRepositoryImpl @Inject constructor(
                     throttlePosition = throttle
                 )
             }
+        }
+    }
+
+    override suspend fun reinitializeAdapter(): Result<Unit> {
+        return try {
+            Elm327Init.bootSequence.forEach { transport.send(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
