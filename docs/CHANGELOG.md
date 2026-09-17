@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.1.2] - 2026-09-08
+### Corrigido
+- **Sincronização de PIDs Específicos**: Correção no parser para lidar com PIDs de um dígito e respostas curtas de emuladores, eliminando o status `GARBLED` nos sensores de Throttle (0111) e Fuel Rate (015E).
+- **Normalização de Eco**: Implementada padronização de busca por `Mode + PID` (ex: 4111) para garantir captura exata dos bytes de dados.
+
 ## [2.1.1] - 2026-09-08
 ### Alterado
 - **Parser de Alta Resiliência**: Limpeza de string via Regex para ignorar espaços, eco e caracteres especiais, garantindo compatibilidade total com Emuladores Android e Clones ELM327 que ignoram comandos de formatação (`AT S0/H0`).

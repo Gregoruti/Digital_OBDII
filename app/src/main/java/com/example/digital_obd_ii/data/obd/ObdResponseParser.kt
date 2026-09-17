@@ -15,18 +15,24 @@ object ObdResponseParser {
             return if (v != null && v in command.minVal..command.maxVal) v else null
         }
 
-        // Standard OBD Response: 41 + PID
-        val expectedEcho = try { (command.mode.toInt(16) + 0x40).toString(16).uppercase() } catch (e: Exception) { "" }
-        val target = expectedEcho + command.pid
+        // Standard OBD Response: 41 + PID (normalizado para 2 dígitos)
+        val modeInt = try { command.mode.toInt(16) } catch (e: Exception) { 0 }
+        val expectedEchoMode = (modeInt + 0x40).toString(16).uppercase()
+        
+        // Garante que o PID tenha o formato correto para busca
+        val normalizedPid = command.pid.uppercase().padStart(2, '0')
+        val target = expectedEchoMode + normalizedPid
 
-        // Busca o target dentro da string (caso o emulador envie ECO ou HEADERS)
+        // Busca o target dentro da string
         if (!clean.contains(target)) return null
 
-        // Pega apenas o que vem DEPOIS do target
+        // Pega apenas o que vem DEPOIS do target e limita ao tamanho esperado
         val dataPart = clean.substringAfter(target)
         
+        // Se a resposta for menor do que os bytes esperados, é erro do adaptador
+        if (dataPart.length < command.expectedBytes * 2) return null
+        
         val hexPairs = dataPart.chunked(2)
-        if (hexPairs.size < command.expectedBytes) return null
         
         val dataBytes = try {
             hexPairs.take(command.expectedBytes).map { it.toInt(16) }
