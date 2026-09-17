@@ -1,3 +1,15 @@
+/**
+ * MODELO DE DADOS: VehicleProfile
+ * Objetivo: Persistência de configurações de layout, performance e perfil do veículo.
+ * Correlações: Utilizado por VehicleProfileViewModel e DashboardViewModel.
+ *
+ * Histórico:
+ * v1.0.0 - Estrutura básica.
+ * v1.8.7 - Inclusão de Intervalos de Polling (SPS).
+ * v2.3.0 - Adicionado suporte a múltiplos backgrounds nativos e flag isCustomBackground.
+ *
+ * Status: Estável.
+ */
 package com.example.digital_obd_ii.domain.model
 
 /**

@@ -1,3 +1,15 @@
+/**
+ * UI: DashboardScreen
+ * Objetivo: Tela principal de exibição de dados do veículo em tempo real.
+ * Correlações: Consome DashboardViewModel e exibe VehicleSnapshot.
+ *
+ * Histórico:
+ * v2.3.0 - Carregamento dinâmico de backgrounds (assets ou customizados).
+ * v1.9.1 - Adicionado Motor de Fluidez (Interpolação de RPM/Velocidade).
+ * v1.8.6 - Inclusão de botão de configurações invisível.
+ *
+ * Status: Em conformidade com Motor de Fluidez v2.0.
+ */
 package com.example.digital_obd_ii.presentation.dashboard.ui
 
 import android.graphics.BitmapFactory

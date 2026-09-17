@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.3.1] - 2026-09-08
+### Documentação
+- **Cabeçalhos de Arquivo**: Adicionada documentação técnica no topo dos arquivos críticos (`VehicleProfile`, `VehicleProfileViewModel`, `VisualSettingsScreen`, `DashboardScreen`) detalhando objetivos, correlações e histórico.
+- **Padronização**: Atualização dos comentários de versão interna nos arquivos.
+
 ## [2.3.0] - 2026-09-08
 ### Adicionado
 - **Galeria de Backgrounds**: Nova funcionalidade no menu de personalização que permite alternar entre múltiplos fundos nativos (`dashboard_bg_1.jpg`, `dashboard_bg_2.jpg`, etc.) via carrossel horizontal.

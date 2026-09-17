@@ -1,3 +1,14 @@
+/**
+ * VIEWMODEL: VehicleProfileViewModel
+ * Objetivo: Gestão de estado da tela de perfil e personalização visual.
+ * Correlações: Interage com ProfileRepository e ObdRepository (para diagnósticos).
+ *
+ * Histórico:
+ * v2.3.0 - Implementada lógica de troca de backgrounds nativos e gerenciamento de flags de customização.
+ * v1.9.3 - Adicionado suporte a Benchmark e logs de diagnóstico.
+ *
+ * Status: Operacional.
+ */
 package com.example.digital_obd_ii.presentation.profile
 
 import androidx.lifecycle.ViewModel

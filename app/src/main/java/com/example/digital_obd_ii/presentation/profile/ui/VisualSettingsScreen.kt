@@ -1,3 +1,14 @@
+/**
+ * UI: VisualSettingsScreen
+ * Objetivo: Interface para personalização de cores, geometria e backgrounds.
+ * Correlações: Consome VehicleProfileViewModel.
+ *
+ * Histórico:
+ * v2.3.0 - Adicionado carrossel de backgrounds nativos (dashboard_bg_X.jpg).
+ * v1.8.5 - Introdução de simulador de condução e cores hexadecimais.
+ *
+ * Status: Refatorado para galeria de assets.
+ */
 package com.example.digital_obd_ii.presentation.profile.ui
 
 import android.graphics.Bitmap
