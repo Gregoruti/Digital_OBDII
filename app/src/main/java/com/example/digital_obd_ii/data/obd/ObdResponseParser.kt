@@ -29,8 +29,11 @@ object ObdResponseParser {
         // Pega apenas o que vem DEPOIS do target e limita ao tamanho esperado
         val dataPart = clean.substringAfter(target)
         
-        // Se a resposta for menor do que os bytes esperados, é erro do adaptador
-        if (dataPart.length < command.expectedBytes * 2) return null
+        // Se a resposta contém o ECO mas não contém os bytes de dados (caso do seu log NaN)
+        if (dataPart.length < command.expectedBytes * 2) {
+            // Retorna null para indicar que não há dado válido para o decode
+            return null
+        }
         
         val hexPairs = dataPart.chunked(2)
         

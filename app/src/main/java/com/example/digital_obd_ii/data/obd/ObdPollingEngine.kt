@@ -62,9 +62,15 @@ class ObdPollingEngine(
     }.flowOn(Dispatchers.IO)
 
     private fun createLogEntry(query: String, raw: String, result: Double?, cmd: ObdCommand): ObdLogEntry {
+        val clean = raw.uppercase().replace(Regex("[^0-9A-F]"), "")
+        val expectedEchoMode = try { (cmd.mode.toInt(16) + 0x40).toString(16).uppercase() } catch (e: Exception) { "" }
+        val target = expectedEchoMode + cmd.pid.padStart(2, '0')
+        
         val status = when {
             raw.isEmpty() || raw.contains("?") -> ObdLogEntry.LogStatus.TIMEOUT
             raw.contains("NODATA") || raw.contains("ERROR") -> ObdLogEntry.LogStatus.ADAPTER_ERROR
+            // Se contém o Eco (ex: 4111) mas não tem resultado (Payload vazio/NaN)
+            result == null && clean.contains(target) -> ObdLogEntry.LogStatus.ADAPTER_ERROR
             result == null -> ObdLogEntry.LogStatus.GARBLED
             result < cmd.minVal || result > cmd.maxVal -> ObdLogEntry.LogStatus.OUT_OF_RANGE
             else -> ObdLogEntry.LogStatus.SUCCESS

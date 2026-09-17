@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.1.3] - 2026-09-08
+### Corrigido
+- **Tratamento de Payload Vazio (NaN)**: Correção para casos onde o adaptador/emulador retorna o eco do PID mas omite os bytes de dados (ex: `4111\r\r>`).
+- **Diagnóstico Preciso**: Respostas com payload ausente agora são marcadas corretamente como `ADAPTER_ERROR` (Erro de Adaptador) em vez de `GARBLED` (Dados Embaralhados), facilitando a identificação de sensores não inicializados no emulador.
+
 ## [2.1.2] - 2026-09-08
 ### Corrigido
 - **Sincronização de PIDs Específicos**: Correção no parser para lidar com PIDs de um dígito e respostas curtas de emuladores, eliminando o status `GARBLED` nos sensores de Throttle (0111) e Fuel Rate (015E).
