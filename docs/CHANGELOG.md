@@ -1,5 +1,9 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.1.1] - 2026-09-08
+### Alterado
+- **Parser de Alta Resiliência**: Limpeza de string via Regex para ignorar espaços, eco e caracteres especiais, garantindo compatibilidade total com Emuladores Android e Clones ELM327 que ignoram comandos de formatação (`AT S0/H0`).
+
 ## [2.1.0] - 2026-09-08
 ### Adicionado
 - **Motor de Conexão Resiliente**: Implementação de `Mutex` (thread-safety) e `withTimeoutOrNull` no transporte Bluetooth.

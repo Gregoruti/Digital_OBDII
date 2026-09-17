@@ -2,9 +2,12 @@ package com.example.digital_obd_ii.data.obd
 
 object ObdResponseParser {
     fun parse(raw: String, command: ObdCommand): Double? {
-        val clean = raw.replace("\r", "").replace("\n", "").replace(" ", "").trim()
+        // Limpeza agressiva: remove TUDO que não for Hexadecimal ou ponto
+        val clean = raw.uppercase()
+            .replace(Regex("[^0-9A-F.]"), "")
+            .trim()
         
-        if (clean.isEmpty() || clean.contains("NODATA") || clean.contains("ERROR") || clean.contains("?")) return null
+        if (clean.isEmpty() || clean.contains("NODATA") || clean.contains("ERROR")) return null
 
         // Special handling for AT RV (Adapter Voltage)
         if (command is ObdCommand.VoltageAdapter) {
@@ -12,14 +15,14 @@ object ObdResponseParser {
             return if (v != null && v in command.minVal..command.maxVal) v else null
         }
 
-        // Standard OBD Response: 41 0C 1A F8 -> Mode echo (41), PID echo (0C), Data (1A F8)
+        // Standard OBD Response: 41 + PID
         val expectedEcho = try { (command.mode.toInt(16) + 0x40).toString(16).uppercase() } catch (e: Exception) { "" }
         val target = expectedEcho + command.pid
 
-        // Se a resposta contém o eco do PID (mesmo que não no início, por conta de Headers)
+        // Busca o target dentro da string (caso o emulador envie ECO ou HEADERS)
         if (!clean.contains(target)) return null
 
-        // Corta tudo antes do Eco para ignorar possíveis Headers residuais
+        // Pega apenas o que vem DEPOIS do target
         val dataPart = clean.substringAfter(target)
         
         val hexPairs = dataPart.chunked(2)
