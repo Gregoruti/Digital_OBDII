@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.1.4] - 2026-09-08
+### Otimizado
+- **Motor de Polling Reativo (v2.1.4)**: Implementada emissão imediata de dados (`emit`) logo após cada leitura de sensor, eliminando o atraso de "fim de ciclo".
+- **Latência Zero**: Substituído o `delay(10ms)` por `yield()`, permitindo que o motor de polling rode na velocidade máxima permitida pelo hardware (ou emulador).
+
 ## [2.1.3] - 2026-09-08
 ### Corrigido
 - **Tratamento de Payload Vazio (NaN)**: Correção para casos onde o adaptador/emulador retorna o eco do PID mas omite os bytes de dados (ex: `4111\r\r>`).

@@ -43,6 +43,9 @@ class ObdPollingEngine(
                     currentResults[cmd] = result
                     lastPollTimestamps[sensorKey] = now
                     
+                    // Emissão Imediata para o Display (v2.1.4)
+                    emit(currentResults.toMap())
+                    
                     if (sensorKey != "RPM") {
                         val rpmCmd = ObdCommand.Rpm
                         val rpmQuery = "${rpmCmd.mode}${rpmCmd.pid}"
@@ -53,11 +56,14 @@ class ObdPollingEngine(
 
                         currentResults[rpmCmd] = rpmResult
                         lastPollTimestamps["RPM"] = System.currentTimeMillis()
+                        
+                        // Emissão Imediata após prioridade de RPM
+                        emit(currentResults.toMap())
                     }
                 }
             }
-            emit(currentResults.toMap())
-            delay(10)
+            // Substituído delay fixo por yield para maximizar taxa de polling
+            kotlinx.coroutines.yield()
         }
     }.flowOn(Dispatchers.IO)
 
