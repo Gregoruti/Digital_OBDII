@@ -96,6 +96,7 @@ data class VehicleProfile(
 
     // Barra de RPM
     val isShiftLightMode: Boolean = false,
+    val isRpmGlowEnabled: Boolean = true, // NOVO v2.4.0
     val rpmBarCurvature: Float = 30f,
     val rpmBarWidth: Float = 22f,
     val rpmBarHeight: Float = 40f,

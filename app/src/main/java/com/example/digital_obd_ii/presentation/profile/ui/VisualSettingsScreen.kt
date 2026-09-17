@@ -228,6 +228,10 @@ fun VisualSettingsScreen(
                         Text("Modo Shift Light", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isShiftLightMode, onCheckedChange = { viewModel.updateIsShiftLightMode(it) })
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Efeito Glow (Brilho)", modifier = Modifier.weight(1f))
+                        Switch(checked = uiState.profile.isRpmGlowEnabled, onCheckedChange = { viewModel.updateIsRpmGlowEnabled(it) })
+                    }
                     ControlSlider("Ângulo (0=Reta)", uiState.profile.rpmBarCurvature, 0f, 60f) { viewModel.updateRpmBarCurvature(it) }
                     ControlSlider("Altura", uiState.profile.rpmBarHeight, 10f, 100f) { viewModel.updateRpmBarHeight(it) }
                     ControlSlider("Posição Y", uiState.profile.rpmBarY, 0f, 400f) { viewModel.updateRpmBarY(it) }
@@ -333,6 +337,7 @@ fun VisualSettingsScreen(
                     ArchedRpmGauge(
                         currentRpm = simRpm,
                         isShiftLightMode = uiState.profile.isShiftLightMode,
+                        isGlowEnabled = uiState.profile.isRpmGlowEnabled,
                         curvature = uiState.profile.rpmBarCurvature,
                         barWidth = uiState.profile.rpmBarWidth * previewScale.avgScale,
                         barHeight = uiState.profile.rpmBarHeight * previewScale.avgScale,

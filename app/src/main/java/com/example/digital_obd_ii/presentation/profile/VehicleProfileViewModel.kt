@@ -132,6 +132,10 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(isShiftLightMode = value)) }
     }
 
+    fun updateIsRpmGlowEnabled(value: Boolean) {
+        _uiState.update { it.copy(profile = it.profile.copy(isRpmGlowEnabled = value)) }
+    }
+
     fun updateRpmBarCurvature(value: Float) {
         _uiState.update { it.copy(profile = it.profile.copy(rpmBarCurvature = value)) }
     }

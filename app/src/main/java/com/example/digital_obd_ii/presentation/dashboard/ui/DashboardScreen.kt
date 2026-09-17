@@ -121,6 +121,7 @@ fun DashboardScreen(
         ArchedRpmGauge(
             currentRpm = animatedRpm.toFloat(),
             isShiftLightMode = uiState.profile.isShiftLightMode,
+            isGlowEnabled = uiState.profile.isRpmGlowEnabled, // NOVO v2.4.0
             curvature = uiState.profile.rpmBarCurvature,
             barWidth = uiState.profile.rpmBarWidth * screenScale.avgScale,
             barHeight = uiState.profile.rpmBarHeight * screenScale.avgScale,

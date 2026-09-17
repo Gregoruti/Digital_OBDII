@@ -203,13 +203,23 @@ fun SevenSegmentText(
     }
 }
 
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.asAndroidRect
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import android.graphics.Paint
+import android.graphics.BlurMaskFilter
+import androidx.compose.ui.graphics.toArgb
+
 /**
- * Gauge de RPM Dinâmico v3
+ * Gauge de RPM Dinâmico v3.1
+ * v2.4.0 - Adicionado suporte a Efeito Glow (Brilho Neon).
  */
 @Composable
 fun ArchedRpmGauge(
     currentRpm: Float,
     isShiftLightMode: Boolean = false,
+    isGlowEnabled: Boolean = true, // NOVO v2.4.0
     curvature: Float = 30f,
     barWidth: Float = 22f,
     barHeight: Float = 40f,
@@ -278,9 +288,38 @@ fun ArchedRpmGauge(
                 val x2 = cx + (outerR * cos(angle))
                 val y2 = cy + (outerR * sin(angle))
 
+                // Efeito Glow (v2.4.0)
+                if (isGlowEnabled && isActive) {
+                    drawIntoCanvas { canvas ->
+                        val paint = Paint().apply {
+                            isAntiAlias = true
+                            this.color = color.toArgb()
+                            strokeWidth = barWidth * 1.5f
+                            strokeCap = Paint.Cap.BUTT
+                            maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
+                        }
+                        canvas.nativeCanvas.drawLine(x1, y1, x2, y2, paint)
+                    }
+                }
+
                 drawLine(color = color, start = Offset(x1, y1), end = Offset(x2, y2), strokeWidth = barWidth, cap = StrokeCap.Butt)
             } else {
                 val x = startOffsetX + (drawingWidth * fraction)
+                
+                // Efeito Glow (v2.4.0)
+                if (isGlowEnabled && isActive) {
+                    drawIntoCanvas { canvas ->
+                        val paint = Paint().apply {
+                            isAntiAlias = true
+                            this.color = color.toArgb()
+                            strokeWidth = barWidth * 1.5f
+                            strokeCap = Paint.Cap.BUTT
+                            maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
+                        }
+                        canvas.nativeCanvas.drawLine(x, 0f, x, barHeight, paint)
+                    }
+                }
+
                 drawLine(color = color, start = Offset(x, 0f), end = Offset(x, barHeight), strokeWidth = barWidth, cap = StrokeCap.Butt)
             }
         }

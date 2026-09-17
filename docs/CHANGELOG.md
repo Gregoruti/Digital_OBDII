@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.4.0] - 2026-09-08
+### Adicionado
+- **Efeito Glow (Brilho Neon)**: Nova opção no menu de personalização para ativar/desativar o brilho nas barras de RPM.
+- **Renderização Nativa**: Implementação de `BlurMaskFilter` via `NativeCanvas` para um efeito de glow suave e performático.
+
 ## [2.3.1] - 2026-09-08
 ### Documentação
 - **Cabeçalhos de Arquivo**: Adicionada documentação técnica no topo dos arquivos críticos (`VehicleProfile`, `VehicleProfileViewModel`, `VisualSettingsScreen`, `DashboardScreen`) detalhando objetivos, correlações e histórico.
