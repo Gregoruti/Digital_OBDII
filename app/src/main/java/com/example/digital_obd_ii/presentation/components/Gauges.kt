@@ -19,6 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
+import android.graphics.Paint
+import android.graphics.BlurMaskFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.digital_obd_ii.domain.usecase.GearAction
@@ -202,14 +206,6 @@ fun SevenSegmentText(
         }
     }
 }
-
-import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.asAndroidRect
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import android.graphics.Paint
-import android.graphics.BlurMaskFilter
-import androidx.compose.ui.graphics.toArgb
 
 /**
  * Gauge de RPM Dinâmico v3.1
