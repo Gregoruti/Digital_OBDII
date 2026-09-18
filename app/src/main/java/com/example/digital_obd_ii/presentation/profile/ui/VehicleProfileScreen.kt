@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.digital_obd_ii.domain.model.FuelType
+import com.example.digital_obd_ii.domain.model.DevicePreset
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.presentation.components.VersionBadge
 import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
@@ -97,6 +98,29 @@ fun VehicleProfileScreen(
                 FuelTypeSelector(
                     selectedType = uiState.profile.fuelType,
                     onTypeSelected = { viewModel.updateFuelType(it) }
+                )
+            }
+
+            item {
+                Text("Modo de Dispositivo", style = MaterialTheme.typography.titleMedium)
+                Column {
+                    DevicePreset.values().forEach { preset ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            RadioButton(
+                                selected = (uiState.profile.devicePreset == preset),
+                                onClick = { viewModel.updateDevicePreset(preset) }
+                            )
+                            Text(text = preset.label, modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+                Text(
+                    "O layout dos indicadores será salvo individualmente para cada modo.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

@@ -127,6 +127,10 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(digitThickness = value)) }
     }
 
+    fun updateDevicePreset(preset: com.example.digital_obd_ii.domain.model.DevicePreset) {
+        _uiState.update { it.copy(profile = it.profile.copy(devicePreset = preset)) }
+    }
+
     fun updateBackground(path: String?, isCustom: Boolean = false) {
         _uiState.update { it.copy(profile = it.profile.copy(backgroundPath = path, isCustomBackground = isCustom)) }
     }

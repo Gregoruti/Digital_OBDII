@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.0.0] - 2026-09-08
+### Adicionado
+- **Arquitetura Multi-Layout**: Implementação de uma matriz de configuração que permite salvar 20 layouts independentes (10 Backgrounds x 2 Modos de Tela).
+- **Seletor de Modo de Dispositivo**: Nova opção no Perfil do Veículo para alternar entre "Modo Tablet (Grande)" e "Modo Carro (Menor 9\")", cada um com sua própria memória de posicionamento.
+- **Migração Inteligente**: Os dados da v2.7.2 foram preservados e movidos automaticamente para o slot [Background 1 + Tablet].
+
 ## [2.10.1] - 2026-09-08
 ### Documentação
 - **Conformidade v2.10.1**: Revisão final de cabeçalhos técnicos e atualização dos modelos de dados para suportar a customização do Shift Light.

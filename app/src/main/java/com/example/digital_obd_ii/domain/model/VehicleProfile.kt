@@ -5,17 +5,10 @@
  *
  * Histórico:
  * v1.0.0 - Estrutura básica.
- * v1.8.7 - Inclusão de Intervalos de Polling (SPS).
- * v2.3.0 - Adicionado suporte a múltiplos backgrounds nativos e flag isCustomBackground.
- * v2.5.0 - Adicionada configuração de Escala de RPM (maxScaleRpm, isRpmScaleVisible, rpmScaleTextSize).
- * v2.5.1 - Adicionado redlineStartRpm customizável.
- * v2.5.4 - Atualização dos Padrões de Fábrica (Escala 4K, Redline 2500, Blink Branco, RPM Y:300).
- * v2.5.5 - Ajuste de Performance (RPM 50ms, Fuel 50ms) e correção de geometria padrão.
- * v2.5.7 - Consolidação de padrões de fábrica via migração de chaves DataStore.
- * v2.7.0 - Novo Layout de Indicadores (RPM 305, SPEED 255/270, GEARS 770/270).
- * v2.7.1 - Ajuste fino de layout (RPM 435, SPEED 200, VOLTS 755, CLOCK 760, TRIP_DIST 460).
- * v2.7.2 - Consolidação de refinamento de design e conformidade com diretrizes.
+ * v2.5.4 - Atualização dos Padrões de Fábrica.
+ * v2.7.2 - Consolidação de refinamento de design.
  * v2.10.0 - Customização do Shift Light (Modo de Alvo e Sensibilidade).
+ * v3.0.0 - Matriz de Multi-Layout (10 Backgrounds x 2 Presets de Dispositivo).
  *
  * Status: Estável.
  */
@@ -23,18 +16,18 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v2.10.0 - Inclusão de presets de Shift Light.
+ * v3.0.0 - Suporte a Multi-Layout.
  */
 object FactoryDefaults {
     val RPM = ElementConfig(435f, 305f, 0.70f)
-    val SPEED = ElementConfig(200f, 270f, 1.00f)
+    val SPEED = ElementConfig(255f, 270f, 1.00f)
     val TEMP = ElementConfig(220f, 395f, 0.70f)
     val KML = ElementConfig(200f, 502f, 0.70f)
-    val VOLTS = ElementConfig(755f, 395f, 0.70f)
-    val CLOCK = ElementConfig(760f, 502f, 0.70f)
+    val VOLTS = ElementConfig(795f, 395f, 0.70f)
+    val CLOCK = ElementConfig(825f, 502f, 0.70f)
     val GEARS = ElementConfig(770f, 270f, 1.00f)
-    val TRIP_TIME = ElementConfig(475f, 390f, 0.55f)
-    val TRIP_DIST = ElementConfig(485f, 460f, 0.55f)
+    val TRIP_TIME = ElementConfig(485f, 390f, 0.55f)
+    val TRIP_DIST = ElementConfig(485f, 465f, 0.55f)
     val TRIP_FUEL = ElementConfig(485f, 537f, 0.55f)
 
     val ELEMENTS_MAP = mapOf(
@@ -44,19 +37,15 @@ object FactoryDefaults {
         "TRIP_DIST" to TRIP_DIST, "TRIP_FUEL" to TRIP_FUEL
     )
 
-    // PRESETS DE MULTIMIDIA (Escala Reduzida v1.8.8)
-    val MULTIMEDIA_ELEMENTS_MAP = mapOf(
-        "RPM" to RPM.copy(scale = 0.70f),
-        "SPEED" to SPEED.copy(scale = 0.50f),
-        "TEMP" to TEMP.copy(scale = 0.50f),
-        "KML" to KML.copy(scale = 0.50f),
-        "VOLTS" to VOLTS.copy(scale = 0.50f),
-        "CLOCK" to CLOCK.copy(scale = 0.50f),
-        "GEARS" to GEARS.copy(scale = 0.50f),
-        "TRIP_TIME" to TRIP_TIME.copy(scale = 0.40f),
-        "TRIP_DIST" to TRIP_DIST.copy(scale = 0.40f),
-        "TRIP_FUEL" to TRIP_FUEL.copy(scale = 0.40f)
-    )
+    /**
+     * Gera a chave para a matriz de layouts.
+     * @param bgPath Nome do arquivo de background (ex: dashboard_bg_1.jpg)
+     * @param preset Modo de dispositivo (TABLET ou MULTIMEDIA)
+     */
+    fun getLayoutKey(bgPath: String?, preset: DevicePreset): String {
+        val bgId = bgPath?.filter { it.isDigit() }?.ifEmpty { "1" } ?: "1"
+        return "bg${bgId}_${preset.name.lowercase()}"
+    }
 
     // Cores Padrão
     const val COLOR_ACTIVE_BLUE: Long = 0xFF2B35B0
@@ -68,12 +57,12 @@ object FactoryDefaults {
 
     // SPS Padrão (ms)
     val POLLING_INTERVALS = mapOf(
-        "RPM" to 50,     // Alterado v2.5.5 (era 0)
+        "RPM" to 50,
         "SPEED" to 50,
         "MAF" to 50,
         "VOLTS" to 500,
         "TEMP" to 1000,
-        "FUEL_RATE" to 50 // Alterado v2.5.5 (era 500)
+        "FUEL_RATE" to 50
     )
 }
 
@@ -99,8 +88,12 @@ data class VehicleProfile(
     
     val backgroundPath: String? = "dashboard_bg_1.jpg",
     val isCustomBackground: Boolean = false,
+    val devicePreset: DevicePreset = DevicePreset.TABLET,
     
-    // Mapa de Elementos
+    // MATRIZ DE LAYOUTS (v3.0.0)
+    val multiLayouts: Map<String, Map<String, ElementConfig>> = emptyMap(),
+
+    // Elementos Ativos (Helper)
     val elements: Map<String, ElementConfig> = FactoryDefaults.ELEMENTS_MAP,
 
     // Barra de RPM
@@ -125,12 +118,12 @@ data class VehicleProfile(
 
     // SHIFT LIGHT CUSTOM v2.10.0
     val shiftLightTargetMode: ShiftLightTargetMode = ShiftLightTargetMode.ECONOMIC,
-    val shiftLightSensitivity: Float = 0.85f, // 85% padrão
+    val shiftLightSensitivity: Float = 0.85f,
 
-    // TAXA DE ATUALIZAÇÃO (v1.8.7)
+    // TAXA DE ATUALIZAÇÃO
     val pollingIntervals: Map<String, Int> = FactoryDefaults.POLLING_INTERVALS,
     
-    // PERSISTÊNCIA BT (v1.8.6)
+    // PERSISTÊNCIA BT
     val lastConnectedDeviceAddress: String? = null
 )
 

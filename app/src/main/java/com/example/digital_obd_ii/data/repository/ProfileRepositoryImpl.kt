@@ -1,42 +1,23 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.10.0
+ * REPOSITORY: ProfileRepositoryImpl v3.0.0
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
- * utilizando Jetpack DataStore (Preferences).
+ * utilizando Jetpack DataStore (Preferences). Suporta matriz de 20 layouts.
  *
  * HISTÓRICO:
+ * v3.0.0 - MATRIZ DE LAYOUTS: Implementada persistência para 10 backgrounds x 2 presets.
  * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
- * v2.7.2 - Documentação e versionamento final do layout refinado.
- * v2.7.1 - AJUSTE FINO DE LAYOUT: Alterada chave ELEMENTS_CONFIG para _v12 para forçar
- *          o novo posicionamento de indicadores v2.7.1.
- * v2.7.0 - MIGRAÇÃO DE LAYOUT: Alterada chave ELEMENTS_CONFIG para _v11 para forçar
- *          o novo posicionamento de indicadores em todos os dispositivos.
- * v2.5.7 - Estabilização da migração de chaves v2 e verificação de integridade dos padrões.
- * v2.5.6 - MIGRAÇÃO DE CHAVES (Nuclear Option): Alteradas chaves de geometria para _v2 
- *          para forçar o carregamento dos novos padrões de fábrica em todos os dispositivos.
- * v2.5.4 - Sincronização rigorosa dos fallbacks de persistência com os novos padrões v2.5.4.
- * v2.5.3 - Revisão de persistência para as novas escalas e redline.
- * v2.5.1 - Adição de persistência para redlineStartRpm e maxRpmScale.
- * v2.3.0 - Suporte a múltiplos backgrounds e toggle custom/nativo.
- * v1.9.1 - Inclusão de parâmetros de performance (polling rates e blink interval).
- * v1.8.1 - Implementação de Factory Defaults para reset de fábrica.
- *
- * CORRELAÇÕES:
- * - Consome: Jetpack DataStore
- * - Provê: VehicleProfile para todo o app.
+ * v2.7.1 - Ajuste fino de layout v2.
  */
 
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.digital_obd_ii.domain.model.ElementConfig
-import com.example.digital_obd_ii.domain.model.FuelType
-import com.example.digital_obd_ii.domain.model.VehicleProfile
-import com.example.digital_obd_ii.domain.model.FactoryDefaults
+import com.example.digital_obd_ii.domain.model.*
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -69,35 +50,34 @@ class ProfileRepositoryImpl @Inject constructor(
         val DIGIT_SKEW = floatPreferencesKey("digit_skew")
         
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
-        val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v12") // v2.7.1 Force Migration
+        val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v12")
+        val DEVICE_PRESET = stringPreferencesKey("device_preset")
+        val MULTI_LAYOUTS = stringPreferencesKey("multi_layouts_v3")
 
-        val IS_SHIFT_LIGHT = booleanPreferencesKey("is_shift_light_v2")
-        val RPM_CURVATURE = floatPreferencesKey("rpm_curvature_v2")
-        val RPM_BAR_WIDTH = floatPreferencesKey("rpm_bar_width_v2")
-        val RPM_BAR_HEIGHT = floatPreferencesKey("rpm_bar_height_v2")
-        val RPM_BAR_Y = floatPreferencesKey("rpm_bar_y_v2")
+        val IS_SHIFT_LIGHT_V2 = booleanPreferencesKey("is_shift_light_v2")
+        val RPM_CURVATURE_V2 = floatPreferencesKey("rpm_curvature_v2")
+        val RPM_BAR_WIDTH_V2 = floatPreferencesKey("rpm_bar_width_v2")
+        val RPM_BAR_HEIGHT_V2 = floatPreferencesKey("rpm_bar_height_v2")
+        val RPM_BAR_Y_V2 = floatPreferencesKey("rpm_bar_y_v2")
         
-        val COLOR_ACTIVE_BLUE = longPreferencesKey("color_active_blue_v2")
-        val COLOR_DIMMED_BLUE = longPreferencesKey("color_dimmed_blue_v2")
-        val COLOR_ACTIVE_RED = longPreferencesKey("color_active_red_v2")
-        val COLOR_DIMMED_RED = longPreferencesKey("color_dimmed_red_v2")
-        val COLOR_BLINK_ACTIVE = longPreferencesKey("color_blink_active_v2")
-        val COLOR_BLINK_DIMMED = longPreferencesKey("color_blink_dimmed_v2")
+        val COLOR_ACTIVE_BLUE_V2 = longPreferencesKey("color_active_blue_v2")
+        val COLOR_DIMMED_BLUE_V2 = longPreferencesKey("color_dimmed_blue_v2")
+        val COLOR_ACTIVE_RED_V2 = longPreferencesKey("color_active_red_v2")
+        val COLOR_DIMMED_RED_V2 = longPreferencesKey("color_dimmed_red_v2")
+        val COLOR_BLINK_ACTIVE_V2 = longPreferencesKey("color_blink_active_v2")
+        val COLOR_BLINK_DIMMED_V2 = longPreferencesKey("color_blink_dimmed_v2")
 
-        // NOVOS v2.5.1
-        val IS_CUSTOM_BG = booleanPreferencesKey("is_custom_bg_v2")
-        val MAX_RPM_SCALE = intPreferencesKey("max_rpm_scale_v2")
-        val IS_RPM_SCALE_VISIBLE = booleanPreferencesKey("is_rpm_scale_visible_v2")
-        val RPM_SCALE_TEXT_SIZE = floatPreferencesKey("rpm_scale_text_size_v2")
-        val REDLINE_START_RPM = intPreferencesKey("redline_start_rpm_v2")
-        val IS_GLOW_ENABLED = booleanPreferencesKey("is_glow_enabled_v2")
-        val SHIFT_LIGHT_BLINK_MS = intPreferencesKey("shift_light_blink_ms_v2")
+        val IS_CUSTOM_BG_V2 = booleanPreferencesKey("is_custom_bg_v2")
+        val MAX_RPM_SCALE_V2 = intPreferencesKey("max_rpm_scale_v2")
+        val IS_RPM_SCALE_VISIBLE_V2 = booleanPreferencesKey("is_rpm_scale_visible_v2")
+        val RPM_SCALE_TEXT_SIZE_V2 = floatPreferencesKey("rpm_scale_text_size_v2")
+        val REDLINE_START_RPM_V2 = intPreferencesKey("redline_start_rpm_v2")
+        val IS_GLOW_ENABLED_V2 = booleanPreferencesKey("is_glow_enabled_v2")
+        val SHIFT_LIGHT_BLINK_MS_V2 = intPreferencesKey("shift_light_blink_ms_v2")
 
-        // SPS (v1.8.7)
         val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")
         val LAST_BT_ADDRESS = stringPreferencesKey("last_bt_address")
 
-        // SHIFT LIGHT v2.10.0
         val SHIFT_LIGHT_TARGET_MODE = stringPreferencesKey("shift_light_target_mode")
         val SHIFT_LIGHT_SENSITIVITY = floatPreferencesKey("shift_light_sensitivity")
     }
@@ -113,10 +93,23 @@ class ProfileRepositoryImpl @Inject constructor(
 
     private fun mapProfile(preferences: Preferences): VehicleProfile {
         val elementsStr = preferences[PreferencesKeys.ELEMENTS_CONFIG]
-        val elements = if (elementsStr != null) deserializeElements(elementsStr) else FactoryDefaults.ELEMENTS_MAP
+        val legacyElements = if (elementsStr != null) deserializeElements(elementsStr) else FactoryDefaults.ELEMENTS_MAP
+
+        val multiLayoutsStr = preferences[PreferencesKeys.MULTI_LAYOUTS]
+        val multiLayouts = if (multiLayoutsStr != null) deserializeMultiLayouts(multiLayoutsStr) else emptyMap<String, Map<String, ElementConfig>>()
 
         val spsStr = preferences[PreferencesKeys.POLLING_INTERVALS]
         val sps = if (spsStr != null) deserializeSps(spsStr) else FactoryDefaults.POLLING_INTERVALS
+
+        val bgPath = preferences[PreferencesKeys.BACKGROUND_PATH] ?: "dashboard_bg_1.jpg"
+        val preset = try { 
+            DevicePreset.valueOf(
+                preferences[PreferencesKeys.DEVICE_PRESET] ?: DevicePreset.TABLET.name
+            ) 
+        } catch (e: Exception) { DevicePreset.TABLET }
+
+        val currentKey = FactoryDefaults.getLayoutKey(bgPath, preset)
+        val activeElements = multiLayouts[currentKey] ?: if (bgPath.contains("bg_1") && preset == DevicePreset.TABLET) legacyElements else FactoryDefaults.ELEMENTS_MAP
 
         return VehicleProfile(
             name = preferences[PreferencesKeys.NAME] ?: "Honda Civic 1.8 2011",
@@ -133,34 +126,36 @@ class ProfileRepositoryImpl @Inject constructor(
             digitHeight = preferences[PreferencesKeys.DIGIT_HEIGHT] ?: 110f,
             digitThickness = preferences[PreferencesKeys.DIGIT_THICKNESS] ?: 14f,
             digitSkew = preferences[PreferencesKeys.DIGIT_SKEW] ?: -12f,
-            backgroundPath = preferences[PreferencesKeys.BACKGROUND_PATH],
-            isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG] ?: false,
-            elements = elements,
+            backgroundPath = bgPath,
+            isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG_V2] ?: false,
+            devicePreset = preset,
+            multiLayouts = multiLayouts,
+            elements = activeElements,
 
-            isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT] ?: true,
-            isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED] ?: true,
-            maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE] ?: 4000,
-            isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE] ?: true,
-            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] ?: 30f,
-            redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM] ?: 2500,
-            rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE] ?: 35f,
-            rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT] ?: 57f,
-            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y] ?: 110.4f,
-            shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS] ?: 100,
+            isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] ?: true,
+            isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] ?: true,
+            maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE_V2] ?: 4000,
+            isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] ?: true,
+            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] ?: 30f,
+            redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
+            rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
+            rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 57f,
+            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 110.4f,
+            shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
             
-            colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,
-            colorDimmedBlue = preferences[PreferencesKeys.COLOR_DIMMED_BLUE] ?: FactoryDefaults.COLOR_DIMMED_BLUE,
-            colorActiveRed = preferences[PreferencesKeys.COLOR_ACTIVE_RED] ?: FactoryDefaults.COLOR_ACTIVE_RED,
-            colorDimmedRed = preferences[PreferencesKeys.COLOR_DIMMED_RED] ?: FactoryDefaults.COLOR_DIMMED_RED,
-            colorBlinkActive = preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] ?: FactoryDefaults.COLOR_BLINK_ON,
-            colorBlinkDimmed = preferences[PreferencesKeys.COLOR_BLINK_DIMMED] ?: FactoryDefaults.COLOR_BLINK_OFF,
+            colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE_V2] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,
+            colorDimmedBlue = preferences[PreferencesKeys.COLOR_DIMMED_BLUE_V2] ?: FactoryDefaults.COLOR_DIMMED_BLUE,
+            colorActiveRed = preferences[PreferencesKeys.COLOR_ACTIVE_RED_V2] ?: FactoryDefaults.COLOR_ACTIVE_RED,
+            colorDimmedRed = preferences[PreferencesKeys.COLOR_DIMMED_RED_V2] ?: FactoryDefaults.COLOR_DIMMED_RED,
+            colorBlinkActive = preferences[PreferencesKeys.COLOR_BLINK_ACTIVE_V2] ?: FactoryDefaults.COLOR_BLINK_ON,
+            colorBlinkDimmed = preferences[PreferencesKeys.COLOR_BLINK_DIMMED_V2] ?: FactoryDefaults.COLOR_BLINK_OFF,
 
             shiftLightTargetMode = try { 
-                com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.valueOf(
-                    preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] ?: com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.ECONOMIC.name
+                ShiftLightTargetMode.valueOf(
+                    preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] ?: ShiftLightTargetMode.ECONOMIC.name
                 )
-            } catch (e: Exception) { com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.ECONOMIC },
+            } catch (e: Exception) { ShiftLightTargetMode.ECONOMIC },
             shiftLightSensitivity = preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] ?: 0.85f,
 
             pollingIntervals = sps,
@@ -186,27 +181,34 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.DIGIT_SKEW] = profile.digitSkew
             
             profile.backgroundPath?.let { preferences[PreferencesKeys.BACKGROUND_PATH] = it } ?: preferences.remove(PreferencesKeys.BACKGROUND_PATH)
-            preferences[PreferencesKeys.IS_CUSTOM_BG] = profile.isCustomBackground
+            preferences[PreferencesKeys.IS_CUSTOM_BG_V2] = profile.isCustomBackground
+            preferences[PreferencesKeys.DEVICE_PRESET] = profile.devicePreset.name
+            
+            val currentKey = FactoryDefaults.getLayoutKey(profile.backgroundPath, profile.devicePreset)
+            val updatedMatrix = profile.multiLayouts.toMutableMap()
+            updatedMatrix[currentKey] = profile.elements
+            preferences[PreferencesKeys.MULTI_LAYOUTS] = serializeMultiLayouts(updatedMatrix)
+
             preferences[PreferencesKeys.ELEMENTS_CONFIG] = serializeElements(profile.elements)
 
-            preferences[PreferencesKeys.IS_SHIFT_LIGHT] = profile.isShiftLightMode
-            preferences[PreferencesKeys.IS_GLOW_ENABLED] = profile.isRpmGlowEnabled
-            preferences[PreferencesKeys.MAX_RPM_SCALE] = profile.maxRpmScale
-            preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE] = profile.isRpmScaleVisible
-            preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] = profile.rpmScaleTextSize
-            preferences[PreferencesKeys.REDLINE_START_RPM] = profile.redlineStartRpm
-            preferences[PreferencesKeys.RPM_CURVATURE] = profile.rpmBarCurvature
-            preferences[PreferencesKeys.RPM_BAR_WIDTH] = profile.rpmBarWidth
-            preferences[PreferencesKeys.RPM_BAR_HEIGHT] = profile.rpmBarHeight
-            preferences[PreferencesKeys.RPM_BAR_Y] = profile.rpmBarY
-            preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS] = profile.shiftLightBlinkMs
+            preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] = profile.isShiftLightMode
+            preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] = profile.isRpmGlowEnabled
+            preferences[PreferencesKeys.MAX_RPM_SCALE_V2] = profile.maxRpmScale
+            preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] = profile.isRpmScaleVisible
+            preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] = profile.rpmScaleTextSize
+            preferences[PreferencesKeys.REDLINE_START_RPM_V2] = profile.redlineStartRpm
+            preferences[PreferencesKeys.RPM_CURVATURE_V2] = profile.rpmBarCurvature
+            preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] = profile.rpmBarWidth
+            preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] = profile.rpmBarHeight
+            preferences[PreferencesKeys.RPM_BAR_Y_V2] = profile.rpmBarY
+            preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] = profile.shiftLightBlinkMs
             
-            preferences[PreferencesKeys.COLOR_ACTIVE_BLUE] = profile.colorActiveBlue
-            preferences[PreferencesKeys.COLOR_DIMMED_BLUE] = profile.colorDimmedBlue
-            preferences[PreferencesKeys.COLOR_ACTIVE_RED] = profile.colorActiveRed
-            preferences[PreferencesKeys.COLOR_DIMMED_RED] = profile.colorDimmedRed
-            preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] = profile.colorBlinkActive
-            preferences[PreferencesKeys.COLOR_BLINK_DIMMED] = profile.colorBlinkDimmed
+            preferences[PreferencesKeys.COLOR_ACTIVE_BLUE_V2] = profile.colorActiveBlue
+            preferences[PreferencesKeys.COLOR_DIMMED_BLUE_V2] = profile.colorDimmedBlue
+            preferences[PreferencesKeys.COLOR_ACTIVE_RED_V2] = profile.colorActiveRed
+            preferences[PreferencesKeys.COLOR_DIMMED_RED_V2] = profile.colorDimmedRed
+            preferences[PreferencesKeys.COLOR_BLINK_ACTIVE_V2] = profile.colorBlinkActive
+            preferences[PreferencesKeys.COLOR_BLINK_DIMMED_V2] = profile.colorBlinkDimmed
 
             preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] = profile.shiftLightTargetMode.name
             preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] = profile.shiftLightSensitivity
@@ -243,6 +245,23 @@ class ProfileRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             FactoryDefaults.POLLING_INTERVALS
+        }
+    }
+
+    private fun serializeMultiLayouts(matrix: Map<String, Map<String, ElementConfig>>): String {
+        return matrix.entries.joinToString("#") { (key, elements) ->
+            "$key@${serializeElements(elements)}"
+        }
+    }
+
+    private fun deserializeMultiLayouts(str: String): Map<String, Map<String, ElementConfig>> {
+        return try {
+            str.split("#").associate { part ->
+                val (key, elementsStr) = part.split("@")
+                key to deserializeElements(elementsStr)
+            }
+        } catch (e: Exception) {
+            emptyMap()
         }
     }
 }
