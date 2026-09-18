@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.2
+ * VIEWMODEL: DashboardViewModel v2.6.3
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
  * v2.6.2 - Forçado início do Watchdog no init e adição de Logs de Diagnóstico (OBD_RESILIENCE).
  * v2.6.1 - Implementação de Watchdog de Re-conexão (tentativa automática a cada 5s se desconectado).
  * v2.6.0 - Implementação de Auto-Conexão Bluetooth (reconexão automática ao abrir o app).
@@ -121,29 +122,50 @@ class DashboardViewModel @Inject constructor(
 
     private fun autoConnect(address: String) {
         // Previne múltiplas tentativas simultâneas
-        if (_uiState.value.connectionState is ConnectionState.Connecting) return
+        if (_uiState.value.connectionState is ConnectionState.Connecting) {
+            android.util.Log.d("OBD_RESILIENCE", "Ignorando autoConnect: Já existe uma tentativa em curso.")
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
+            android.util.Log.i("OBD_RESILIENCE", "🚀 Iniciando tentativa de conexão para: $address")
             
             try {
                 val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-                if (adapter == null || !adapter.isEnabled) {
+                if (adapter == null) {
+                    android.util.Log.e("OBD_RESILIENCE", "❌ Falha: BluetoothAdapter é nulo.")
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                    return@launch
+                }
+                
+                if (!adapter.isEnabled) {
+                    android.util.Log.w("OBD_RESILIENCE", "⚠️ Falha: Bluetooth está desligado no sistema.")
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                    return@launch
+                }
+
+                // Verifica se o endereço é válido
+                if (!android.bluetooth.BluetoothAdapter.checkBluetoothAddress(address)) {
+                    android.util.Log.e("OBD_RESILIENCE", "❌ Falha: Endereço MAC inválido: $address")
                     _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     return@launch
                 }
 
                 val device = adapter.getRemoteDevice(address)
+                android.util.Log.d("OBD_RESILIENCE", "Dispositivo remoto obtido: ${device.name ?: "Sem nome"} ($address)")
+
                 obdRepository.connect(device)
                     .onSuccess {
+                        android.util.Log.i("OBD_RESILIENCE", "✅ Auto-conexão BEM SUCEDIDA para $address")
                         _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
                     }
                     .onFailure { e ->
-                        android.util.Log.e("OBD_AUTOCONNECT", "Falha: ${e.message}")
+                        android.util.Log.e("OBD_RESILIENCE", "❌ Falha na conexão: ${e.message}")
                         _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     }
             } catch (e: Exception) {
-                android.util.Log.e("OBD_AUTOCONNECT", "Erro fatal: ${e.message}")
+                android.util.Log.e("OBD_RESILIENCE", "🔥 Erro fatal no fluxo de auto-conexão: ${e.message}", e)
                 _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
             }
         }

@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.3] - 2026-09-08
+### Adicionado
+- **Solicitação de Permissões em Runtime**: Adicionada lógica na `MainActivity` para solicitar `BLUETOOTH_CONNECT` e `BLUETOOTH_SCAN` em dispositivos Android 12+, corrigindo possível bloqueio silencioso da auto-conexão.
+- **Logs de Depuração Profunda**: Inclusão de rastreamento ultra-detalhado (TAG: `OBD_RESILIENCE`) para capturar falhas exatas no handshake Bluetooth.
+
 ## [2.6.2] - 2026-09-08
 ### Corrigido
 - **Ativação do Watchdog**: Correção na ordem de inicialização do ViewModel, garantindo que o Watchdog e os coletores de perfil iniciem imediatamente no `init`.
