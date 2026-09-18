@@ -14,6 +14,7 @@
  * v2.5.7 - Consolidação de padrões de fábrica via migração de chaves DataStore.
  * v2.7.0 - Novo Layout de Indicadores (RPM 305, SPEED 255/270, GEARS 770/270).
  * v2.7.1 - Ajuste fino de layout (RPM 435, SPEED 200, VOLTS 755, CLOCK 760, TRIP_DIST 460).
+ * v2.7.2 - Consolidação de refinamento de design e conformidade com diretrizes.
  *
  * Status: Estável.
  */

@@ -1,5 +1,9 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.7.2] - 2026-09-08
+### Documentação
+- **Conformidade v2.7.2**: Atualização de cabeçalhos de arquivos e documentação técnica após refinamento de layout.
+
 ## [2.7.1] - 2026-09-08
 ### Alterado
 - **Ajuste Fino de Design**: Refinamento das coordenadas de layout (RPM, Velocidade, Volts e Relógio) para melhor equilíbrio visual.
