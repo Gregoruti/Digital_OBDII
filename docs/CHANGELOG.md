@@ -1,5 +1,13 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.10.0] - 2026-09-08
+### Adicionado
+- **Customização de Shift Light**: Nova seção no Perfil do Veículo permitindo escolher entre o modo Econômico (Honda Style) ou Performance (Início do Redline).
+- **Sensibilidade Ajustável**: Controle deslizante para definir o percentual do alvo (80% a 100%) em que o alerta visual (Blink) deve disparar.
+### Alterado
+- **Regras de Restrição de Alerta**: O Shift Light agora é automaticamente suprimido quando o veículo está em **5ª marcha** ou acima de **100 KM/h**, otimizando a experiência em rodovias.
+- **Arquitetura de Alerta**: Lógica de processamento do Blink movida para o `DashboardViewModel` para maior precisão e desacoplamento da UI.
+
 ## [2.9.0] - 2026-09-08
 ### Alterado
 - **Nova Lógica de Marchas**: Implementação de sistema inteligente para supressão de "N" (Neutro) enquanto o veículo estiver em movimento.

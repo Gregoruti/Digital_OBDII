@@ -175,6 +175,15 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(shiftLightBlinkMs = value)) }
     }
 
+    // SHIFT LIGHT v2.10.0
+    fun updateShiftLightTargetMode(mode: com.example.digital_obd_ii.domain.model.ShiftLightTargetMode) {
+        _uiState.update { it.copy(profile = it.profile.copy(shiftLightTargetMode = mode)) }
+    }
+
+    fun updateShiftLightSensitivity(sensitivity: Float) {
+        _uiState.update { it.copy(profile = it.profile.copy(shiftLightSensitivity = sensitivity)) }
+    }
+
     // PERFORMANCE SPS (v1.8.7)
     fun updatePollingInterval(key: String, ms: Int) {
         _uiState.update { state ->

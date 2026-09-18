@@ -58,6 +58,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentTime = remember { mutableStateOf("") }
     val context = LocalContext.current
+    val isBlinking by viewModel.isBlinking.collectAsState()
 
     // Animações para suavizar os valores digitais (v1.9.1)
     val animatedRpm by animateIntAsState(
@@ -77,15 +78,6 @@ fun DashboardScreen(
             currentTime.value = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()) // v1.8.8: ":" separador oficial
             kotlinx.coroutines.delay(1000)
         }
-    }
-
-    // LÓGICA DE BLINK SHIFT LIGHT (85% do Alvo Econômico Honda)
-    val isBlinking = remember(animatedRpm, uiState.snapshot.idealGear, uiState.profile.isShiftLightMode) {
-        if (!uiState.profile.isShiftLightMode) return@remember false
-        
-        val targets = mapOf(1 to 2700, 2 to 2900, 3 to 2800, 4 to 2900)
-        val target = targets[uiState.snapshot.idealGear] ?: 3000
-        animatedRpm >= (target * 0.85f).toInt()
     }
 
     BoxWithConstraints(

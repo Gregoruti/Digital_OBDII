@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.7.2
+ * REPOSITORY: ProfileRepositoryImpl v2.10.0
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
  * utilizando Jetpack DataStore (Preferences).
  *
  * HISTÓRICO:
+ * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
  * v2.7.2 - Documentação e versionamento final do layout refinado.
  * v2.7.1 - AJUSTE FINO DE LAYOUT: Alterada chave ELEMENTS_CONFIG para _v12 para forçar
  *          o novo posicionamento de indicadores v2.7.1.
@@ -95,6 +96,10 @@ class ProfileRepositoryImpl @Inject constructor(
         // SPS (v1.8.7)
         val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")
         val LAST_BT_ADDRESS = stringPreferencesKey("last_bt_address")
+
+        // SHIFT LIGHT v2.10.0
+        val SHIFT_LIGHT_TARGET_MODE = stringPreferencesKey("shift_light_target_mode")
+        val SHIFT_LIGHT_SENSITIVITY = floatPreferencesKey("shift_light_sensitivity")
     }
 
     override fun getProfile(): Flow<VehicleProfile> = context.dataStore.data.map { preferences ->
@@ -151,6 +156,13 @@ class ProfileRepositoryImpl @Inject constructor(
             colorBlinkActive = preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] ?: FactoryDefaults.COLOR_BLINK_ON,
             colorBlinkDimmed = preferences[PreferencesKeys.COLOR_BLINK_DIMMED] ?: FactoryDefaults.COLOR_BLINK_OFF,
 
+            shiftLightTargetMode = try { 
+                com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.valueOf(
+                    preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] ?: com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.ECONOMIC.name
+                )
+            } catch (e: Exception) { com.example.digital_obd_ii.domain.model.ShiftLightTargetMode.ECONOMIC },
+            shiftLightSensitivity = preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] ?: 0.85f,
+
             pollingIntervals = sps,
             lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS]
         )
@@ -195,6 +207,9 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.COLOR_DIMMED_RED] = profile.colorDimmedRed
             preferences[PreferencesKeys.COLOR_BLINK_ACTIVE] = profile.colorBlinkActive
             preferences[PreferencesKeys.COLOR_BLINK_DIMMED] = profile.colorBlinkDimmed
+
+            preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] = profile.shiftLightTargetMode.name
+            preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] = profile.shiftLightSensitivity
 
             preferences[PreferencesKeys.POLLING_INTERVALS] = serializeSps(profile.pollingIntervals)
             profile.lastConnectedDeviceAddress?.let { preferences[PreferencesKeys.LAST_BT_ADDRESS] = it }

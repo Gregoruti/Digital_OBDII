@@ -1,13 +1,15 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.5
+ * VIEWMODEL: DashboardViewModel v2.10.0
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.10.0 - Lógica de Blink (Shift Light) movida para o ViewModel com novas regras de restrição
+ *           (sem alerta em 5ª marcha ou acima de 100km/h) e customização de alvo.
  * v2.6.5 - Limpeza de debug visual e manutenção de lógica interna de resiliência.
  * v2.6.4 - Atraso no Watchdog (startup delay) e Feedback Visual de Depuração na UI.
  * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
@@ -31,6 +33,8 @@ import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.UpdateTripSummaryUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
+import com.example.digital_obd_ii.domain.model.VehicleProfile
+import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.data.database.dao.TripDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -55,6 +59,10 @@ class DashboardViewModel @Inject constructor(
 
     private var lastTimestamp = System.currentTimeMillis()
     private var watchdogJob: kotlinx.coroutines.Job? = null
+
+    // LÓGICA DE BLINK (v2.10.0)
+    private val _isBlinking = MutableStateFlow(false)
+    val isBlinking: StateFlow<Boolean> = _isBlinking.asStateFlow()
 
     init {
         android.util.Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Iniciando coletores e Watchdog.")
@@ -110,6 +118,9 @@ class DashboardViewModel @Inject constructor(
                         val currentProfile = _uiState.value.profile
                         val gearRec = calculateGear(snapshot.rpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
+                        // v2.10.0: Cálculo do estado de Blink (Shift Light)
+                        updateBlinkState(snapshot.rpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+
                         _uiState.update { state ->
                             state.copy(
                                 snapshot = snapshot,
@@ -121,6 +132,32 @@ class DashboardViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun updateBlinkState(rpm: Int, speed: Int, gear: Int, profile: VehicleProfile) {
+        if (!profile.isShiftLightMode) {
+            _isBlinking.value = false
+            return
+        }
+
+        // Restrição v2.10.0: Sem alerta na 5ª marcha ou acima de 100 km/h
+        if (gear >= 5 || speed > 100) {
+            _isBlinking.value = false
+            return
+        }
+
+        val target = when (profile.shiftLightTargetMode) {
+            ShiftLightTargetMode.ECONOMIC -> {
+                val targets = mapOf(1 to 2700, 2 to 2900, 3 to 2800, 4 to 2900)
+                targets[gear] ?: 3000
+            }
+            ShiftLightTargetMode.PERFORMANCE -> {
+                profile.redlineStartRpm
+            }
+        }
+
+        val threshold = (target * profile.shiftLightSensitivity).toInt()
+        _isBlinking.value = rpm >= threshold
     }
 
     private fun autoConnect(address: String) {

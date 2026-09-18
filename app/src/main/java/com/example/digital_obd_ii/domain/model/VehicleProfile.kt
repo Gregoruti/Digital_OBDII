@@ -15,6 +15,7 @@
  * v2.7.0 - Novo Layout de Indicadores (RPM 305, SPEED 255/270, GEARS 770/270).
  * v2.7.1 - Ajuste fino de layout (RPM 435, SPEED 200, VOLTS 755, CLOCK 760, TRIP_DIST 460).
  * v2.7.2 - Consolidação de refinamento de design e conformidade com diretrizes.
+ * v2.10.0 - Customização do Shift Light (Modo de Alvo e Sensibilidade).
  *
  * Status: Estável.
  */
@@ -22,7 +23,7 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v2.7.1 - Ajuste fino de layout.
+ * v2.10.0 - Inclusão de presets de Shift Light.
  */
 object FactoryDefaults {
     val RPM = ElementConfig(435f, 305f, 0.70f)
@@ -122,6 +123,10 @@ data class VehicleProfile(
     val colorBlinkActive: Long = FactoryDefaults.COLOR_BLINK_ON,
     val colorBlinkDimmed: Long = FactoryDefaults.COLOR_BLINK_OFF,
 
+    // SHIFT LIGHT CUSTOM v2.10.0
+    val shiftLightTargetMode: ShiftLightTargetMode = ShiftLightTargetMode.ECONOMIC,
+    val shiftLightSensitivity: Float = 0.85f, // 85% padrão
+
     // TAXA DE ATUALIZAÇÃO (v1.8.7)
     val pollingIntervals: Map<String, Int> = FactoryDefaults.POLLING_INTERVALS,
     
@@ -144,4 +149,9 @@ enum class FuelType(val label: String, val afr: Double, val density: Double) {
 enum class DevicePreset(val label: String) {
     TABLET("Tablet (Padrão)"),
     MULTIMEDIA("Multimídia (Menor)")
+}
+
+enum class ShiftLightTargetMode(val label: String) {
+    ECONOMIC("Econômico (2.7k - 3k)"),
+    PERFORMANCE("Performance (Início Redline)")
 }

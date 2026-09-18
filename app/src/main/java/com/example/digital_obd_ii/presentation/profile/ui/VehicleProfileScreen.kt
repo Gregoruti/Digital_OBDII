@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.digital_obd_ii.domain.model.FuelType
+import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.presentation.components.VersionBadge
 import com.example.digital_obd_ii.presentation.profile.VehicleProfileViewModel
 
@@ -166,6 +167,47 @@ fun VehicleProfileScreen(
                         modifier = Modifier.width(100.dp)
                     )
                 }
+            }
+
+            item {
+                Divider()
+                Text("Ajustes de Shift Light (Blink)", style = MaterialTheme.typography.titleMedium)
+            }
+
+            item {
+                Text("Modo de Alvo", style = MaterialTheme.typography.bodyMedium)
+                Column {
+                    ShiftLightTargetMode.values().forEach { mode ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            RadioButton(
+                                selected = (uiState.profile.shiftLightTargetMode == mode),
+                                onClick = { viewModel.updateShiftLightTargetMode(mode) }
+                            )
+                            Text(text = mode.label, modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    "Sensibilidade: ${(uiState.profile.shiftLightSensitivity * 100).toInt()}%", 
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Slider(
+                    value = uiState.profile.shiftLightSensitivity,
+                    onValueChange = { viewModel.updateShiftLightSensitivity(it) },
+                    valueRange = 0.80f..1.00f,
+                    steps = 19 // Incrementos de 1%
+                )
+                Text(
+                    "O alerta disparará quando atingir este percentual do alvo de RPM.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             item {
