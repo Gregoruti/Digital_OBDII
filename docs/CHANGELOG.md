@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.10.1] - 2026-09-08
+### Documentação
+- **Conformidade v2.10.1**: Revisão final de cabeçalhos técnicos e atualização dos modelos de dados para suportar a customização do Shift Light.
+- **Checklist de Validação**: Preparação da lista de testes reais em veículo para as novas lógicas de marcha e alertas.
+
 ## [2.10.0] - 2026-09-08
 ### Adicionado
 - **Customização de Shift Light**: Nova seção no Perfil do Veículo permitindo escolher entre o modo Econômico (Honda Style) ou Performance (Início do Redline).
