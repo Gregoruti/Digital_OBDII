@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.7.0] - 2026-09-08
+### Alterado
+- **Novo Layout de Indicadores**: Reestruturação completa das coordenadas e escalas de todos os elementos do Dashboard (RPM, Velocidade, Marchas, Trip, etc) conforme nova tabela de design.
+- **Migração Forçada v2.7.0**: Atualização da chave de persistência de elementos (`elements_config_v11`) para garantir que o novo layout seja aplicado automaticamente no primeiro carregamento desta versão.
+
 ## [2.6.5] - 2026-09-08
 ### Removido
 - **Debug Visual**: Remoção do texto amarelo de monitoramento do Watchdog na UI do Dashboard para limpeza de layout.
