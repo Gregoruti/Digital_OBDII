@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.8.0] - 2026-09-08
+### Alterado
+- **Lógica de Temperatura (TEMP)**: O display agora exibe obrigatoriamente 3 dígitos (ex: 095). O alarme visual (cor vermelha) agora só é ativado acima de **104°C**.
+- **Lógica de Tensão (VOLTS)**: Adicionado alarme visual (cor vermelha) para tensões abaixo de **12.0V**.
+- **Limpeza de UI**: Remoção do ícone de termômetro vermelho em altas temperaturas para um visual mais limpo.
+
 ## [2.7.2] - 2026-09-08
 ### Documentação
 - **Conformidade v2.7.2**: Atualização de cabeçalhos de arquivos e documentação técnica após refinamento de layout.

@@ -3,6 +3,7 @@
  * Objetivo: Tela principal de exibição de dados do veículo em tempo real.
  * 
  * HISTÓRICO:
+ * v2.8.0 - Novas regras para TEMP (3 dígitos, alarme >104C, ícone removido) e VOLTS (alarme <12V).
  * v2.5.3 - Ajuste de compatibilidade com a nova escala de RPM e Redline (proporcional 4K/8K).
  * v2.5.1 - Adicionado suporte ao Redline customizável.
  * v2.5.0 - Implementação visual da Escala de RPM Dinâmica sincronizada.
@@ -183,9 +184,16 @@ fun DashboardScreen(
                 else -> ""
             }
 
-            val pad = when(key) { "RPM" -> 4; "SPEED" -> 3; else -> 0 }
+            val pad = when(key) { 
+                "RPM" -> 4 
+                "SPEED" -> 3 
+                "TEMP" -> 3 // v2.8.0: 3 dígitos para temperatura
+                else -> 0 
+            }
+            
             val color = when {
-                key == "TEMP" && uiState.snapshot.coolantTempC > 100 -> CivicColors.RedMain
+                key == "TEMP" && uiState.snapshot.coolantTempC > 104 -> CivicColors.RedMain // v2.8.0: Limiar 104C
+                key == "VOLTS" && uiState.snapshot.ecuVoltage < 12.0 -> CivicColors.RedMain // v2.8.0: Alarme < 12V
                 else -> CivicColors.White
             }
 
@@ -205,15 +213,6 @@ fun DashboardScreen(
                         activeColor = color,
                         padLength = pad
                     )
-                    
-                    if (key == "TEMP" && uiState.snapshot.coolantTempC > 100) {
-                        Spacer(modifier = Modifier.width(8.dp * screenScale.avgScale))
-                        Icon(
-                            Icons.Default.Thermostat, null, 
-                            tint = CivicColors.RedMain, 
-                            modifier = Modifier.size(24.dp * screenScale.avgScale)
-                        )
-                    }
                 }
             }
         }
