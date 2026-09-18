@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.3
+ * VIEWMODEL: DashboardViewModel v2.6.4
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.4 - Atraso no Watchdog (startup delay) e Feedback Visual de Depuração na UI.
  * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
  * v2.6.2 - Forçado início do Watchdog no init e adição de Logs de Diagnóstico (OBD_RESILIENCE).
  * v2.6.1 - Implementação de Watchdog de Re-conexão (tentativa automática a cada 5s se desconectado).
@@ -63,13 +64,18 @@ class DashboardViewModel @Inject constructor(
     private fun startWatchdog() {
         if (watchdogJob != null) return
         watchdogJob = viewModelScope.launch {
+            // v2.6.4: Aguarda 3 segundos antes do primeiro check para estabilizar Bluetooth/Profile
+            _uiState.update { it.copy(watchdogMessage = "Aguardando inicialização...") }
+            kotlinx.coroutines.delay(3000)
+            
             while (true) {
                 val state = _uiState.value
                 val address = state.profile.lastConnectedDeviceAddress
                 
-                android.util.Log.d("OBD_RESILIENCE", "Watchdog Check: ConnectionState=${state.connectionState::class.simpleName}, Address=$address")
+                val statusMsg = "Watchdog: ${state.connectionState::class.simpleName} | Last: ${address ?: "Nenhum"}"
+                _uiState.update { it.copy(watchdogMessage = statusMsg) }
+                android.util.Log.d("OBD_RESILIENCE", statusMsg)
 
-                // v2.6.1/v2.6.2: Se estiver desconectado e tiver um endereço salvo, tenta conectar
                 if (address != null && state.connectionState is ConnectionState.Disconnected) {
                     android.util.Log.i("OBD_RESILIENCE", "Watchdog disparando auto-conexão para: $address")
                     autoConnect(address)
@@ -122,51 +128,32 @@ class DashboardViewModel @Inject constructor(
 
     private fun autoConnect(address: String) {
         // Previne múltiplas tentativas simultâneas
-        if (_uiState.value.connectionState is ConnectionState.Connecting) {
-            android.util.Log.d("OBD_RESILIENCE", "Ignorando autoConnect: Já existe uma tentativa em curso.")
-            return
-        }
+        if (_uiState.value.connectionState is ConnectionState.Connecting) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
+            _uiState.update { it.copy(connectionState = ConnectionState.Connecting, watchdogMessage = "Tentando conectar...") }
             android.util.Log.i("OBD_RESILIENCE", "🚀 Iniciando tentativa de conexão para: $address")
             
             try {
                 val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-                if (adapter == null) {
-                    android.util.Log.e("OBD_RESILIENCE", "❌ Falha: BluetoothAdapter é nulo.")
-                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
-                    return@launch
-                }
-                
-                if (!adapter.isEnabled) {
-                    android.util.Log.w("OBD_RESILIENCE", "⚠️ Falha: Bluetooth está desligado no sistema.")
-                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
-                    return@launch
-                }
-
-                // Verifica se o endereço é válido
-                if (!android.bluetooth.BluetoothAdapter.checkBluetoothAddress(address)) {
-                    android.util.Log.e("OBD_RESILIENCE", "❌ Falha: Endereço MAC inválido: $address")
-                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                if (adapter == null || !adapter.isEnabled) {
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "BT Desligado") }
                     return@launch
                 }
 
                 val device = adapter.getRemoteDevice(address)
-                android.util.Log.d("OBD_RESILIENCE", "Dispositivo remoto obtido: ${device.name ?: "Sem nome"} ($address)")
-
                 obdRepository.connect(device)
                     .onSuccess {
-                        android.util.Log.i("OBD_RESILIENCE", "✅ Auto-conexão BEM SUCEDIDA para $address")
-                        _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
+                        android.util.Log.i("OBD_RESILIENCE", "✅ Auto-conexão BEM SUCEDIDA")
+                        _uiState.update { it.copy(connectionState = ConnectionState.Connected, watchdogMessage = "Conectado!") }
                     }
                     .onFailure { e ->
-                        android.util.Log.e("OBD_RESILIENCE", "❌ Falha na conexão: ${e.message}")
-                        _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                        android.util.Log.e("OBD_RESILIENCE", "❌ Falha: ${e.message}")
+                        _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "Falha: ${e.message}") }
                     }
             } catch (e: Exception) {
-                android.util.Log.e("OBD_RESILIENCE", "🔥 Erro fatal no fluxo de auto-conexão: ${e.message}", e)
-                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                android.util.Log.e("OBD_RESILIENCE", "🔥 Erro fatal: ${e.message}")
+                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "Erro: ${e.message}") }
             }
         }
     }

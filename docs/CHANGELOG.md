@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.4] - 2026-09-08
+### Adicionado
+- **Feedback Visual de Resiliência**: Inclusão de um log visual amarelo no canto inferior do Dashboard para monitorar o status do Watchdog em tempo real.
+- **Atraso de Inicialização (Startup Delay)**: O Watchdog agora aguarda 3 segundos antes da primeira tentativa de conexão, garantindo a estabilidade dos serviços de Bluetooth e Perfil.
+
 ## [2.6.3] - 2026-09-08
 ### Adicionado
 - **Solicitação de Permissões em Runtime**: Adicionada lógica na `MainActivity` para solicitar `BLUETOOTH_CONNECT` e `BLUETOOTH_SCAN` em dispositivos Android 12+, corrigindo possível bloqueio silencioso da auto-conexão.
