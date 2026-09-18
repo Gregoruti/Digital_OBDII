@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.9.0] - 2026-09-08
+### Alterado
+- **Nova Lógica de Marchas**: Implementação de sistema inteligente para supressão de "N" (Neutro) enquanto o veículo estiver em movimento.
+- **Detecção de Saída**: O indicador agora exibe automaticamente a marcha "1" quando o veículo está parado mas o acelerador é acionado (>5%), preparando o condutor para a arrancada.
+- **Persistência de Estado**: Durante trocas de marcha ou uso da embreagem em movimento, o display agora mantém a última marcha detectada em vez de alternar para "N".
+
 ## [2.8.0] - 2026-09-08
 ### Alterado
 - **Lógica de Temperatura (TEMP)**: O display agora exibe obrigatoriamente 3 dígitos (ex: 095). O alarme visual (cor vermelha) agora só é ativado acima de **104°C**.
