@@ -6,6 +6,7 @@
  * Histórico:
  * v2.3.0 - Adicionado carrossel de backgrounds nativos (dashboard_bg_X.jpg).
  * v2.5.0 - Adicionados controles para Escala de RPM Dinâmica.
+ * v2.5.1 - Adicionado controle de Início de Redline (RPM).
  * v1.8.5 - Introdução de simulador de condução e cores hexadecimais.
  *
  * Status: Refatorado para galeria de assets.
@@ -259,6 +260,7 @@ fun VisualSettingsScreen(
                                 )
                             }
                         }
+                        ControlSlider("Início Redline (RPM)", uiState.profile.redlineStartRpm.toFloat(), 1000f, 8000f) { viewModel.updateRedlineStartRpm(it.toInt()) }
                         ControlSlider("Tamanho do Texto", uiState.profile.rpmScaleTextSize, 8f, 30f) { viewModel.updateRpmScaleTextSize(it) }
                     }
 
@@ -371,6 +373,7 @@ fun VisualSettingsScreen(
                         isScaleVisible = uiState.profile.isRpmScaleVisible,
                         maxScaleRpm = uiState.profile.maxRpmScale,
                         scaleTextSize = uiState.profile.rpmScaleTextSize,
+                        redlineStartRpm = uiState.profile.redlineStartRpm,
                         curvature = uiState.profile.rpmBarCurvature,
                         barWidth = uiState.profile.rpmBarWidth * previewScale.avgScale,
                         barHeight = uiState.profile.rpmBarHeight * previewScale.avgScale,

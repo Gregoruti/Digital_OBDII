@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.1] - 2026-09-08
+### Corrigido
+- **Persistência de Escala**: Correção na persistência dos dados de escala (4K/8K e tamanho de texto) no DataStore, garantindo que as configurações não sejam perdidas ao retornar ao Dashboard.
+### Adicionado
+- **Redline Customizável**: Novo ajuste no menu de personalização para definir o ponto de início da zona vermelha (redline) na barra de RPM.
+
 ## [2.5.0] - 2026-09-08
 ### Adicionado
 - **Escala de RPM Dinâmica**: Nova funcionalidade para exibir uma escala numérica (0-4 ou 0-8) abaixo das barras de RPM.

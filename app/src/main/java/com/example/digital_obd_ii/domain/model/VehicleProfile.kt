@@ -8,6 +8,7 @@
  * v1.8.7 - Inclusão de Intervalos de Polling (SPS).
  * v2.3.0 - Adicionado suporte a múltiplos backgrounds nativos e flag isCustomBackground.
  * v2.5.0 - Adicionada configuração de Escala de RPM (maxScaleRpm, isRpmScaleVisible, rpmScaleTextSize).
+ * v2.5.1 - Adicionado redlineStartRpm customizável.
  *
  * Status: Estável.
  */
@@ -98,9 +99,10 @@ data class VehicleProfile(
     // Barra de RPM
     val isShiftLightMode: Boolean = false,
     val isRpmGlowEnabled: Boolean = true,
-    val maxRpmScale: Int = 8000, // NOVO v2.5.0 (4000 ou 8000)
-    val isRpmScaleVisible: Boolean = true, // NOVO v2.5.0
-    val rpmScaleTextSize: Float = 14f, // NOVO v2.5.0
+    val maxRpmScale: Int = 8000, 
+    val isRpmScaleVisible: Boolean = true,
+    val rpmScaleTextSize: Float = 14f, 
+    val redlineStartRpm: Int = 7000, // NOVO v2.5.1
     val rpmBarCurvature: Float = 30f,
     val rpmBarWidth: Float = 22f,
     val rpmBarHeight: Float = 40f,

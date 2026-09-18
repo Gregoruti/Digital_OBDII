@@ -220,6 +220,7 @@ fun ArchedRpmGauge(
     isScaleVisible: Boolean = true, // NOVO v2.5.0
     maxScaleRpm: Int = 8000,       // NOVO v2.5.0
     scaleTextSize: Float = 14f,    // NOVO v2.5.0
+    redlineStartRpm: Int = 7000,   // NOVO v2.5.1
     curvature: Float = 30f,
     barWidth: Float = 22f,
     barHeight: Float = 40f,
@@ -253,7 +254,7 @@ fun ArchedRpmGauge(
         val totalBlocks = 44
         // Ajuste dinâmico do teto de RPM conforme a escala ou modo shift light
         val maxRpm = if (isShiftLightMode) 3200f else maxScaleRpm.toFloat()
-        val redlineStart = if (isShiftLightMode) 2500f else (maxRpm * 0.875f) // v2.5.0: Redline proporcional se for 4k ou 8k
+        val redlineStart = if (isShiftLightMode) 2500f else redlineStartRpm.toFloat() // v2.5.1: Redline customizável
         val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
 
         val marginPercent = if (curvature <= 0) 0.15f else 0f

@@ -6,6 +6,7 @@
  * Histórico:
  * v2.3.0 - Carregamento dinâmico de backgrounds (assets ou customizados).
  * v2.5.0 - Implementação visual da Escala de RPM Dinâmica sincronizada.
+ * v2.5.1 - Adicionado suporte ao Redline customizável.
  * v1.9.1 - Adicionado Motor de Fluidez (Interpolação de RPM/Velocidade).
  * v1.8.6 - Inclusão de botão de configurações invisível.
  *
@@ -126,6 +127,7 @@ fun DashboardScreen(
             isScaleVisible = uiState.profile.isRpmScaleVisible,
             maxScaleRpm = uiState.profile.maxRpmScale,
             scaleTextSize = uiState.profile.rpmScaleTextSize,
+            redlineStartRpm = uiState.profile.redlineStartRpm,
             curvature = uiState.profile.rpmBarCurvature,
             barWidth = uiState.profile.rpmBarWidth * screenScale.avgScale,
             barHeight = uiState.profile.rpmBarHeight * screenScale.avgScale,

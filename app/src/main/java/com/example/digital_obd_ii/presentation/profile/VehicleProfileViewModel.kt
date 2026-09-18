@@ -6,6 +6,7 @@
  * Histórico:
  * v2.3.0 - Implementada lógica de troca de backgrounds nativos e gerenciamento de flags de customização.
  * v2.5.0 - Adicionada gestão de estado para a nova Escala de RPM Dinâmica.
+ * v2.5.1 - Adicionada função updateRedlineStartRpm.
  * v1.9.3 - Adicionado suporte a Benchmark e logs de diagnóstico.
  *
  * Status: Operacional.
@@ -147,6 +148,10 @@ class VehicleProfileViewModel @Inject constructor(
 
     fun updateRpmScaleTextSize(value: Float) {
         _uiState.update { it.copy(profile = it.profile.copy(rpmScaleTextSize = value)) }
+    }
+
+    fun updateRedlineStartRpm(value: Int) {
+        _uiState.update { it.copy(profile = it.profile.copy(redlineStartRpm = value)) }
     }
 
     fun updateRpmBarCurvature(value: Float) {

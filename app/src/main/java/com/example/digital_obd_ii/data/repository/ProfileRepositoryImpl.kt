@@ -55,6 +55,15 @@ class ProfileRepositoryImpl @Inject constructor(
         val COLOR_BLINK_ACTIVE = longPreferencesKey("color_blink_active")
         val COLOR_BLINK_DIMMED = longPreferencesKey("color_blink_dimmed")
 
+        // NOVOS v2.5.1
+        val IS_CUSTOM_BG = booleanPreferencesKey("is_custom_bg")
+        val MAX_RPM_SCALE = intPreferencesKey("max_rpm_scale")
+        val IS_RPM_SCALE_VISIBLE = booleanPreferencesKey("is_rpm_scale_visible")
+        val RPM_SCALE_TEXT_SIZE = floatPreferencesKey("rpm_scale_text_size")
+        val REDLINE_START_RPM = intPreferencesKey("redline_start_rpm")
+        val IS_GLOW_ENABLED = booleanPreferencesKey("is_glow_enabled")
+        val SHIFT_LIGHT_BLINK_MS = intPreferencesKey("shift_light_blink_ms")
+
         // SPS (v1.8.7)
         val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")
         val LAST_BT_ADDRESS = stringPreferencesKey("last_bt_address")
@@ -92,13 +101,20 @@ class ProfileRepositoryImpl @Inject constructor(
             digitThickness = preferences[PreferencesKeys.DIGIT_THICKNESS] ?: 14f,
             digitSkew = preferences[PreferencesKeys.DIGIT_SKEW] ?: -12f,
             backgroundPath = preferences[PreferencesKeys.BACKGROUND_PATH],
+            isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG] ?: false,
             elements = elements,
 
             isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT] ?: false,
+            isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED] ?: true,
+            maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE] ?: 8000,
+            isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE] ?: true,
+            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] ?: 14f,
+            redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM] ?: 7000,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE] ?: 30f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH] ?: 22f,
             rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT] ?: 40f,
             rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y] ?: 100f,
+            shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS] ?: 100,
             
             colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,
             colorDimmedBlue = preferences[PreferencesKeys.COLOR_DIMMED_BLUE] ?: FactoryDefaults.COLOR_DIMMED_BLUE,
@@ -130,13 +146,20 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.DIGIT_SKEW] = profile.digitSkew
             
             profile.backgroundPath?.let { preferences[PreferencesKeys.BACKGROUND_PATH] = it } ?: preferences.remove(PreferencesKeys.BACKGROUND_PATH)
+            preferences[PreferencesKeys.IS_CUSTOM_BG] = profile.isCustomBackground
             preferences[PreferencesKeys.ELEMENTS_CONFIG] = serializeElements(profile.elements)
 
             preferences[PreferencesKeys.IS_SHIFT_LIGHT] = profile.isShiftLightMode
+            preferences[PreferencesKeys.IS_GLOW_ENABLED] = profile.isRpmGlowEnabled
+            preferences[PreferencesKeys.MAX_RPM_SCALE] = profile.maxRpmScale
+            preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE] = profile.isRpmScaleVisible
+            preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] = profile.rpmScaleTextSize
+            preferences[PreferencesKeys.REDLINE_START_RPM] = profile.redlineStartRpm
             preferences[PreferencesKeys.RPM_CURVATURE] = profile.rpmBarCurvature
             preferences[PreferencesKeys.RPM_BAR_WIDTH] = profile.rpmBarWidth
             preferences[PreferencesKeys.RPM_BAR_HEIGHT] = profile.rpmBarHeight
             preferences[PreferencesKeys.RPM_BAR_Y] = profile.rpmBarY
+            preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS] = profile.shiftLightBlinkMs
             
             preferences[PreferencesKeys.COLOR_ACTIVE_BLUE] = profile.colorActiveBlue
             preferences[PreferencesKeys.COLOR_DIMMED_BLUE] = profile.colorDimmedBlue
