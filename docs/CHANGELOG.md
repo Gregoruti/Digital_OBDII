@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.7] - 2026-09-08
+### Consolidado
+- **Padrão de Fábrica Absoluto**: Consolidação da migração de chaves v2.5.6 para garantir que 100% dos usuários recebam a nova geometria (35°/57dp) e performance (50ms) no primeiro carregamento.
+- **Documentação v2.5.7**: Revisão final de cabeçalhos e conformidade com as diretrizes de governança de IA.
+
 ## [2.5.6] - 2026-09-08
 ### Alterado
 - **Migração Forçada de Padrões**: Alteração interna das chaves de armazenamento (DataStore) para forçar o carregamento dos novos padrões v2.5.5 em todos os dispositivos sem necessidade de reset manual.

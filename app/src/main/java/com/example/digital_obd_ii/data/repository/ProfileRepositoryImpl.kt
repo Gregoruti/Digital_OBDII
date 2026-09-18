@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.5.6
+ * REPOSITORY: ProfileRepositoryImpl v2.5.7
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
  * utilizando Jetpack DataStore (Preferences).
  *
  * HISTÓRICO:
+ * v2.5.7 - Estabilização da migração de chaves v2 e verificação de integridade dos padrões.
  * v2.5.6 - MIGRAÇÃO DE CHAVES (Nuclear Option): Alteradas chaves de geometria para _v2 
  *          para forçar o carregamento dos novos padrões de fábrica em todos os dispositivos.
  * v2.5.4 - Sincronização rigorosa dos fallbacks de persistência com os novos padrões v2.5.4.

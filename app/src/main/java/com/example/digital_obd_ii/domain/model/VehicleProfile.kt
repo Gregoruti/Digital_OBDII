@@ -11,6 +11,7 @@
  * v2.5.1 - Adicionado redlineStartRpm customizável.
  * v2.5.4 - Atualização dos Padrões de Fábrica (Escala 4K, Redline 2500, Blink Branco, RPM Y:300).
  * v2.5.5 - Ajuste de Performance (RPM 50ms, Fuel 50ms) e correção de geometria padrão.
+ * v2.5.7 - Consolidação de padrões de fábrica via migração de chaves DataStore.
  *
  * Status: Estável.
  */
@@ -18,7 +19,7 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v2.5.5 - Ajuste de performance e geometria.
+ * v2.5.7 - Ajuste final de performance e geometria.
  */
 object FactoryDefaults {
     val RPM = ElementConfig(415f, 300f, 0.70f)
