@@ -10,6 +10,7 @@
  * v2.5.0 - Adicionada configuração de Escala de RPM (maxScaleRpm, isRpmScaleVisible, rpmScaleTextSize).
  * v2.5.1 - Adicionado redlineStartRpm customizável.
  * v2.5.4 - Atualização dos Padrões de Fábrica (Escala 4K, Redline 2500, Blink Branco, RPM Y:300).
+ * v2.5.5 - Ajuste de Performance (RPM 50ms, Fuel 50ms) e correção de geometria padrão.
  *
  * Status: Estável.
  */
@@ -17,7 +18,7 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v2.5.4 - Ajuste de geometria e posicionamento padrão.
+ * v2.5.5 - Ajuste de performance e geometria.
  */
 object FactoryDefaults {
     val RPM = ElementConfig(415f, 300f, 0.70f)
@@ -62,12 +63,12 @@ object FactoryDefaults {
 
     // SPS Padrão (ms)
     val POLLING_INTERVALS = mapOf(
-        "RPM" to 0,      // Máximo possível
+        "RPM" to 50,     // Alterado v2.5.5 (era 0)
         "SPEED" to 50,
         "MAF" to 50,
         "VOLTS" to 500,
         "TEMP" to 1000,
-        "FUEL_RATE" to 500
+        "FUEL_RATE" to 50 // Alterado v2.5.5 (era 500)
     )
 }
 

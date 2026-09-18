@@ -1,5 +1,12 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.5] - 2026-09-08
+### Corrigido
+- **Restauração de Fábrica (Crítico)**: Removidos valores fixos antigos que estavam "escondidos" na lógica de reset do ViewModel. Agora o botão "Restaurar Fábrica" utiliza 100% os padrões v2.5.4/v2.5.5.
+- **Geometria Sincronizada**: Validação final dos valores de Redline (2500), Ângulo (35°), Altura (57dp) e Posição Y (110.4) como padrão absoluto.
+### Alterado
+- **Ajuste de Performance**: Intervalo de polling de RPM alterado de 1ms para **50ms** e Fuel Rate de 500ms para **50ms**, conforme solicitado para estabilidade de benchmark.
+
 ## [2.5.4] - 2026-09-08
 ### Alterado
 - **Novos Padrões de Fábrica**: Atualização das configurações padrão do dashboard para Escala de 4000 RPM, Início de Redline em 2500 RPM, Curvatura de 35° e altura de barra de 57dp.

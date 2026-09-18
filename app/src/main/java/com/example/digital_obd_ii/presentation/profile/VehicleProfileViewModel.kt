@@ -7,6 +7,7 @@
  * v2.3.0 - Implementada lógica de troca de backgrounds nativos e gerenciamento de flags de customização.
  * v2.5.0 - Adicionada gestão de estado para a nova Escala de RPM Dinâmica.
  * v2.5.1 - Adicionada função updateRedlineStartRpm.
+ * v2.5.5 - Correção crítica no restoreFactorySettings para usar padrões v2.5.4/v2.5.5.
  * v1.9.3 - Adicionado suporte a Benchmark e logs de diagnóstico.
  *
  * Status: Operacional.
@@ -213,25 +214,13 @@ class VehicleProfileViewModel @Inject constructor(
             DevicePreset.MULTIMEDIA -> FactoryDefaults.MULTIMEDIA_ELEMENTS_MAP
         }
         
+        // v2.5.5: Removidos valores hardcoded. Agora utiliza a instância limpa de VehicleProfile
+        // que já contém os novos padrões definidos na data class.
+        val defaultProfile = VehicleProfile(elements = targetElements)
+        
         _uiState.update { state ->
             state.copy(
-                profile = state.profile.copy(
-                    elements = targetElements,
-                    digitWidth = 60f,
-                    digitHeight = 110f,
-                    digitThickness = 14f,
-                    digitSkew = -12f,
-                    rpmBarCurvature = 30f,
-                    rpmBarWidth = 22f,
-                    rpmBarHeight = 40f,
-                    rpmBarY = 100f,
-                    colorActiveBlue = FactoryDefaults.COLOR_ACTIVE_BLUE,
-                    colorDimmedBlue = FactoryDefaults.COLOR_DIMMED_BLUE,
-                    colorActiveRed = FactoryDefaults.COLOR_ACTIVE_RED,
-                    colorDimmedRed = FactoryDefaults.COLOR_DIMMED_RED,
-                    colorBlinkActive = FactoryDefaults.COLOR_BLINK_ON,
-                    colorBlinkDimmed = FactoryDefaults.COLOR_BLINK_OFF
-                )
+                profile = defaultProfile
             )
         }
     }
