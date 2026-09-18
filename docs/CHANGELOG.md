@@ -4,6 +4,8 @@
 ### Corrigido
 - **Escala de RPM Preditiva**: Remoção do teto forçado de 3200 RPM no modo Shift Light, unificando a escala das barras com a escala numérica (4K/8K). Agora 800 RPM em uma escala de 8K ocupa exatamente 10% da barra, corrigindo a distorção de 2.5x relatada.
 - **Precisão de Redline**: A zona vermelha agora inicia exatamente no valor de RPM configurado, eliminando o erro de proporção que jogava o redline para marcas superiores da escala.
+### Documentação
+- **Padronização v2.5.3**: Cabeçalhos de arquivos críticos (`DashboardScreen`, `DashboardViewModel`, `ObdRepositoryImpl`, `ProfileRepositoryImpl`, `Gauges`) atualizados com histórico de versões e correlações técnicas.
 
 ## [2.5.2] - 2026-09-08
 ### Corrigido

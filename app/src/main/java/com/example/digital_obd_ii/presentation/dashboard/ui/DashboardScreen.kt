@@ -1,16 +1,19 @@
 /**
- * UI: DashboardScreen
+ * UI: DashboardScreen v2.5.3
  * Objetivo: Tela principal de exibição de dados do veículo em tempo real.
- * Correlações: Consome DashboardViewModel e exibe VehicleSnapshot.
- *
- * Histórico:
- * v2.3.0 - Carregamento dinâmico de backgrounds (assets ou customizados).
- * v2.5.0 - Implementação visual da Escala de RPM Dinâmica sincronizada.
+ * 
+ * HISTÓRICO:
+ * v2.5.3 - Ajuste de compatibilidade com a nova escala de RPM e Redline (proporcional 4K/8K).
  * v2.5.1 - Adicionado suporte ao Redline customizável.
+ * v2.5.0 - Implementação visual da Escala de RPM Dinâmica sincronizada.
+ * v2.3.0 - Carregamento dinâmico de backgrounds (assets ou customizados).
  * v1.9.1 - Adicionado Motor de Fluidez (Interpolação de RPM/Velocidade).
  * v1.8.6 - Inclusão de botão de configurações invisível.
  *
- * Status: Em conformidade com Motor de Fluidez v2.0.
+ * CORRELAÇÕES:
+ * - Consome: DashboardViewModel
+ * - Componentes: ArchedRpmGauge, SevenSegmentText, InfoCard
+ * - Configurações: VehicleProfile
  */
 package com.example.digital_obd_ii.presentation.dashboard.ui
 

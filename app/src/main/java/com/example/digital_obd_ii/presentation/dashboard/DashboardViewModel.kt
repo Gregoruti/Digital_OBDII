@@ -1,5 +1,23 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
+/**
+ * VIEWMODEL: DashboardViewModel v2.5.3
+ * 
+ * OBJETIVO:
+ * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
+ * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
+ *
+ * HISTÓRICO:
+ * v2.5.3 - Ajuste na lógica de escala de RPM para refletir mudanças no Gauge.
+ * v2.5.0 - Sincronização com o sistema de Escala Dinâmica (4K/8K).
+ * v2.1.0 - Integração com o Motor de Conexão Resiliente.
+ * v1.8.6 - Persistência do último endereço Bluetooth conectado.
+ *
+ * CORRELAÇÕES:
+ * - Consome: ObdRepository, ProfileRepository, TripDao
+ * - Provê: DashboardUiState para DashboardScreen.kt
+ */
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digital_obd_ii.domain.repository.ObdRepository

@@ -1,5 +1,24 @@
 package com.example.digital_obd_ii.data.repository
 
+/**
+ * REPOSITORY: ProfileRepositoryImpl v2.5.3
+ * 
+ * OBJETIVO:
+ * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
+ * utilizando Jetpack DataStore (Preferences).
+ *
+ * HISTÓRICO:
+ * v2.5.3 - Revisão de persistência para as novas escalas e redline.
+ * v2.5.1 - Adição de persistência para redlineStartRpm e maxRpmScale.
+ * v2.3.0 - Suporte a múltiplos backgrounds e toggle custom/nativo.
+ * v1.9.1 - Inclusão de parâmetros de performance (polling rates e blink interval).
+ * v1.8.1 - Implementação de Factory Defaults para reset de fábrica.
+ *
+ * CORRELAÇÕES:
+ * - Consome: Jetpack DataStore
+ * - Provê: VehicleProfile para todo o app.
+ */
+
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*

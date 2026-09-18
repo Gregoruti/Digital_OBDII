@@ -1,5 +1,24 @@
 package com.example.digital_obd_ii.data.repository
 
+/**
+ * REPOSITORY: ObdRepositoryImpl v2.5.3
+ * 
+ * OBJETIVO:
+ * Implementação concreta do repositório OBD, gerenciando a conexão Bluetooth,
+ * o motor de polling e o processamento de PIDs.
+ *
+ * HISTÓRICO:
+ * v2.5.3 - Estabilização de dados para as novas escalas visuais.
+ * v2.1.4 - Motor de Polling Reativo com latência zero (yield).
+ * v2.1.0 - Implementação de Mutex para thread-safety no transporte Bluetooth.
+ * v2.0.0 - Boot Robusto com sequência de comandos estrita (ATZ, ATE0, etc).
+ * v1.8.6 - Adicionado suporte para Auto-Conexão via ProfileRepository.
+ *
+ * CORRELAÇÕES:
+ * - Depende de: BluetoothConnectionManager, ObdPollingEngine, ProfileRepository
+ * - Implementa: ObdRepository
+ */
+
 import android.bluetooth.BluetoothDevice
 import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
 import com.example.digital_obd_ii.data.obd.Elm327Init
