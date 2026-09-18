@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.4
+ * VIEWMODEL: DashboardViewModel v2.6.5
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.5 - Limpeza de debug visual e manutenção de lógica interna de resiliência.
  * v2.6.4 - Atraso no Watchdog (startup delay) e Feedback Visual de Depuração na UI.
  * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
  * v2.6.2 - Forçado início do Watchdog no init e adição de Logs de Diagnóstico (OBD_RESILIENCE).
@@ -65,19 +66,15 @@ class DashboardViewModel @Inject constructor(
         if (watchdogJob != null) return
         watchdogJob = viewModelScope.launch {
             // v2.6.4: Aguarda 3 segundos antes do primeiro check para estabilizar Bluetooth/Profile
-            _uiState.update { it.copy(watchdogMessage = "Aguardando inicialização...") }
             kotlinx.coroutines.delay(3000)
             
             while (true) {
                 val state = _uiState.value
                 val address = state.profile.lastConnectedDeviceAddress
                 
-                val statusMsg = "Watchdog: ${state.connectionState::class.simpleName} | Last: ${address ?: "Nenhum"}"
-                _uiState.update { it.copy(watchdogMessage = statusMsg) }
-                android.util.Log.d("OBD_RESILIENCE", statusMsg)
+                android.util.Log.d("OBD_RESILIENCE", "Watchdog: ${state.connectionState::class.simpleName} | Last: ${address ?: "Nenhum"}")
 
                 if (address != null && state.connectionState is ConnectionState.Disconnected) {
-                    android.util.Log.i("OBD_RESILIENCE", "Watchdog disparando auto-conexão para: $address")
                     autoConnect(address)
                 }
                 
@@ -131,29 +128,25 @@ class DashboardViewModel @Inject constructor(
         if (_uiState.value.connectionState is ConnectionState.Connecting) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(connectionState = ConnectionState.Connecting, watchdogMessage = "Tentando conectar...") }
-            android.util.Log.i("OBD_RESILIENCE", "🚀 Iniciando tentativa de conexão para: $address")
+            _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
             
             try {
                 val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
                 if (adapter == null || !adapter.isEnabled) {
-                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "BT Desligado") }
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     return@launch
                 }
 
                 val device = adapter.getRemoteDevice(address)
                 obdRepository.connect(device)
                     .onSuccess {
-                        android.util.Log.i("OBD_RESILIENCE", "✅ Auto-conexão BEM SUCEDIDA")
-                        _uiState.update { it.copy(connectionState = ConnectionState.Connected, watchdogMessage = "Conectado!") }
+                        _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
                     }
                     .onFailure { e ->
-                        android.util.Log.e("OBD_RESILIENCE", "❌ Falha: ${e.message}")
-                        _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "Falha: ${e.message}") }
+                        _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     }
             } catch (e: Exception) {
-                android.util.Log.e("OBD_RESILIENCE", "🔥 Erro fatal: ${e.message}")
-                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected, watchdogMessage = "Erro: ${e.message}") }
+                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
             }
         }
     }

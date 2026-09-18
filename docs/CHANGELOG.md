@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.5] - 2026-09-08
+### Removido
+- **Debug Visual**: Remoção do texto amarelo de monitoramento do Watchdog na UI do Dashboard para limpeza de layout.
+### Alterado
+- **Estabilização de Código**: Manutenção da lógica interna de auto-conexão e delay de startup, visando futura correção de persistência de endereço MAC.
+
 ## [2.6.4] - 2026-09-08
 ### Adicionado
 - **Feedback Visual de Resiliência**: Inclusão de um log visual amarelo no canto inferior do Dashboard para monitorar o status do Watchdog em tempo real.

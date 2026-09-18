@@ -11,8 +11,7 @@ data class DashboardUiState(
     val trip: TripSummary = TripSummary(startTime = System.currentTimeMillis()),
     val connectionState: ConnectionState = ConnectionState.Disconnected,
     val gearAction: GearAction = GearAction.NEUTRAL,
-    val profile: VehicleProfile = VehicleProfile(),
-    val watchdogMessage: String = "" // v2.6.4: Feedback visual para depuração
+    val profile: VehicleProfile = VehicleProfile()
 )
 
 sealed class ConnectionState {

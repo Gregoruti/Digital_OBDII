@@ -158,16 +158,6 @@ fun DashboardScreen(
                 .padding(16.dp * screenScale.avgScale)
         )
 
-        // v2.6.4: Texto de Debug Visual para o Watchdog (Temporário)
-        Text(
-            text = uiState.watchdogMessage,
-            color = Color.Yellow,
-            fontSize = 10.sp,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(8.dp)
-        )
-
         // 3. BOTÃO DE CONFIGURAÇÕES INVISÍVEL (v1.8.6)
         // Sobreposto ao ícone de engrenagem do background no canto superior direito
         Box(
