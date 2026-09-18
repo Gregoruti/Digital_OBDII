@@ -5,6 +5,7 @@
  *
  * Histórico:
  * v2.3.0 - Adicionado carrossel de backgrounds nativos (dashboard_bg_X.jpg).
+ * v2.5.0 - Adicionados controles para Escala de RPM Dinâmica.
  * v1.8.5 - Introdução de simulador de condução e cores hexadecimais.
  *
  * Status: Refatorado para galeria de assets.
@@ -232,6 +233,35 @@ fun VisualSettingsScreen(
                         Text("Efeito Glow (Brilho)", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isRpmGlowEnabled, onCheckedChange = { viewModel.updateIsRpmGlowEnabled(it) })
                     }
+                    
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Escala de RPM", style = MaterialTheme.typography.labelLarge, color = CivicColors.BlueGlow)
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Mostrar Escala Numérica", modifier = Modifier.weight(1f))
+                        Switch(checked = uiState.profile.isRpmScaleVisible, onCheckedChange = { viewModel.updateIsRpmScaleVisible(it) })
+                    }
+                    
+                    if (uiState.profile.isRpmScaleVisible) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Fundo de Escala", modifier = Modifier.weight(1f))
+                            Row {
+                                FilterChip(
+                                    selected = uiState.profile.maxRpmScale == 4000,
+                                    onClick = { viewModel.updateMaxRpmScale(4000) },
+                                    label = { Text("4K") }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                FilterChip(
+                                    selected = uiState.profile.maxRpmScale == 8000,
+                                    onClick = { viewModel.updateMaxRpmScale(8000) },
+                                    label = { Text("8K") }
+                                )
+                            }
+                        }
+                        ControlSlider("Tamanho do Texto", uiState.profile.rpmScaleTextSize, 8f, 30f) { viewModel.updateRpmScaleTextSize(it) }
+                    }
+
                     ControlSlider("Ângulo (0=Reta)", uiState.profile.rpmBarCurvature, 0f, 60f) { viewModel.updateRpmBarCurvature(it) }
                     ControlSlider("Altura", uiState.profile.rpmBarHeight, 10f, 100f) { viewModel.updateRpmBarHeight(it) }
                     ControlSlider("Posição Y", uiState.profile.rpmBarY, 0f, 400f) { viewModel.updateRpmBarY(it) }
@@ -338,6 +368,9 @@ fun VisualSettingsScreen(
                         currentRpm = simRpm,
                         isShiftLightMode = uiState.profile.isShiftLightMode,
                         isGlowEnabled = uiState.profile.isRpmGlowEnabled,
+                        isScaleVisible = uiState.profile.isRpmScaleVisible,
+                        maxScaleRpm = uiState.profile.maxRpmScale,
+                        scaleTextSize = uiState.profile.rpmScaleTextSize,
                         curvature = uiState.profile.rpmBarCurvature,
                         barWidth = uiState.profile.rpmBarWidth * previewScale.avgScale,
                         barHeight = uiState.profile.rpmBarHeight * previewScale.avgScale,

@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.0] - 2026-09-08
+### Adicionado
+- **Escala de RPM Dinâmica**: Nova funcionalidade para exibir uma escala numérica (0-4 ou 0-8) abaixo das barras de RPM.
+- **Personalização de Escala**: Opções para alternar entre fundo de escala de 4000 ou 8000 RPM, visibilidade e ajuste de tamanho de fonte.
+- **Geometria Sincronizada**: A escala acompanha automaticamente a curvatura (arco ou reta) definida para o RPM.
+
 ## [2.4.0] - 2026-09-08
 ### Adicionado
 - **Efeito Glow (Brilho Neon)**: Nova opção no menu de personalização para ativar/desativar o brilho nas barras de RPM.

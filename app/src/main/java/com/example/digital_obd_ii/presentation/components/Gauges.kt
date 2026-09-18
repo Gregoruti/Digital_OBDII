@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import android.graphics.Paint
 import android.graphics.BlurMaskFilter
+import android.graphics.Typeface
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.digital_obd_ii.domain.usecase.GearAction
@@ -208,14 +209,17 @@ fun SevenSegmentText(
 }
 
 /**
- * Gauge de RPM Dinâmico v3.1
- * v2.4.0 - Adicionado suporte a Efeito Glow (Brilho Neon).
+ * Gauge de RPM Dinâmico v3.2
+ * v2.5.0 - Adicionado suporte a Escala Numérica (0-4 ou 0-8).
  */
 @Composable
 fun ArchedRpmGauge(
     currentRpm: Float,
     isShiftLightMode: Boolean = false,
-    isGlowEnabled: Boolean = true, // NOVO v2.4.0
+    isGlowEnabled: Boolean = true,
+    isScaleVisible: Boolean = true, // NOVO v2.5.0
+    maxScaleRpm: Int = 8000,       // NOVO v2.5.0
+    scaleTextSize: Float = 14f,    // NOVO v2.5.0
     curvature: Float = 30f,
     barWidth: Float = 22f,
     barHeight: Float = 40f,
@@ -247,8 +251,9 @@ fun ArchedRpmGauge(
 
     Canvas(modifier = modifier) {
         val totalBlocks = 44
-        val maxRpm = if (isShiftLightMode) 3200f else 8000f
-        val redlineStart = if (isShiftLightMode) 2500f else 7000f
+        // Ajuste dinâmico do teto de RPM conforme a escala ou modo shift light
+        val maxRpm = if (isShiftLightMode) 3200f else maxScaleRpm.toFloat()
+        val redlineStart = if (isShiftLightMode) 2500f else (maxRpm * 0.875f) // v2.5.0: Redline proporcional se for 4k ou 8k
         val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
 
         val marginPercent = if (curvature <= 0) 0.15f else 0f
@@ -317,6 +322,79 @@ fun ArchedRpmGauge(
                 }
 
                 drawLine(color = color, start = Offset(x, 0f), end = Offset(x, barHeight), strokeWidth = barWidth, cap = StrokeCap.Butt)
+            }
+        }
+
+        // 3. Desenho da Escala Numérica (v2.5.0)
+        if (isScaleVisible) {
+            val scaleMax = maxScaleRpm.toFloat()
+            val textPaint = Paint().apply {
+                color = android.graphics.Color.WHITE
+                textSize = scaleTextSize * density
+                textAlign = Paint.Align.CENTER
+                typeface = Typeface.DEFAULT_BOLD
+                isAntiAlias = true
+            }
+
+            val stepSize = 500
+            val totalSteps = (maxScaleRpm / stepSize)
+
+            if (curvature > 0) {
+                val cx = size.width / 2f
+                val r = size.width * 1.4f
+                val cy = r + 50f
+                val totalSweepRad = Math.toRadians(curvature.toDouble())
+                val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
+
+                // Linha contínua da escala
+                val scaleR = r - 5f
+                val path = Path()
+                for (i in 0..100) {
+                    val f = i / 100f
+                    val angle = (startRad + f * totalSweepRad).toFloat()
+                    val px = cx + (scaleR * cos(angle))
+                    val py = cy + (scaleR * sin(angle))
+                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                }
+                drawPath(path = path, color = Color.White, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+
+                // Marcadores e Números
+                for (i in 0..totalSteps) {
+                    val rpmValue = i * stepSize
+                    val fraction = rpmValue / scaleMax
+                    val angle = (startRad + fraction * totalSweepRad).toFloat()
+
+                    val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
+                    val x1 = cx + (scaleR * cos(angle))
+                    val y1 = cy + (scaleR * sin(angle))
+                    val x2 = cx + ((scaleR + tickLength) * cos(angle))
+                    val y2 = cy + ((scaleR + tickLength) * sin(angle))
+
+                    drawLine(color = Color.White, start = Offset(x1, y1), end = Offset(x2, y2), strokeWidth = 2f)
+
+                    if (rpmValue % 1000 == 0) {
+                        val textR = scaleR + tickLength + (scaleTextSize * density / 1.5f)
+                        val tx = cx + (textR * cos(angle))
+                        val ty = cy + (textR * sin(angle))
+                        drawIntoCanvas { it.nativeCanvas.drawText((rpmValue / 1000).toString(), tx, ty + (textPaint.textSize / 3), textPaint) }
+                    }
+                }
+            } else {
+                val scaleY = barHeight + 10f
+                drawLine(color = Color.White, start = Offset(startOffsetX, scaleY), end = Offset(startOffsetX + drawingWidth, scaleY), strokeWidth = 2f)
+
+                for (i in 0..totalSteps) {
+                    val rpmValue = i * stepSize
+                    val fraction = rpmValue / scaleMax
+                    val x = startOffsetX + (drawingWidth * fraction)
+
+                    val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
+                    drawLine(color = Color.White, start = Offset(x, scaleY), end = Offset(x, scaleY + tickLength), strokeWidth = 2f)
+
+                    if (rpmValue % 1000 == 0) {
+                        drawIntoCanvas { it.nativeCanvas.drawText((rpmValue / 1000).toString(), x, scaleY + tickLength + textPaint.textSize, textPaint) }
+                    }
+                }
             }
         }
     }

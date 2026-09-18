@@ -5,6 +5,7 @@
  *
  * Histórico:
  * v2.3.0 - Carregamento dinâmico de backgrounds (assets ou customizados).
+ * v2.5.0 - Implementação visual da Escala de RPM Dinâmica sincronizada.
  * v1.9.1 - Adicionado Motor de Fluidez (Interpolação de RPM/Velocidade).
  * v1.8.6 - Inclusão de botão de configurações invisível.
  *
@@ -121,7 +122,10 @@ fun DashboardScreen(
         ArchedRpmGauge(
             currentRpm = animatedRpm.toFloat(),
             isShiftLightMode = uiState.profile.isShiftLightMode,
-            isGlowEnabled = uiState.profile.isRpmGlowEnabled, // NOVO v2.4.0
+            isGlowEnabled = uiState.profile.isRpmGlowEnabled,
+            isScaleVisible = uiState.profile.isRpmScaleVisible,
+            maxScaleRpm = uiState.profile.maxRpmScale,
+            scaleTextSize = uiState.profile.rpmScaleTextSize,
             curvature = uiState.profile.rpmBarCurvature,
             barWidth = uiState.profile.rpmBarWidth * screenScale.avgScale,
             barHeight = uiState.profile.rpmBarHeight * screenScale.avgScale,
