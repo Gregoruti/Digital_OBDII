@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.0
+ * VIEWMODEL: DashboardViewModel v2.6.1
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.1 - Implementação de Watchdog de Re-conexão (tentativa automática a cada 5s se desconectado).
  * v2.6.0 - Implementação de Auto-Conexão Bluetooth (reconexão automática ao abrir o app).
  * v2.5.3 - Ajuste na lógica de escala de RPM para refletir mudanças no Gauge.
  * v2.5.0 - Sincronização com o sistema de Escala Dinâmica (4K/8K).
@@ -49,20 +50,34 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private var lastTimestamp = System.currentTimeMillis()
+    private var watchdogJob: kotlinx.coroutines.Job? = null
 
-    fun startCollecting() {
-        // Coletor 1: Sempre observa o perfil, independente da conexão OBD (v1.8.1)
-        viewModelScope.launch {
-            profileRepository.getProfile().collect { profile ->
-                // RASTREIO 3: O que chegou no ViewModel?
-                android.util.Log.d("RASTREIO_VM", "VM RECEBEU PERFIL: RPM X=${profile.elements["RPM"]?.x}, Y=${profile.elements["RPM"]?.y}")
+    init {
+        startWatchdog()
+    }
+
+    private fun startWatchdog() {
+        if (watchdogJob != null) return
+        watchdogJob = viewModelScope.launch {
+            while (true) {
+                val state = _uiState.value
+                val address = state.profile.lastConnectedDeviceAddress
                 
-                // v2.6.0: Gatilho de Auto-Conexão se houver endereço salvo e não estiver conectado
-                if (profile.lastConnectedDeviceAddress != null && 
-                    _uiState.value.connectionState is ConnectionState.Disconnected) {
-                    autoConnect(profile.lastConnectedDeviceAddress)
+                // v2.6.1: Se estiver desconectado e tiver um endereço salvo, tenta conectar
+                if (address != null && state.connectionState is ConnectionState.Disconnected) {
+                    android.util.Log.d("OBD_WATCHDOG", "Tentando auto-conexão para $address")
+                    autoConnect(address)
                 }
                 
+                kotlinx.coroutines.delay(5000) // Tenta a cada 5 segundos
+            }
+        }
+    }
+
+    fun startCollecting() {
+        // Coletor 1: Sempre observa o perfil
+        viewModelScope.launch {
+            profileRepository.getProfile().collect { profile ->
                 _uiState.update { it.copy(profile = profile) }
             }
         }
@@ -99,20 +114,30 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun autoConnect(address: String) {
+        // Previne múltiplas tentativas simultâneas
+        if (_uiState.value.connectionState is ConnectionState.Connecting) return
+
         viewModelScope.launch {
             _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
             
-            // Tenta obter o dispositivo pareado pelo endereço
-            val device = android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.getRemoteDevice(address)
-            if (device != null) {
+            try {
+                val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                if (adapter == null || !adapter.isEnabled) {
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                    return@launch
+                }
+
+                val device = adapter.getRemoteDevice(address)
                 obdRepository.connect(device)
                     .onSuccess {
                         _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
                     }
                     .onFailure { e ->
+                        android.util.Log.e("OBD_AUTOCONNECT", "Falha: ${e.message}")
                         _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     }
-            } else {
+            } catch (e: Exception) {
+                android.util.Log.e("OBD_AUTOCONNECT", "Erro fatal: ${e.message}")
                 _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
             }
         }

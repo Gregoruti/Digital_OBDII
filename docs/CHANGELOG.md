@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.1] - 2026-09-08
+### Adicionado
+- **Watchdog de Bluetooth**: Implementação de um monitor em segundo plano que tenta reconectar automaticamente ao último adaptador OBD-II a cada 5 segundos caso a conexão seja perdida ou o app seja aberto.
+- **Resiliência de Auto-Conexão**: Verificação de estado do adaptador Bluetooth (ligado/desligado) antes de tentar a conexão, evitando crashes e loops infinitos.
+
 ## [2.6.0] - 2026-09-08
 ### Adicionado
 - **Auto-Conexão Inteligente**: O aplicativo agora memoriza o endereço MAC do último adaptador OBD-II conectado com sucesso. Ao abrir o Dashboard, o sistema tenta restabelecer a conexão automaticamente em segundo plano.
