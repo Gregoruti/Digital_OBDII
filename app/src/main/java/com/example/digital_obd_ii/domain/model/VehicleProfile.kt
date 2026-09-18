@@ -13,6 +13,7 @@
  * v2.5.5 - Ajuste de Performance (RPM 50ms, Fuel 50ms) e correção de geometria padrão.
  * v2.5.7 - Consolidação de padrões de fábrica via migração de chaves DataStore.
  * v2.7.0 - Novo Layout de Indicadores (RPM 305, SPEED 255/270, GEARS 770/270).
+ * v2.7.1 - Ajuste fino de layout (RPM 435, SPEED 200, VOLTS 755, CLOCK 760, TRIP_DIST 460).
  *
  * Status: Estável.
  */
@@ -20,18 +21,18 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v2.7.0 - Novo Layout de Indicadores.
+ * v2.7.1 - Ajuste fino de layout.
  */
 object FactoryDefaults {
-    val RPM = ElementConfig(415f, 305f, 0.70f)
-    val SPEED = ElementConfig(255f, 270f, 1.00f)
+    val RPM = ElementConfig(435f, 305f, 0.70f)
+    val SPEED = ElementConfig(200f, 270f, 1.00f)
     val TEMP = ElementConfig(220f, 395f, 0.70f)
     val KML = ElementConfig(200f, 502f, 0.70f)
-    val VOLTS = ElementConfig(795f, 395f, 0.70f)
-    val CLOCK = ElementConfig(825f, 502f, 0.70f)
+    val VOLTS = ElementConfig(755f, 395f, 0.70f)
+    val CLOCK = ElementConfig(760f, 502f, 0.70f)
     val GEARS = ElementConfig(770f, 270f, 1.00f)
-    val TRIP_TIME = ElementConfig(485f, 390f, 0.55f)
-    val TRIP_DIST = ElementConfig(485f, 465f, 0.55f)
+    val TRIP_TIME = ElementConfig(475f, 390f, 0.55f)
+    val TRIP_DIST = ElementConfig(485f, 460f, 0.55f)
     val TRIP_FUEL = ElementConfig(485f, 537f, 0.55f)
 
     val ELEMENTS_MAP = mapOf(

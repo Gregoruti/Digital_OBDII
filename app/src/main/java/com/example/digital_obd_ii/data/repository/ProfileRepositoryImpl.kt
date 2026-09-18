@@ -1,13 +1,15 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.7.0
+ * REPOSITORY: ProfileRepositoryImpl v2.7.1
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
  * utilizando Jetpack DataStore (Preferences).
  *
  * HISTÓRICO:
+ * v2.7.1 - AJUSTE FINO DE LAYOUT: Alterada chave ELEMENTS_CONFIG para _v12 para forçar
+ *          o novo posicionamento de indicadores v2.7.1.
  * v2.7.0 - MIGRAÇÃO DE LAYOUT: Alterada chave ELEMENTS_CONFIG para _v11 para forçar
  *          o novo posicionamento de indicadores em todos os dispositivos.
  * v2.5.7 - Estabilização da migração de chaves v2 e verificação de integridade dos padrões.
@@ -65,7 +67,7 @@ class ProfileRepositoryImpl @Inject constructor(
         val DIGIT_SKEW = floatPreferencesKey("digit_skew")
         
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
-        val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v11") // v2.7.0 Force Migration
+        val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v12") // v2.7.1 Force Migration
 
         val IS_SHIFT_LIGHT = booleanPreferencesKey("is_shift_light_v2")
         val RPM_CURVATURE = floatPreferencesKey("rpm_curvature_v2")

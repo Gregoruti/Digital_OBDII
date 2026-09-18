@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.7.1] - 2026-09-08
+### Alterado
+- **Ajuste Fino de Design**: Refinamento das coordenadas de layout (RPM, Velocidade, Volts e Relógio) para melhor equilíbrio visual.
+- **Migração Forçada v2.7.1**: Atualização da chave `elements_config_v12` para garantir a aplicação imediata dos novos ajustes de posição.
+
 ## [2.7.0] - 2026-09-08
 ### Alterado
 - **Novo Layout de Indicadores**: Reestruturação completa das coordenadas e escalas de todos os elementos do Dashboard (RPM, Velocidade, Marchas, Trip, etc) conforme nova tabela de design.
