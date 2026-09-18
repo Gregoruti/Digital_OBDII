@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.5.3
+ * REPOSITORY: ProfileRepositoryImpl v2.5.4
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
  * utilizando Jetpack DataStore (Preferences).
  *
  * HISTÓRICO:
+ * v2.5.4 - Sincronização rigorosa dos fallbacks de persistência com os novos padrões v2.5.4.
  * v2.5.3 - Revisão de persistência para as novas escalas e redline.
  * v2.5.1 - Adição de persistência para redlineStartRpm e maxRpmScale.
  * v2.3.0 - Suporte a múltiplos backgrounds e toggle custom/nativo.
@@ -123,16 +124,16 @@ class ProfileRepositoryImpl @Inject constructor(
             isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG] ?: false,
             elements = elements,
 
-            isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT] ?: false,
+            isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT] ?: true,
             isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED] ?: true,
-            maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE] ?: 8000,
+            maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE] ?: 4000,
             isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE] ?: true,
-            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] ?: 14f,
-            redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM] ?: 7000,
-            rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE] ?: 30f,
+            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE] ?: 30f,
+            redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM] ?: 2500,
+            rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE] ?: 35f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT] ?: 40f,
-            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y] ?: 100f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT] ?: 57f,
+            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y] ?: 110.4f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS] ?: 100,
             
             colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,
