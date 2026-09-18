@@ -1,5 +1,25 @@
 package com.example.digital_obd_ii.presentation.components
 
+/**
+ * COMPONENTES DE VISUALIZAÇÃO (GAUGES) v2.5.3
+ * 
+ * OBJETIVO:
+ * Fornecer componentes de interface de alta fidelidade para o Dashboard, incluindo
+ * Gauges de RPM em arco/reta, Texto em 7-Segmentos e Cards de Informação Digital.
+ *
+ * HISTÓRICO DE VERSÕES:
+ * - 2.5.3: Correção crítica na escala de RPM e posição do Redline. Removido teto de 3200 RPM
+ *          que causava distorção visual em escalas de 4K/8K.
+ * - 2.5.2: Correção de sintaxe e ajuste fino na renderização do Redline.
+ * - 2.5.0: Adicionado suporte a Escala Numérica Dinâmica (0-4 ou 0-8).
+ * - 1.9.1: Implementação de animação suave via Spring no ArchedRpmGauge.
+ * - 1.8.8: Suporte a caractere ':' no motor 7-segmentos para exibição de tempo.
+ *
+ * CORRELAÇÕES:
+ * - Consumido por: DashboardScreen.kt
+ * - Depende de: VehicleProfile (configurações de cores, escalas e geometria).
+ */
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -252,9 +272,8 @@ fun ArchedRpmGauge(
 
     Canvas(modifier = modifier) {
         val totalBlocks = 44
-        // Ajuste dinâmico do teto de RPM conforme a escala ou modo shift light
-        val maxRpm = if (isShiftLightMode) 3200f else maxScaleRpm.toFloat()
-        val redlineStart = if (isShiftLightMode) 2500f else redlineStartRpm.toFloat() // v2.5.1: Redline customizável
+        // v2.5.3: Unificação absoluta da escala. O teto das barras agora segue rigorosamente o maxScaleRpm.
+        val maxRpm = maxScaleRpm.toFloat()
         val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
 
         val marginPercent = if (curvature <= 0) 0.15f else 0f
@@ -266,11 +285,16 @@ fun ArchedRpmGauge(
             val rpmAtBlock = fraction * maxRpm
             val isActive = i <= blocksActive
             
-            // Correção v2.5.2: O redlineStart deve ser relativo ao teto atual (maxRpm)
-            // Se estamos em 4K, o redlineStartRpm de 7000 nunca seria atingido.
-            // Solução: Se redlineStartRpm > maxRpm, usamos um percentual padrão (87%).
-            val effectiveRedline = if (redlineStartRpm >= maxRpm) (maxRpm * 0.875f) else redlineStartRpm.toFloat()
+            // v2.5.3: O redline agora é posicionado de forma absoluta baseada no redlineStartRpm.
+            // Se o valor for inválido ou maior que o teto, usa 87.5% como fallback preventivo.
+            val effectiveRedline = if (redlineStartRpm <= 0 || redlineStartRpm >= maxRpm) {
+                (maxRpm * 0.875f)
+            } else {
+                redlineStartRpm.toFloat()
+            }
             val isRedline = rpmAtBlock >= effectiveRedline
+            
+            val color = when {
                 isBlinking -> colorConfig.blink.copy(alpha = blinkAlpha)
                 isActive && isRedline -> colorConfig.activeRed
                 isActive && !isRedline -> colorConfig.activeBlue
