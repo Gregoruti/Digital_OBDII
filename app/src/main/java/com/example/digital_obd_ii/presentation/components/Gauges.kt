@@ -265,9 +265,12 @@ fun ArchedRpmGauge(
             val fraction = i.toFloat() / totalBlocks.toFloat()
             val rpmAtBlock = fraction * maxRpm
             val isActive = i <= blocksActive
-            val isRedline = rpmAtBlock >= redlineStart
-
-            val color = when {
+            
+            // Correção v2.5.2: O redlineStart deve ser relativo ao teto atual (maxRpm)
+            // Se estamos em 4K, o redlineStartRpm de 7000 nunca seria atingido.
+            // Solução: Se redlineStartRpm > maxRpm, usamos um percentual padrão (87%).
+            val effectiveRedline = if (redlineStartRpm >= maxRpm) (maxRpm * 0.875f) else redlineStartRpm.toFloat()
+            val isRedline = rpmAtBlock >= effectiveRedline
                 isBlinking -> colorConfig.blink.copy(alpha = blinkAlpha)
                 isActive && isRedline -> colorConfig.activeRed
                 isActive && !isRedline -> colorConfig.activeBlue

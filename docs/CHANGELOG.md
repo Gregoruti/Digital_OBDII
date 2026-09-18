@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.2] - 2026-09-08
+### Corrigido
+- **Lógica de Redline Dinâmico**: Correção na renderização da zona vermelha para ser proporcional ao fundo de escala selecionado (4K/8K), garantindo que o efeito visual funcione corretamente em ambos os modos.
+- **Sincronização Visual**: O brilho (Glow) e a cor das barras agora respeitam o ponto exato de início de redline configurado.
+
 ## [2.5.1] - 2026-09-08
 ### Corrigido
 - **Persistência de Escala**: Correção na persistência dos dados de escala (4K/8K e tamanho de texto) no DataStore, garantindo que as configurações não sejam perdidas ao retornar ao Dashboard.
