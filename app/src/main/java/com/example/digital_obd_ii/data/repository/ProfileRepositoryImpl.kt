@@ -1,13 +1,15 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v2.5.4
+ * REPOSITORY: ProfileRepositoryImpl v2.5.6
  * 
  * OBJETIVO:
  * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
  * utilizando Jetpack DataStore (Preferences).
  *
  * HISTÓRICO:
+ * v2.5.6 - MIGRAÇÃO DE CHAVES (Nuclear Option): Alteradas chaves de geometria para _v2 
+ *          para forçar o carregamento dos novos padrões de fábrica em todos os dispositivos.
  * v2.5.4 - Sincronização rigorosa dos fallbacks de persistência com os novos padrões v2.5.4.
  * v2.5.3 - Revisão de persistência para as novas escalas e redline.
  * v2.5.1 - Adição de persistência para redlineStartRpm e maxRpmScale.
@@ -62,27 +64,27 @@ class ProfileRepositoryImpl @Inject constructor(
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
         val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v10")
 
-        val IS_SHIFT_LIGHT = booleanPreferencesKey("is_shift_light")
-        val RPM_CURVATURE = floatPreferencesKey("rpm_curvature")
-        val RPM_BAR_WIDTH = floatPreferencesKey("rpm_bar_width")
-        val RPM_BAR_HEIGHT = floatPreferencesKey("rpm_bar_height")
-        val RPM_BAR_Y = floatPreferencesKey("rpm_bar_y")
+        val IS_SHIFT_LIGHT = booleanPreferencesKey("is_shift_light_v2")
+        val RPM_CURVATURE = floatPreferencesKey("rpm_curvature_v2")
+        val RPM_BAR_WIDTH = floatPreferencesKey("rpm_bar_width_v2")
+        val RPM_BAR_HEIGHT = floatPreferencesKey("rpm_bar_height_v2")
+        val RPM_BAR_Y = floatPreferencesKey("rpm_bar_y_v2")
         
-        val COLOR_ACTIVE_BLUE = longPreferencesKey("color_active_blue")
-        val COLOR_DIMMED_BLUE = longPreferencesKey("color_dimmed_blue")
-        val COLOR_ACTIVE_RED = longPreferencesKey("color_active_red")
-        val COLOR_DIMMED_RED = longPreferencesKey("color_dimmed_red")
-        val COLOR_BLINK_ACTIVE = longPreferencesKey("color_blink_active")
-        val COLOR_BLINK_DIMMED = longPreferencesKey("color_blink_dimmed")
+        val COLOR_ACTIVE_BLUE = longPreferencesKey("color_active_blue_v2")
+        val COLOR_DIMMED_BLUE = longPreferencesKey("color_dimmed_blue_v2")
+        val COLOR_ACTIVE_RED = longPreferencesKey("color_active_red_v2")
+        val COLOR_DIMMED_RED = longPreferencesKey("color_dimmed_red_v2")
+        val COLOR_BLINK_ACTIVE = longPreferencesKey("color_blink_active_v2")
+        val COLOR_BLINK_DIMMED = longPreferencesKey("color_blink_dimmed_v2")
 
         // NOVOS v2.5.1
-        val IS_CUSTOM_BG = booleanPreferencesKey("is_custom_bg")
-        val MAX_RPM_SCALE = intPreferencesKey("max_rpm_scale")
-        val IS_RPM_SCALE_VISIBLE = booleanPreferencesKey("is_rpm_scale_visible")
-        val RPM_SCALE_TEXT_SIZE = floatPreferencesKey("rpm_scale_text_size")
-        val REDLINE_START_RPM = intPreferencesKey("redline_start_rpm")
-        val IS_GLOW_ENABLED = booleanPreferencesKey("is_glow_enabled")
-        val SHIFT_LIGHT_BLINK_MS = intPreferencesKey("shift_light_blink_ms")
+        val IS_CUSTOM_BG = booleanPreferencesKey("is_custom_bg_v2")
+        val MAX_RPM_SCALE = intPreferencesKey("max_rpm_scale_v2")
+        val IS_RPM_SCALE_VISIBLE = booleanPreferencesKey("is_rpm_scale_visible_v2")
+        val RPM_SCALE_TEXT_SIZE = floatPreferencesKey("rpm_scale_text_size_v2")
+        val REDLINE_START_RPM = intPreferencesKey("redline_start_rpm_v2")
+        val IS_GLOW_ENABLED = booleanPreferencesKey("is_glow_enabled_v2")
+        val SHIFT_LIGHT_BLINK_MS = intPreferencesKey("shift_light_blink_ms_v2")
 
         // SPS (v1.8.7)
         val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")

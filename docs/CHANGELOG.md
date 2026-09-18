@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.6] - 2026-09-08
+### Alterado
+- **Migração Forçada de Padrões**: Alteração interna das chaves de armazenamento (DataStore) para forçar o carregamento dos novos padrões v2.5.5 em todos os dispositivos sem necessidade de reset manual.
+- **Sincronização Absoluta**: Garantia de que Redline (2500), Ângulo (35°), Altura (57dp) e Polling (50ms) sejam os valores iniciais de qualquer instalação.
+
 ## [2.5.5] - 2026-09-08
 ### Corrigido
 - **Restauração de Fábrica (Crítico)**: Removidos valores fixos antigos que estavam "escondidos" na lógica de reset do ViewModel. Agora o botão "Restaurar Fábrica" utiliza 100% os padrões v2.5.4/v2.5.5.
