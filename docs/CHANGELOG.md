@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.2] - 2026-09-08
+### Corrigido
+- **Ativação do Watchdog**: Correção na ordem de inicialização do ViewModel, garantindo que o Watchdog e os coletores de perfil iniciem imediatamente no `init`.
+- **Diagnóstico de Resiliência**: Adição de logs detalhados (TAG: `OBD_RESILIENCE`) para monitorar o comportamento da auto-conexão no Logcat/Benchmark.
+
 ## [2.6.1] - 2026-09-08
 ### Adicionado
 - **Watchdog de Bluetooth**: Implementação de um monitor em segundo plano que tenta reconectar automaticamente ao último adaptador OBD-II a cada 5 segundos caso a conexão seja perdida ou o app seja aberto.

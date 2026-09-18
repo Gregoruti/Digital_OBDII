@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.6.1
+ * VIEWMODEL: DashboardViewModel v2.6.2
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.2 - Forçado início do Watchdog no init e adição de Logs de Diagnóstico (OBD_RESILIENCE).
  * v2.6.1 - Implementação de Watchdog de Re-conexão (tentativa automática a cada 5s se desconectado).
  * v2.6.0 - Implementação de Auto-Conexão Bluetooth (reconexão automática ao abrir o app).
  * v2.5.3 - Ajuste na lógica de escala de RPM para refletir mudanças no Gauge.
@@ -53,6 +54,8 @@ class DashboardViewModel @Inject constructor(
     private var watchdogJob: kotlinx.coroutines.Job? = null
 
     init {
+        android.util.Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Iniciando coletores e Watchdog.")
+        startCollecting() // v2.6.2: Força início imediato dos coletores
         startWatchdog()
     }
 
@@ -63,13 +66,15 @@ class DashboardViewModel @Inject constructor(
                 val state = _uiState.value
                 val address = state.profile.lastConnectedDeviceAddress
                 
-                // v2.6.1: Se estiver desconectado e tiver um endereço salvo, tenta conectar
+                android.util.Log.d("OBD_RESILIENCE", "Watchdog Check: ConnectionState=${state.connectionState::class.simpleName}, Address=$address")
+
+                // v2.6.1/v2.6.2: Se estiver desconectado e tiver um endereço salvo, tenta conectar
                 if (address != null && state.connectionState is ConnectionState.Disconnected) {
-                    android.util.Log.d("OBD_WATCHDOG", "Tentando auto-conexão para $address")
+                    android.util.Log.i("OBD_RESILIENCE", "Watchdog disparando auto-conexão para: $address")
                     autoConnect(address)
                 }
                 
-                kotlinx.coroutines.delay(5000) // Tenta a cada 5 segundos
+                kotlinx.coroutines.delay(5000) 
             }
         }
     }
@@ -78,6 +83,7 @@ class DashboardViewModel @Inject constructor(
         // Coletor 1: Sempre observa o perfil
         viewModelScope.launch {
             profileRepository.getProfile().collect { profile ->
+                android.util.Log.d("OBD_RESILIENCE", "Perfil Carregado: LastAddress=${profile.lastConnectedDeviceAddress}")
                 _uiState.update { it.copy(profile = profile) }
             }
         }
