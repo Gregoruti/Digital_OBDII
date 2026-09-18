@@ -9,6 +9,7 @@
  * v2.3.0 - Adicionado suporte a múltiplos backgrounds nativos e flag isCustomBackground.
  * v2.5.0 - Adicionada configuração de Escala de RPM (maxScaleRpm, isRpmScaleVisible, rpmScaleTextSize).
  * v2.5.1 - Adicionado redlineStartRpm customizável.
+ * v2.5.4 - Atualização dos Padrões de Fábrica (Escala 4K, Redline 2500, Blink Branco, RPM Y:300).
  *
  * Status: Estável.
  */
@@ -16,10 +17,10 @@ package com.example.digital_obd_ii.domain.model
 
 /**
  * CONFIGURAÇÃO DE FÁBRICA OFICIAL (Fonte Única da Verdade)
- * v1.8.7 - Inclusão de Intervalos de Polling (SPS).
+ * v2.5.4 - Ajuste de geometria e posicionamento padrão.
  */
 object FactoryDefaults {
-    val RPM = ElementConfig(415f, 200f, 1.00f)
+    val RPM = ElementConfig(415f, 300f, 0.70f)
     val SPEED = ElementConfig(120f, 265f, 0.70f)
     val TEMP = ElementConfig(140f, 385f, 0.70f)
     val KML = ElementConfig(85f, 502f, 0.70f)
@@ -56,7 +57,7 @@ object FactoryDefaults {
     const val COLOR_DIMMED_BLUE: Long = 0x331A2285
     const val COLOR_ACTIVE_RED: Long = 0xFFF71C10
     const val COLOR_DIMMED_RED: Long = 0x33C71007
-    const val COLOR_BLINK_ON: Long = 0xFFFF0000
+    const val COLOR_BLINK_ON: Long = 0xFFFFFFFF
     const val COLOR_BLINK_OFF: Long = 0xFF000000
 
     // SPS Padrão (ms)
@@ -97,16 +98,16 @@ data class VehicleProfile(
     val elements: Map<String, ElementConfig> = FactoryDefaults.ELEMENTS_MAP,
 
     // Barra de RPM
-    val isShiftLightMode: Boolean = false,
+    val isShiftLightMode: Boolean = true,
     val isRpmGlowEnabled: Boolean = true,
-    val maxRpmScale: Int = 8000, 
+    val maxRpmScale: Int = 4000, 
     val isRpmScaleVisible: Boolean = true,
-    val rpmScaleTextSize: Float = 14f, 
-    val redlineStartRpm: Int = 7000, // NOVO v2.5.1
-    val rpmBarCurvature: Float = 30f,
+    val rpmScaleTextSize: Float = 30f, 
+    val redlineStartRpm: Int = 2500, 
+    val rpmBarCurvature: Float = 35f,
     val rpmBarWidth: Float = 22f,
-    val rpmBarHeight: Float = 40f,
-    val rpmBarY: Float = 100f,
+    val rpmBarHeight: Float = 57f,
+    val rpmBarY: Float = 110.4f,
     val shiftLightBlinkMs: Int = 100,
     
     val colorActiveBlue: Long = FactoryDefaults.COLOR_ACTIVE_BLUE,

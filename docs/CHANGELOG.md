@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.5.4] - 2026-09-08
+### Alterado
+- **Novos Padrões de Fábrica**: Atualização das configurações padrão do dashboard para Escala de 4000 RPM, Início de Redline em 2500 RPM, Curvatura de 35° e altura de barra de 57dp.
+- **Cor de Alerta**: Alteração da cor do Blink (Shift Light) padrão para Branco (FFFFFFFF).
+- **Layout Central**: Reajuste da posição padrão do indicador de RPM (Y:300, Escala 0.70) para melhor ergonomia visual em telas padrão.
+
 ## [2.5.3] - 2026-09-08
 ### Corrigido
 - **Escala de RPM Preditiva**: Remoção do teto forçado de 3200 RPM no modo Shift Light, unificando a escala das barras com a escala numérica (4K/8K). Agora 800 RPM em uma escala de 8K ocupa exatamente 10% da barra, corrigindo a distorção de 2.5x relatada.
