@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ObdRepositoryImpl v2.5.3
+ * REPOSITORY: ObdRepositoryImpl v2.6.0
  * 
  * OBJETIVO:
  * Implementação concreta do repositório OBD, gerenciando a conexão Bluetooth,
  * o motor de polling e o processamento de PIDs.
  *
  * HISTÓRICO:
+ * v2.6.0 - Persistência automática do endereço MAC para Auto-Conexão.
  * v2.5.3 - Estabilização de dados para as novas escalas visuais.
  * v2.1.4 - Motor de Polling Reativo com latência zero (yield).
  * v2.1.0 - Implementação de Mutex para thread-safety no transporte Bluetooth.
@@ -49,9 +50,10 @@ class ObdRepositoryImpl @Inject constructor(
             val initResult = reinitializeAdapter()
             if (initResult.isFailure) return Result.failure(initResult.exceptionOrNull() ?: Exception("Init failed"))
             
-            // Persiste o endereço para Auto-Conexão v1.8.6
-            val profile = profileRepository.getProfileSync()
-            profileRepository.saveProfile(profile.copy(lastConnectedDeviceAddress = device.address))
+            // Persiste o endereço para Auto-Conexão v1.8.6/v2.6.0
+            // Captura o perfil atual e salva o novo endereço
+            val currentProfile = profileRepository.getProfileSync()
+            profileRepository.saveProfile(currentProfile.copy(lastConnectedDeviceAddress = device.address))
         }
         return result
     }

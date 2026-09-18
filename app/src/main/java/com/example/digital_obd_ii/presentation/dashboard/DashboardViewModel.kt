@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v2.5.3
+ * VIEWMODEL: DashboardViewModel v2.6.0
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v2.6.0 - Implementação de Auto-Conexão Bluetooth (reconexão automática ao abrir o app).
  * v2.5.3 - Ajuste na lógica de escala de RPM para refletir mudanças no Gauge.
  * v2.5.0 - Sincronização com o sistema de Escala Dinâmica (4K/8K).
  * v2.1.0 - Integração com o Motor de Conexão Resiliente.
@@ -55,6 +56,13 @@ class DashboardViewModel @Inject constructor(
             profileRepository.getProfile().collect { profile ->
                 // RASTREIO 3: O que chegou no ViewModel?
                 android.util.Log.d("RASTREIO_VM", "VM RECEBEU PERFIL: RPM X=${profile.elements["RPM"]?.x}, Y=${profile.elements["RPM"]?.y}")
+                
+                // v2.6.0: Gatilho de Auto-Conexão se houver endereço salvo e não estiver conectado
+                if (profile.lastConnectedDeviceAddress != null && 
+                    _uiState.value.connectionState is ConnectionState.Disconnected) {
+                    autoConnect(profile.lastConnectedDeviceAddress)
+                }
+                
                 _uiState.update { it.copy(profile = profile) }
             }
         }
@@ -87,6 +95,26 @@ class DashboardViewModel @Inject constructor(
                         }
                     }
                 }
+        }
+    }
+
+    private fun autoConnect(address: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
+            
+            // Tenta obter o dispositivo pareado pelo endereço
+            val device = android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.getRemoteDevice(address)
+            if (device != null) {
+                obdRepository.connect(device)
+                    .onSuccess {
+                        _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
+                    }
+                    .onFailure { e ->
+                        _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                    }
+            } else {
+                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+            }
         }
     }
 

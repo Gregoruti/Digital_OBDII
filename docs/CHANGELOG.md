@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [2.6.0] - 2026-09-08
+### Adicionado
+- **Auto-Conexão Inteligente**: O aplicativo agora memoriza o endereço MAC do último adaptador OBD-II conectado com sucesso. Ao abrir o Dashboard, o sistema tenta restabelecer a conexão automaticamente em segundo plano.
+- **Gestão de Estado de Conexão**: Melhoria no feedback visual durante a reconexão automática.
+
 ## [2.5.7] - 2026-09-08
 ### Consolidado
 - **Padrão de Fábrica Absoluto**: Consolidação da migração de chaves v2.5.6 para garantir que 100% dos usuários recebam a nova geometria (35°/57dp) e performance (50ms) no primeiro carregamento.
