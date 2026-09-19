@@ -6,8 +6,7 @@
  * das requisições OBD-II respeitando os intervalos do perfil.
  *
  * HISTÓRICO:
- * v3.1.0 - TURBO POLLING: Remoção de redundância de RPM e redução de manutenção AT.
- * v2.10.6 - FAIL-FAST: Implementação de descarte de erros para evitar acúmulo de latência.
+ * v3.1.1 - Ajuste de Timeout Global para 250ms.
  * v2.1.4 - Motor reativo com emissão imediata (zero lag).
  */
 package com.example.digital_obd_ii.data.obd

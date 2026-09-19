@@ -15,7 +15,7 @@ import java.util.UUID
 
 /**
  * Gerencia a conexão física via Bluetooth Classic (SPP).
- * v3.1.0 - MODO TURBO: Leitura em blocos (buffer), timeout agressivo de 500ms e limpeza atômica.
+ * v3.1.1 - Timeout ultra-agressivo de 250ms para latência mínima.
  * v2.1.0 - Thread-safe, com limpeza de buffer e timeout.
  */
 class BluetoothConnectionManager(
@@ -48,7 +48,7 @@ class BluetoothConnectionManager(
         }
     }
 
-    suspend fun send(command: String, timeoutMs: Long = 500L): String = mutex.withLock {
+    suspend fun send(command: String, timeoutMs: Long = 250L): String = mutex.withLock {
         withContext(Dispatchers.IO) {
             val out = output ?: return@withContext "ERROR: No Output"
             val inp = input ?: return@withContext "ERROR: No Input"

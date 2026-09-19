@@ -9,6 +9,7 @@
  * v2.7.2 - Consolidação de refinamento de design.
  * v2.10.0 - Customização do Shift Light (Modo de Alvo e Sensibilidade).
  * v3.0.0 - Matriz de Multi-Layout (10 Backgrounds x 2 Presets de Dispositivo).
+ * v3.1.1 - Ajuste de Posição Y padrão da Barra de RPM.
  *
  * Status: Estável.
  */
