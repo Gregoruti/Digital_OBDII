@@ -1,10 +1,19 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.0.0] - 2026-09-08
+## [3.2.0] - 2026-09-08
 ### Adicionado
-- **Arquitetura Multi-Layout**: Implementação de uma matriz de configuração que permite salvar 20 layouts independentes (10 Backgrounds x 2 Modos de Tela).
-- **Seletor de Modo de Dispositivo**: Nova opção no Perfil do Veículo para alternar entre "Modo Tablet (Grande)" e "Modo Carro (Menor 9\")", cada um com sua própria memória de posicionamento.
-- **Migração Inteligente**: Os dados da v2.7.2 foram preservados e movidos automaticamente para o slot [Background 1 + Tablet].
+- **Turbo Polling v3.2.0**: Implementação de motor de busca ultra-performático com leitura em blocos (buffer) e latência reduzida.
+- **Sincronização de Layout Multimídia**: Atualização do preset "Multimídia (Menor)" com escalas 0.90 (principais), 0.65 (secundários) e 0.50 (viagem), focado em centrais multimídia de 9 polegadas.
+- **Documentação de Protocolo**: Atualização do `OBD_COMMUNICATION_PROTOCOL.md` detalhando as novas regras de performance.
+### Alterado
+- **Timeout Bluetooth**: Ajustado para **500ms** como padrão estável, garantindo resiliência em adaptadores reais e emuladores.
+- **Geometria da Barra de RPM**: Correção da posição Y padrão para **50.0**, garantindo que o arco de RPM ocupe o topo da tela por padrão em novos perfis ou resets.
+
+## [3.1.x] - 2026-09-08
+### Otimizado
+- **Modo Turbo (v3.1.0)**: Otimização do loop de busca com remoção de comandos redundantes.
+- **Fail-Fast (v3.1.1)**: Descarte imediato de pacotes corrompidos ou com atraso superior ao timeout para manter a fluidez do RPM.
+- **Ajuste de Y (v3.1.3)**: Correção de regressão na persistência do valor vertical da barra.
 
 ## [2.10.1] - 2026-09-08
 ### Documentação
