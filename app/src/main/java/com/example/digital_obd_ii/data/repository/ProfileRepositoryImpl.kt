@@ -11,6 +11,7 @@ package com.example.digital_obd_ii.data.repository
  * v3.0.0 - MATRIZ DE LAYOUTS: Implementada persistência para 10 backgrounds x 2 presets.
  * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
  * v2.7.1 - Ajuste fino de layout v2.
+ * v3.1.3 - Correção de regressão na Posição Y padrão da Barra de RPM.
  */
 
 import android.content.Context
@@ -140,8 +141,8 @@ class ProfileRepositoryImpl @Inject constructor(
             redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 57f,
-            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 110.4f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 50f,
+            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 50f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
             
             colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE_V2] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,
