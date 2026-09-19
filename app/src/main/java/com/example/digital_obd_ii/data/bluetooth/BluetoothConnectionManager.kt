@@ -15,6 +15,7 @@ import java.util.UUID
 
 /**
  * Gerencia a conexão física via Bluetooth Classic (SPP).
+ * v3.1.0 - MODO TURBO: Leitura em blocos (buffer), timeout agressivo de 500ms e limpeza atômica.
  * v2.1.0 - Thread-safe, com limpeza de buffer e timeout.
  */
 class BluetoothConnectionManager(
@@ -47,36 +48,51 @@ class BluetoothConnectionManager(
         }
     }
 
-    suspend fun send(command: String, timeoutMs: Long = 2000L): String = mutex.withLock {
+    suspend fun send(command: String, timeoutMs: Long = 500L): String = mutex.withLock {
         withContext(Dispatchers.IO) {
             val out = output ?: return@withContext "ERROR: No Output"
             val inp = input ?: return@withContext "ERROR: No Input"
 
+            // v2.10.6: Timeout agressivo de 500ms para evitar travamento em simuladores/clones
             withTimeoutOrNull(timeoutMs) {
                 try {
-                    // 1. Limpa lixo residual do buffer antes de enviar
-                    while (inp.available() > 0) {
-                        inp.read()
+                    // 1. Limpa lixo residual do buffer RAPIDAMENTE
+                    if (inp.available() > 0) {
+                        val skipBuffer = ByteArray(inp.available())
+                        inp.read(skipBuffer)
                     }
 
                     // 2. Envia comando (ASCII)
                     out.write("$command\r".toByteArray(Charsets.US_ASCII))
                     out.flush()
 
-                    // 3. Lê byte a byte até o prompt '>'
+                    // 3. Lê bytes em blocos para performance
                     val responseBuilder = StringBuilder()
-                    while (true) {
-                        val b = inp.read()
-                        if (b == -1) break
-                        val c = b.toChar()
-                        if (c == '>') break
-                        responseBuilder.append(c)
+                    val buffer = ByteArray(1024)
+                    var foundPrompt = false
+                    
+                    while (!foundPrompt) {
+                        if (inp.available() > 0) {
+                            val read = inp.read(buffer)
+                            if (read == -1) break
+                            for (i in 0 until read) {
+                                val c = buffer[i].toChar()
+                                if (c == '>') {
+                                    foundPrompt = true
+                                    break
+                                }
+                                responseBuilder.append(c)
+                            }
+                        } else {
+                            // Pequena pausa para não fritar CPU enquanto aguarda buffer
+                            kotlinx.coroutines.yield()
+                        }
                     }
                     responseBuilder.toString().trim()
                 } catch (e: Exception) {
                     "ERROR: ${e.message}"
                 }
-            } ?: "ERROR: Timeout aguardando prompt '>'"
+            } ?: "ERROR: Timeout"
         }
     }
 

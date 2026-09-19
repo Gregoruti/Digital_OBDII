@@ -1,3 +1,15 @@
+/**
+ * ENGINE: ObdPollingEngine v3.1.0
+ * 
+ * OBJETIVO:
+ * Motor de busca de alta performance (Turbo Polling). Gerencia o ciclo de vida
+ * das requisições OBD-II respeitando os intervalos do perfil.
+ *
+ * HISTÓRICO:
+ * v3.1.0 - TURBO POLLING: Remoção de redundância de RPM e redução de manutenção AT.
+ * v2.10.6 - FAIL-FAST: Implementação de descarte de erros para evitar acúmulo de latência.
+ * v2.1.4 - Motor reativo com emissão imediata (zero lag).
+ */
 package com.example.digital_obd_ii.data.obd
 
 import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
@@ -22,11 +34,14 @@ class ObdPollingEngine(
         while (transport.isConnected()) {
             cycleCount++
             
-            if (cycleCount % 100 == 0) {
+            // v3.1.0: Reduzida frequência de manutenção para não poluir o rádio
+            if (cycleCount % 500 == 0) {
                 Elm327Init.maintenanceSequence.forEach { transport.send(it) }
             }
 
             for (cmd in commands) {
+                if (!transport.isConnected()) break
+
                 val sensorKey = getSensorKey(cmd)
                 val interval = profile.pollingIntervals[sensorKey] ?: 250
                 val now = System.currentTimeMillis()
@@ -35,34 +50,21 @@ class ObdPollingEngine(
                 if (now - lastPoll >= interval) {
                     val query = "${cmd.mode}${cmd.pid}"
                     val raw = transport.send(query)
+                    
+                    // v2.10.6: Se houver erro de Timeout, não processa e pula para o próximo para não acumular atraso
+                    if (raw.startsWith("ERROR")) continue
+
                     val result = ObdResponseParser.parse(raw, cmd)
                     
-                    // Emite Log para diagnóstico
                     _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
 
                     currentResults[cmd] = result
-                    lastPollTimestamps[sensorKey] = now
+                    lastPollTimestamps[sensorKey] = System.currentTimeMillis()
                     
-                    // Emissão Imediata para o Display (v2.1.4)
                     emit(currentResults.toMap())
-                    
-                    if (sensorKey != "RPM") {
-                        val rpmCmd = ObdCommand.Rpm
-                        val rpmQuery = "${rpmCmd.mode}${rpmCmd.pid}"
-                        val rawRpm = transport.send(rpmQuery)
-                        val rpmResult = ObdResponseParser.parse(rawRpm, rpmCmd)
-                        
-                        _diagnosticFlow.tryEmit(createLogEntry(rpmQuery, rawRpm, rpmResult, rpmCmd))
-
-                        currentResults[rpmCmd] = rpmResult
-                        lastPollTimestamps["RPM"] = System.currentTimeMillis()
-                        
-                        // Emissão Imediata após prioridade de RPM
-                        emit(currentResults.toMap())
-                    }
                 }
             }
-            // Substituído delay fixo por yield para maximizar taxa de polling
+            // yield() permite que outras coroutines respirem, mas o loop é o mais rápido possível
             kotlinx.coroutines.yield()
         }
     }.flowOn(Dispatchers.IO)

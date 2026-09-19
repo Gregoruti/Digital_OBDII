@@ -203,6 +203,28 @@ fun VisualSettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
+                    Text("📱 MODO DE DISPOSITIVO", color = CivicColors.BlueGlow, style = MaterialTheme.typography.titleMedium)
+                    Text("Define a escala base e o layout salvo:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        DevicePreset.values().forEach { preset ->
+                            FilterChip(
+                                selected = uiState.profile.devicePreset == preset,
+                                onClick = { viewModel.updateDevicePreset(preset) },
+                                label = { Text(preset.label) },
+                                leadingIcon = if (uiState.profile.devicePreset == preset) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null
+                            )
+                        }
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(top = 12.dp))
+                }
+
+                item {
                     Text("🏁 SIMULADOR DE CONDUÇÃO", color = CivicColors.BlueGlow, style = MaterialTheme.typography.titleMedium)
                     Text("Teste a lógica de marchas e blink abaixo:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     

@@ -19,22 +19,35 @@ package com.example.digital_obd_ii.domain.model
  * v3.0.0 - Suporte a Multi-Layout.
  */
 object FactoryDefaults {
-    val RPM = ElementConfig(435f, 305f, 0.70f)
-    val SPEED = ElementConfig(255f, 270f, 1.00f)
-    val TEMP = ElementConfig(220f, 395f, 0.70f)
-    val KML = ElementConfig(200f, 502f, 0.70f)
-    val VOLTS = ElementConfig(795f, 395f, 0.70f)
-    val CLOCK = ElementConfig(825f, 502f, 0.70f)
-    val GEARS = ElementConfig(770f, 270f, 1.00f)
-    val TRIP_TIME = ElementConfig(485f, 390f, 0.55f)
-    val TRIP_DIST = ElementConfig(485f, 465f, 0.55f)
-    val TRIP_FUEL = ElementConfig(485f, 537f, 0.55f)
+    val RPM = ElementConfig(435f, 270f, 0.70f)
+    val SPEED = ElementConfig(135f, 235f, 1.00f)
+    val TEMP = ElementConfig(135f, 365f, 0.70f)
+    val KML = ElementConfig(135f, 482f, 0.70f)
+    val VOLTS = ElementConfig(800f, 365f, 0.70f)
+    val CLOCK = ElementConfig(775f, 482f, 0.70f)
+    val GEARS = ElementConfig(840f, 235f, 1.00f)
+    val TRIP_TIME = ElementConfig(470f, 355f, 0.55f)
+    val TRIP_DIST = ElementConfig(500f, 430f, 0.55f)
+    val TRIP_FUEL = ElementConfig(500f, 502f, 0.55f)
 
     val ELEMENTS_MAP = mapOf(
         "RPM" to RPM, "SPEED" to SPEED, "TEMP" to TEMP,
         "KML" to KML, "VOLTS" to VOLTS, "CLOCK" to CLOCK,
         "GEARS" to GEARS, "TRIP_TIME" to TRIP_TIME,
         "TRIP_DIST" to TRIP_DIST, "TRIP_FUEL" to TRIP_FUEL
+    )
+
+    val MULTIMEDIA_ELEMENTS_MAP = mapOf(
+        "RPM" to ElementConfig(435f, 270f, 0.65f),
+        "SPEED" to ElementConfig(255f, 235f, 0.90f),
+        "TEMP" to ElementConfig(220f, 360f, 0.65f),
+        "KML" to ElementConfig(200f, 467f, 0.65f),
+        "VOLTS" to ElementConfig(795f, 360f, 0.65f),
+        "CLOCK" to ElementConfig(825f, 467f, 0.65f),
+        "GEARS" to ElementConfig(770f, 235f, 0.90f),
+        "TRIP_TIME" to ElementConfig(485f, 355f, 0.50f),
+        "TRIP_DIST" to ElementConfig(485f, 430f, 0.50f),
+        "TRIP_FUEL" to ElementConfig(485f, 502f, 0.50f)
     )
 
     /**
@@ -101,12 +114,12 @@ data class VehicleProfile(
     val isRpmGlowEnabled: Boolean = true,
     val maxRpmScale: Int = 4000, 
     val isRpmScaleVisible: Boolean = true,
-    val rpmScaleTextSize: Float = 30f, 
+    val rpmScaleTextSize: Float = 25f, 
     val redlineStartRpm: Int = 2500, 
     val rpmBarCurvature: Float = 35f,
     val rpmBarWidth: Float = 22f,
-    val rpmBarHeight: Float = 57f,
-    val rpmBarY: Float = 110.4f,
+    val rpmBarHeight: Float = 50f,
+    val rpmBarY: Float = 50f,
     val shiftLightBlinkMs: Int = 100,
     
     val colorActiveBlue: Long = FactoryDefaults.COLOR_ACTIVE_BLUE,

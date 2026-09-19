@@ -28,9 +28,11 @@ O `ObdResponseParser` utiliza um motor de busca "Fuzzy" e limpeza via Regex:
 - **Busca por Eco**: O parser localiza o padrão `(Mode + 40) + PID` (ex: `410C` para RPM) em qualquer posição da string, permitindo extração de dados mesmo se o comando de ocultar Headers/Eco falhar.
 - **Validação de Payload**: Se o adaptador retornar o Eco mas não os dados (caso de valores `NaN` em emuladores), o sistema identifica como `ADAPTER_ERROR`, evitando que o app processe valores nulos ou quebrados.
 
-## 4. Otimização de Performance (Streaming)
+## 4. Otimização de Performance (Turbo Polling v3.1.0)
+- **Leitura em Blocos (Fast Buffer)**: Implementada na v3.1.0, a leitura da resposta Bluetooth agora é feita em blocos de 1024 bytes, eliminando a latência de leitura byte-a-byte.
+- **Timeout Agressivo (500ms)**: Redução drástica do tempo de espera para evitar que o painel congele em caso de falha de um sensor secundário.
 - **Emissão Imediata**: O `ObdPollingEngine` emite dados via `Flow` sensor a sensor, sem esperar o fim do ciclo de polling.
-- **Yielding**: Substituição de `delay(10ms)` por `yield()`, permitindo que o polling rode na velocidade limite do hardware Bluetooth (baud rate).
+- **Filtro de Display (33 FPS)**: O DashboardViewModel permite atualizações a cada 30ms, garantindo fluidez total em taxas de SPS elevadas.
 
 ---
-*Documento consolidado na v2.2.0*
+*Documento consolidado na v3.1.0*

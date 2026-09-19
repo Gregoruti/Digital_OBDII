@@ -20,6 +20,7 @@ import com.example.digital_obd_ii.domain.model.ElementConfig
 import com.example.digital_obd_ii.domain.model.FuelType
 import com.example.digital_obd_ii.domain.model.DevicePreset
 import com.example.digital_obd_ii.domain.model.VehicleProfile
+import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.domain.model.FactoryDefaults
 import com.example.digital_obd_ii.domain.model.ObdLogEntry
 import com.example.digital_obd_ii.domain.repository.ObdRepository
@@ -127,12 +128,38 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(digitThickness = value)) }
     }
 
-    fun updateDevicePreset(preset: com.example.digital_obd_ii.domain.model.DevicePreset) {
-        _uiState.update { it.copy(profile = it.profile.copy(devicePreset = preset)) }
+    fun updateDevicePreset(preset: DevicePreset) {
+        _uiState.update { state ->
+            val oldProfile = state.profile
+            // 1. Atualiza o preset no perfil
+            val newProfileWithPreset = oldProfile.copy(devicePreset = preset)
+            
+            // 2. Determina qual layout carregar para o novo preset + background atual
+            val layoutKey = FactoryDefaults.getLayoutKey(newProfileWithPreset.backgroundPath, preset)
+            val targetLayout = newProfileWithPreset.multiLayouts[layoutKey] 
+                ?: if (preset == DevicePreset.MULTIMEDIA) FactoryDefaults.MULTIMEDIA_ELEMENTS_MAP 
+                else FactoryDefaults.ELEMENTS_MAP
+            
+            // 3. Aplica o novo preset e o layout correspondente
+            state.copy(profile = newProfileWithPreset.copy(elements = targetLayout))
+        }
     }
 
     fun updateBackground(path: String?, isCustom: Boolean = false) {
-        _uiState.update { it.copy(profile = it.profile.copy(backgroundPath = path, isCustomBackground = isCustom)) }
+        _uiState.update { state ->
+            val oldProfile = state.profile
+            // 1. Atualiza o background
+            val newProfileWithBg = oldProfile.copy(backgroundPath = path, isCustomBackground = isCustom)
+            
+            // 2. Determina qual layout carregar para o novo background + preset atual
+            val layoutKey = FactoryDefaults.getLayoutKey(path, newProfileWithBg.devicePreset)
+            val targetLayout = newProfileWithBg.multiLayouts[layoutKey]
+                ?: if (newProfileWithBg.devicePreset == DevicePreset.MULTIMEDIA) FactoryDefaults.MULTIMEDIA_ELEMENTS_MAP 
+                else FactoryDefaults.ELEMENTS_MAP
+                
+            // 3. Aplica as mudanças
+            state.copy(profile = newProfileWithBg.copy(elements = targetLayout))
+        }
     }
 
     fun updateIsShiftLightMode(value: Boolean) {
@@ -180,7 +207,7 @@ class VehicleProfileViewModel @Inject constructor(
     }
 
     // SHIFT LIGHT v2.10.0
-    fun updateShiftLightTargetMode(mode: com.example.digital_obd_ii.domain.model.ShiftLightTargetMode) {
+    fun updateShiftLightTargetMode(mode: ShiftLightTargetMode) {
         _uiState.update { it.copy(profile = it.profile.copy(shiftLightTargetMode = mode)) }
     }
 

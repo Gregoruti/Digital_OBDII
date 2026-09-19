@@ -108,9 +108,10 @@ class DashboardViewModel @Inject constructor(
                 }
                 .collect { snapshot ->
                     val now = System.currentTimeMillis()
+                    // v3.1.0: Reduzido delta para 30ms para permitir SPS mais alto (33fps+)
                     val deltaSec = (now - lastTimestamp) / 1000.0
                     
-                    if (deltaSec >= 0.1) {
+                    if (deltaSec >= 0.03) {
                         lastTimestamp = now
                         val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
                         val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
