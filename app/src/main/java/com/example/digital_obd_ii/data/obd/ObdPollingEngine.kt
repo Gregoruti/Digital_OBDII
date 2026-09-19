@@ -6,7 +6,7 @@
  * das requisições OBD-II respeitando os intervalos do perfil.
  *
  * HISTÓRICO:
- * v3.1.1 - Ajuste de Timeout Global para 250ms.
+ * v3.1.2 - Revertido Timeout para 500ms (Estabilidade).
  * v2.1.4 - Motor reativo com emissão imediata (zero lag).
  */
 package com.example.digital_obd_ii.data.obd

@@ -9,7 +9,7 @@
  * v2.7.2 - Consolidação de refinamento de design.
  * v2.10.0 - Customização do Shift Light (Modo de Alvo e Sensibilidade).
  * v3.0.0 - Matriz de Multi-Layout (10 Backgrounds x 2 Presets de Dispositivo).
- * v3.1.1 - Ajuste de Posição Y padrão da Barra de RPM.
+ * v3.1.2 - Sincronização de layout Multimídia v1.
  *
  * Status: Estável.
  */
@@ -40,15 +40,15 @@ object FactoryDefaults {
 
     val MULTIMEDIA_ELEMENTS_MAP = mapOf(
         "RPM" to ElementConfig(435f, 270f, 0.65f),
-        "SPEED" to ElementConfig(255f, 235f, 0.90f),
-        "TEMP" to ElementConfig(220f, 360f, 0.65f),
-        "KML" to ElementConfig(200f, 467f, 0.65f),
-        "VOLTS" to ElementConfig(795f, 360f, 0.65f),
-        "CLOCK" to ElementConfig(825f, 467f, 0.65f),
-        "GEARS" to ElementConfig(770f, 235f, 0.90f),
-        "TRIP_TIME" to ElementConfig(485f, 355f, 0.50f),
-        "TRIP_DIST" to ElementConfig(485f, 430f, 0.50f),
-        "TRIP_FUEL" to ElementConfig(485f, 502f, 0.50f)
+        "SPEED" to ElementConfig(135f, 235f, 0.90f),
+        "TEMP" to ElementConfig(135f, 365f, 0.65f),
+        "KML" to ElementConfig(135f, 482f, 0.65f),
+        "VOLTS" to ElementConfig(800f, 365f, 0.65f),
+        "CLOCK" to ElementConfig(775f, 482f, 0.65f),
+        "GEARS" to ElementConfig(840f, 235f, 0.90f),
+        "TRIP_TIME" to ElementConfig(470f, 355f, 0.50f),
+        "TRIP_DIST" to ElementConfig(500f, 430f, 0.50f),
+        "TRIP_FUEL" to ElementConfig(500f, 502f, 0.50f)
     )
 
     /**
