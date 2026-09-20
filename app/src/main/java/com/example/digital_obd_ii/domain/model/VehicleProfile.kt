@@ -13,6 +13,7 @@
  * v3.3.1 - Adicionado controle de Efeito Ghosting.
  * v3.4.0 - Configurações Avançadas de Comunicação e Protocolos CAN.
  * v3.5.2 - Ajustes finos Tablet (BG1) e Ghosting desativado por padrão.
+ * v3.5.3 - Ajuste de coordenadas Tablet para novo background.
  *
  * Status: Estável.
  */
@@ -27,9 +28,9 @@ object FactoryDefaults {
     val SPEED = ElementConfig(135f, 235f, 1.00f)
     val TEMP = ElementConfig(135f, 365f, 0.70f)
     val KML = ElementConfig(135f, 482f, 0.70f)
-    val VOLTS = ElementConfig(800f, 365f, 0.70f)
-    val CLOCK = ElementConfig(775f, 482f, 0.70f)
-    val GEARS = ElementConfig(840f, 235f, 1.00f)
+    val VOLTS = ElementConfig(790f, 365f, 0.70f)
+    val CLOCK = ElementConfig(765f, 482f, 0.70f)
+    val GEARS = ElementConfig(830f, 235f, 1.00f)
     val TRIP_TIME = ElementConfig(470f, 355f, 0.55f)
     val TRIP_DIST = ElementConfig(500f, 430f, 0.55f)
     val TRIP_FUEL = ElementConfig(500f, 502f, 0.55f)
@@ -123,8 +124,8 @@ data class VehicleProfile(
     val redlineStartRpm: Int = 2500, 
     val rpmBarCurvature: Float = 35f,
     val rpmBarWidth: Float = 22f,
-    val rpmBarHeight: Float = 39.9f,
-    val rpmBarY: Float = 50f,
+    val rpmBarHeight: Float = 50f,
+    val rpmBarY: Float = 70f,
     val shiftLightBlinkMs: Int = 100,
     
     val colorActiveBlue: Long = FactoryDefaults.COLOR_ACTIVE_BLUE,

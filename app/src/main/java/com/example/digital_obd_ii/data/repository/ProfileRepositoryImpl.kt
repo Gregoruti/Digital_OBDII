@@ -15,6 +15,7 @@ package com.example.digital_obd_ii.data.repository
  * v3.1.3 - Correção de regressão na Posição Y padrão da Barra de RPM.
  * v3.3.1 - Persistência do estado do Efeito Ghosting.
  * v3.4.0 - Persistência de Configurações Avançadas de Comunicação.
+ * v3.5.3 - Sincronização de padrões Tablet para v3.5.3.
  */
 
 import android.content.Context
@@ -153,8 +154,8 @@ class ProfileRepositoryImpl @Inject constructor(
             redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 39.9f,
-            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 50f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 50f,
+            rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 70f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
             
             colorActiveBlue = preferences[PreferencesKeys.COLOR_ACTIVE_BLUE_V2] ?: FactoryDefaults.COLOR_ACTIVE_BLUE,

@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.5.3] - 2026-09-08
+### Alterado
+- **Ajustes de Layout Tablet (BG1)**: Reajuste de coordenadas para novo background (VOLTS, CLOCK, GEARS).
+- **Geometria da Barra de RPM**: Altura ajustada para 50.0 e Posição Y para 70.0 no modo Tablet.
+- **Sincronização de Versão Global**: Incremento para v3.5.3.
+
 ## [3.5.2] - 2026-09-08
 ### Alterado
 - **Ajustes de Layout Tablet (BG1)**: Sincronização de coordenadas padrão conforme nova tabela (ex: RPM em Y:275).
