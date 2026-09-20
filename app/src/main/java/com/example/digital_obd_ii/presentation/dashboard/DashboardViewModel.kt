@@ -1,15 +1,15 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v3.3.1
+ * VIEWMODEL: DashboardViewModel v3.5.0
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
- * v2.10.0 - Lógica de Blink (Shift Light) movida para o ViewModel com novas regras de restrição
- *           (sem alerta em 5ª marcha ou acima de 100km/h) e customização de alvo.
+ * v3.5.0 - ZERO LATENCY: Remoção de throttle de 30ms e uso de conflate() para fluxo instantâneo.
+ * v3.3.1 - Ajustes de Ghosting e recalibração de versão.
  * v2.6.5 - Limpeza de debug visual e manutenção de lógica interna de resiliência.
  * v2.6.4 - Atraso no Watchdog (startup delay) e Feedback Visual de Depuração na UI.
  * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
@@ -106,30 +106,29 @@ class DashboardViewModel @Inject constructor(
                 .catch { e ->
                     _uiState.update { it.copy(connectionState = ConnectionState.Error(e.message ?: "Erro na conexão")) }
                 }
+                .conflate() // v3.5.0: Evita acúmulo de fila, priorizando sempre o último valor lido
                 .collect { snapshot ->
                     val now = System.currentTimeMillis()
-                    // v3.1.0: Reduzido delta para 30ms para permitir SPS mais alto (33fps+)
                     val deltaSec = (now - lastTimestamp) / 1000.0
                     
-                    if (deltaSec >= 0.03) {
-                        lastTimestamp = now
-                        val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
-                        val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
-                        
-                        val currentProfile = _uiState.value.profile
-                        val gearRec = calculateGear(snapshot.rpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
+                    // v3.5.0: Removido filtro de 30ms para processamento imediato de cada sensor
+                    lastTimestamp = now
+                    val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
+                    val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
+                    
+                    val currentProfile = _uiState.value.profile
+                    val gearRec = calculateGear(snapshot.rpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
-                        // v2.10.0: Cálculo do estado de Blink (Shift Light)
-                        updateBlinkState(snapshot.rpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+                    // v2.10.0: Cálculo do estado de Blink (Shift Light)
+                    updateBlinkState(snapshot.rpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
 
-                        _uiState.update { state ->
-                            state.copy(
-                                snapshot = snapshot,
-                                trip = updatedTrip,
-                                connectionState = ConnectionState.Connected,
-                                gearAction = gearRec.action
-                            )
-                        }
+                    _uiState.update { state ->
+                        state.copy(
+                            snapshot = snapshot,
+                            trip = updatedTrip,
+                            connectionState = ConnectionState.Connected,
+                            gearAction = gearRec.action
+                        )
                     }
                 }
         }

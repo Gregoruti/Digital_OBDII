@@ -1,5 +1,12 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.5.0] - 2026-09-08
+### Otimizado
+- **Fluxo de Dados Zero Latência**: Removido o limitador de 30ms no `DashboardViewModel`, permitindo que cada sensor atualize a tela no exato momento em que é lido.
+- **Emissão Sensor-a-Sensor**: O `ObdPollingEngine` agora emite dados individualmente para cada PID, eliminando a espera pelo fim do ciclo de prioridade.
+- **Anti-Fila (Conflate)**: Implementado o operador `.conflate()` no fluxo de dados para garantir que a UI sempre processe apenas o valor mais recente, descartando amostras obsoletas durante frames pesados.
+- **Sincronização Visual Suave**: Manutenção das animações de interpolação, agora reagindo a uma frequência de entrada muito superior.
+
 ## [3.4.0] - 2026-09-08
 ### Adicionado
 - **Motor de Polling com Prioridades**: Implementação de agendador hierárquico (ratio 8:1) para priorizar RPM, Velocidade e MAF sobre outros sensores.

@@ -1,11 +1,12 @@
 /**
- * ENGINE: ObdPollingEngine v3.4.0
+ * ENGINE: ObdPollingEngine v3.5.0
  * 
  * OBJETIVO:
  * Motor de busca de alta performance (Turbo Polling). Gerencia o ciclo de vida
- * das requisições OBD-II com agendador hierárquico (Priority Interleaving).
+ * das requisições OBD-II com agendador hierárquico e emissão instantânea.
  *
  * HISTÓRICO:
+ * v3.5.0 - ZERO LATENCY: Emissão sensor-a-sensor para atualização instantânea do display.
  * v3.4.0 - Agendador Hierárquico (8:1), Multi-PID, Benchmark e Circuit Breaker.
  * v3.1.2 - Revertido Timeout para 500ms (Estabilidade).
  */
@@ -82,7 +83,8 @@ class ObdPollingEngine(
                 highPriorityTick = 0
             }
 
-            emit(currentResults.toMap())
+            // Removido emit(currentResults.toMap()) do loop principal v3.5.0
+            // A emissão agora ocorre dentro de cada função de execução para latência zero.
             kotlinx.coroutines.yield()
         }
     }.flowOn(Dispatchers.IO)
@@ -112,10 +114,13 @@ class ObdPollingEngine(
             _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
             results[cmd] = result
             lastPollTimestamps[sensorKey] = System.currentTimeMillis()
+            
+            // v3.5.0: Emissão instantânea logo após o parse do sensor individual
+            emit(results.toMap())
         }
     }
 
-    private suspend fun executeMultiPid(
+    private suspend fun FlowCollector<Map<ObdCommand, Double?>>.executeMultiPid(
         cmds: List<ObdCommand>,
         results: MutableMap<ObdCommand, Double?>
     ) {
@@ -137,6 +142,8 @@ class ObdPollingEngine(
                 _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
             }
         }
+        // v3.5.0: Emite o bloco atualizado instantaneamente
+        emit(results.toMap())
     }
 
     private fun updateMetrics(rtt: Long, isError: Boolean) {
