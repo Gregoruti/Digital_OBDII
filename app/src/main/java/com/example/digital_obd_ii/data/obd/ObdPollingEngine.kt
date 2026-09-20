@@ -1,11 +1,12 @@
 /**
- * ENGINE: ObdPollingEngine v3.5.1
+ * ENGINE: ObdPollingEngine v3.5.2
  * 
  * OBJETIVO:
  * Motor de busca de alta performance (Turbo Polling). Gerencia o ciclo de vida
  * das requisições OBD-II com agendador hierárquico e emissão instantânea estável.
  *
  * HISTÓRICO:
+ * v3.5.2 - Sincronização de versão e melhorias de performance consolidadas.
  * v3.5.1 - ESTABILIZAÇÃO: Uso de cache persistente para eliminar oscilação em sensores lentos.
  * v3.5.0 - ZERO LATENCY: Emissão sensor-a-sensor para atualização instantânea do display.
  * v3.4.0 - Agendador Hierárquico (8:1), Multi-PID, Benchmark e Circuit Breaker.

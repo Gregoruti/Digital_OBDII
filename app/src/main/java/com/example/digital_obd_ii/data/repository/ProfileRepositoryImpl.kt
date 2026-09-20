@@ -138,7 +138,7 @@ class ProfileRepositoryImpl @Inject constructor(
             digitHeight = preferences[PreferencesKeys.DIGIT_HEIGHT] ?: 110f,
             digitThickness = preferences[PreferencesKeys.DIGIT_THICKNESS] ?: 14f,
             digitSkew = preferences[PreferencesKeys.DIGIT_SKEW] ?: -12f,
-            isGhostEnabled = preferences[PreferencesKeys.IS_GHOST_ENABLED] ?: true,
+            isGhostEnabled = preferences[PreferencesKeys.IS_GHOST_ENABLED] ?: false,
             backgroundPath = bgPath,
             isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG_V2] ?: false,
             devicePreset = preset,

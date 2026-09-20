@@ -12,6 +12,7 @@
  * v3.1.2 - Sincronização de layout Multimídia v1.
  * v3.3.1 - Adicionado controle de Efeito Ghosting.
  * v3.4.0 - Configurações Avançadas de Comunicação e Protocolos CAN.
+ * v3.5.2 - Ajustes finos Tablet (BG1) e Ghosting desativado por padrão.
  *
  * Status: Estável.
  */
@@ -22,7 +23,7 @@ package com.example.digital_obd_ii.domain.model
  * v3.0.0 - Suporte a Multi-Layout.
  */
 object FactoryDefaults {
-    val RPM = ElementConfig(435f, 270f, 0.70f)
+    val RPM = ElementConfig(435f, 275f, 0.70f)
     val SPEED = ElementConfig(135f, 235f, 1.00f)
     val TEMP = ElementConfig(135f, 365f, 0.70f)
     val KML = ElementConfig(135f, 482f, 0.70f)
@@ -101,7 +102,7 @@ data class VehicleProfile(
     val digitHeight: Float = 110f,
     val digitThickness: Float = 14f,
     val digitSkew: Float = -12f,
-    val isGhostEnabled: Boolean = true,
+    val isGhostEnabled: Boolean = false,
     
     val backgroundPath: String? = "dashboard_bg_1.jpg",
     val isCustomBackground: Boolean = false,

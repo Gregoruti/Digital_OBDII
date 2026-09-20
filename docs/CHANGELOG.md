@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.5.2] - 2026-09-08
+### Alterado
+- **Ajustes de Layout Tablet (BG1)**: Sincronização de coordenadas padrão conforme nova tabela (ex: RPM em Y:275).
+- **Padrão Visual**: Efeito Ghosting desativado por padrão para displays digitais mais limpos.
+- **Sincronização de Versão Global**: Incremento para v3.5.2.
+
 ## [3.5.1] - 2026-09-08
 ### Corrigido
 - **Estabilização de Sensores Lentos**: Implementado cache persistente no `ObdPollingEngine` para eliminar a oscilação visual ("flicker") nos campos de Temperatura e Voltagem durante a emissão de alta frequência do RPM.
