@@ -12,7 +12,7 @@ package com.example.digital_obd_ii.data.repository
  * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
  * v2.7.1 - Ajuste fino de layout v2.
  * v3.1.3 - Correção de regressão na Posição Y padrão da Barra de RPM.
- * v3.3.0 - Sincronização de altura RPM 39.9 e texto 25.0 pós-testes.
+ * v3.3.1 - Persistência do estado do Efeito Ghosting.
  */
 
 import android.content.Context
@@ -50,6 +50,7 @@ class ProfileRepositoryImpl @Inject constructor(
         val DIGIT_HEIGHT = floatPreferencesKey("digit_height")
         val DIGIT_THICKNESS = floatPreferencesKey("digit_thickness")
         val DIGIT_SKEW = floatPreferencesKey("digit_skew")
+        val IS_GHOST_ENABLED = booleanPreferencesKey("is_ghost_enabled")
         
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
         val ELEMENTS_CONFIG = stringPreferencesKey("elements_config_v12")
@@ -128,6 +129,7 @@ class ProfileRepositoryImpl @Inject constructor(
             digitHeight = preferences[PreferencesKeys.DIGIT_HEIGHT] ?: 110f,
             digitThickness = preferences[PreferencesKeys.DIGIT_THICKNESS] ?: 14f,
             digitSkew = preferences[PreferencesKeys.DIGIT_SKEW] ?: -12f,
+            isGhostEnabled = preferences[PreferencesKeys.IS_GHOST_ENABLED] ?: true,
             backgroundPath = bgPath,
             isCustomBackground = preferences[PreferencesKeys.IS_CUSTOM_BG_V2] ?: false,
             devicePreset = preset,
@@ -181,6 +183,7 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.DIGIT_HEIGHT] = profile.digitHeight
             preferences[PreferencesKeys.DIGIT_THICKNESS] = profile.digitThickness
             preferences[PreferencesKeys.DIGIT_SKEW] = profile.digitSkew
+            preferences[PreferencesKeys.IS_GHOST_ENABLED] = profile.isGhostEnabled
             
             profile.backgroundPath?.let { preferences[PreferencesKeys.BACKGROUND_PATH] = it } ?: preferences.remove(PreferencesKeys.BACKGROUND_PATH)
             preferences[PreferencesKeys.IS_CUSTOM_BG_V2] = profile.isCustomBackground

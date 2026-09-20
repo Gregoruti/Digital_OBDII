@@ -10,7 +10,7 @@
  * v2.10.0 - Customização do Shift Light (Modo de Alvo e Sensibilidade).
  * v3.0.0 - Matriz de Multi-Layout (10 Backgrounds x 2 Presets de Dispositivo).
  * v3.1.2 - Sincronização de layout Multimídia v1.
- * v3.3.0 - Ajuste Fino Multimídia pós-testes reais (Altura RPM 39.9 e Y:225 para Speed/Gears).
+ * v3.3.1 - Adicionado controle de Efeito Ghosting.
  *
  * Status: Estável.
  */
@@ -100,6 +100,7 @@ data class VehicleProfile(
     val digitHeight: Float = 110f,
     val digitThickness: Float = 14f,
     val digitSkew: Float = -12f,
+    val isGhostEnabled: Boolean = true,
     
     val backgroundPath: String? = "dashboard_bg_1.jpg",
     val isCustomBackground: Boolean = false,

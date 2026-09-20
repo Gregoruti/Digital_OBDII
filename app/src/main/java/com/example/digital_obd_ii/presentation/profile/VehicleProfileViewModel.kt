@@ -128,6 +128,10 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(digitThickness = value)) }
     }
 
+    fun updateIsGhostEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(profile = it.profile.copy(isGhostEnabled = enabled)) }
+    }
+
     fun updateDevicePreset(preset: DevicePreset) {
         _uiState.update { state ->
             val oldProfile = state.profile

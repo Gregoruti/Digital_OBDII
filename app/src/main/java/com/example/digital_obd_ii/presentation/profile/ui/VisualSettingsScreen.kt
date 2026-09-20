@@ -256,6 +256,10 @@ fun VisualSettingsScreen(
                         Text("Efeito Glow (Brilho)", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isRpmGlowEnabled, onCheckedChange = { viewModel.updateIsRpmGlowEnabled(it) })
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Efeito Ghosting (Displays)", modifier = Modifier.weight(1f))
+                        Switch(checked = uiState.profile.isGhostEnabled, onCheckedChange = { viewModel.updateIsGhostEnabled(it) })
+                    }
                     
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text("Escala de RPM", style = MaterialTheme.typography.labelLarge, color = CivicColors.BlueGlow)
@@ -430,7 +434,8 @@ fun VisualSettingsScreen(
                                 digitHeight = uiState.profile.digitHeight * config.scale * previewScale.avgScale,
                                 thickness = uiState.profile.digitThickness * config.scale * previewScale.avgScale,
                                 skewAngleDeg = uiState.profile.digitSkew,
-                                activeColor = Color.White
+                                activeColor = Color.White,
+                                isGhostEnabled = uiState.profile.isGhostEnabled
                             )
                         }
                     }

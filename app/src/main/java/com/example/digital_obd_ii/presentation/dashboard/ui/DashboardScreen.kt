@@ -1,5 +1,5 @@
 /**
- * UI: DashboardScreen v3.3.0
+ * UI: DashboardScreen v3.3.1
  * Objetivo: Tela principal de exibição de dados do veículo em tempo real.
  * 
  * HISTÓRICO:
@@ -203,7 +203,8 @@ fun DashboardScreen(
                         thickness = uiState.profile.digitThickness * config.scale * screenScale.avgScale,
                         skewAngleDeg = uiState.profile.digitSkew,
                         activeColor = color,
-                        padLength = pad
+                        padLength = pad,
+                        isGhostEnabled = uiState.profile.isGhostEnabled
                     )
                 }
             }

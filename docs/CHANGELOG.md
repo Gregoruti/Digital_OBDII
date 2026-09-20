@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.3.1] - 2026-09-08
+### Adicionado
+- **Controle de Ghosting**: Novo botão de liga/desliga no menu de personalização visual para o efeito de "fundo apagado" (888) nos displays de 7 segmentos.
+- **Persistência**: O estado do Ghosting é salvo no perfil do veículo e aplicado globalmente.
+
 ## [3.3.0] - 2026-09-08
 ### Adicionado
 - **Ajuste Fino Multimídia pós-testes reais**: Atualização do preset "Multimídia (Menor)" com novas coordenadas Y:225 para Speed/Gears e altura de RPM reduzida para 39.9px.

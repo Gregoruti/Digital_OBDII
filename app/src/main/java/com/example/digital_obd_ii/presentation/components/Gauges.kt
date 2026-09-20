@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.components
 
 /**
- * COMPONENTES DE VISUALIZAÇÃO (GAUGES) v2.5.3
+ * COMPONENTES DE VISUALIZAÇÃO (GAUGES) v3.3.1
  * 
  * OBJETIVO:
  * Fornecer componentes de interface de alta fidelidade para o Dashboard, incluindo
  * Gauges de RPM em arco/reta, Texto em 7-Segmentos e Cards de Informação Digital.
  *
  * HISTÓRICO DE VERSÕES:
+ * v3.3.1 - Adicionado toggle isGhostEnabled para controle dinâmico do fundo de displays.
  * - 2.5.3: Correção crítica na escala de RPM e posição do Redline. Removido teto de 3200 RPM
  *          que causava distorção visual em escalas de 4K/8K.
  * - 2.5.2: Correção de sintaxe e ajuste fino na renderização do Redline.
@@ -95,7 +96,7 @@ val digitSegments = mapOf(
  */
 fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEngine7SegPx(
     char: Char, xPx: Float, yPx: Float, wPx: Float, hPx: Float, tPx: Float, skewDeg: Float,
-    activeColor: Color, ghostColor: Color, isN: Boolean = false
+    activeColor: Color, ghostColor: Color, isN: Boolean = false, isGhostEnabled: Boolean = true
 ) {
     val gap = tPx * 0.15f
     val skewRad = Math.toRadians(skewDeg.toDouble()).toFloat()
@@ -144,8 +145,10 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEngine7SegPx(
 
     // v1.8.8: Renderiza o Ghost (fundo apagado) APENAS para os segmentos que não estão ativos no char atual
     // Isso garante que o efeito de "display desligado" exista sem bugar os zeros.
-    val ghostStates = BooleanArray(7) { i -> !segs[i] }
-    renderSegments(ghostStates) // Renderiza fundo apagado
+    if (isGhostEnabled) {
+        val ghostStates = BooleanArray(7) { i -> !segs[i] }
+        renderSegments(ghostStates) // Renderiza fundo apagado
+    }
     renderSegments(segs)        // Renderiza segmentos acesos
 
     drawContext.canvas.restore()
@@ -165,7 +168,8 @@ fun SevenSegmentText(
     skewAngleDeg: Float = -12f,
     activeColor: Color = CivicColors.White,
     ghostColor: Color = CivicColors.GhostDark,
-    padLength: Int = 0
+    padLength: Int = 0,
+    isGhostEnabled: Boolean = true
 ) {
     Canvas(modifier = modifier) {
         // Limpeza de string para cálculo de padding (ignora pontuação)
@@ -220,7 +224,7 @@ fun SevenSegmentText(
                     curX += charTotalWidth * 0.6f
                 }
                 else -> {
-                    drawEngine7SegPx(char, curX, 0f, digitWidth, digitHeight, thickness, skewAngleDeg, activeColor, ghostColor, char == 'N')
+                    drawEngine7SegPx(char, curX, 0f, digitWidth, digitHeight, thickness, skewAngleDeg, activeColor, ghostColor, char == 'N', isGhostEnabled)
                     curX += charTotalWidth
                 }
             }
