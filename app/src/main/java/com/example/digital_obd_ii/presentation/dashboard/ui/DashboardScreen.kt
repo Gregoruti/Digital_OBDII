@@ -1,5 +1,5 @@
 /**
- * UI: DashboardScreen v3.5.2
+ * UI: DashboardScreen v3.6.0
  * Objetivo: Tela principal de exibição de dados do veículo em tempo real.
  * 
  * HISTÓRICO:

@@ -14,6 +14,7 @@
  * v3.4.0 - Configurações Avançadas de Comunicação e Protocolos CAN.
  * v3.5.2 - Ajustes finos Tablet (BG1) e Ghosting desativado por padrão.
  * v3.5.3 - Ajuste de coordenadas Tablet para novo background.
+ * v3.6.0 - Consolidação de Layout Tablet e Visual Clean por padrão.
  *
  * Status: Estável.
  */

@@ -16,6 +16,7 @@ package com.example.digital_obd_ii.data.repository
  * v3.3.1 - Persistência do estado do Efeito Ghosting.
  * v3.4.0 - Persistência de Configurações Avançadas de Comunicação.
  * v3.5.3 - Sincronização de padrões Tablet para v3.5.3.
+ * v3.6.0 - Consolidação de geometrias e desativação nativa de Ghosting.
  */
 
 import android.content.Context

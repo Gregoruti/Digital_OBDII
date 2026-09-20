@@ -1,5 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.6.0] - 2026-09-08
+### Adicionado
+- **Consolidação de Alta Performance**: Formalização do motor de streaming sensor-a-sensor com cache persistente para estabilidade total.
+- **Ajustes de Layout Tablet (BG1)**: Reajuste final de coordenadas (VOLTS, CLOCK, GEARS) e geometria da Barra de RPM (Y:70, Altura:50) para novo background.
+- **Visual "Clean" por Padrão**: Efeito Ghosting desativado nativamente para melhor legibilidade.
+
 ## [3.5.3] - 2026-09-08
 ### Alterado
 - **Ajustes de Layout Tablet (BG1)**: Reajuste de coordenadas para novo background (VOLTS, CLOCK, GEARS).

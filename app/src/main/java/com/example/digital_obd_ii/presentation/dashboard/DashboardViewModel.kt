@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v3.5.2
+ * VIEWMODEL: DashboardViewModel v3.6.0
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v3.6.0 - Consolidação de estabilidade e cache persistente.
  * v3.5.2 - Sincronização de versão e melhorias de performance consolidadas.
  * v3.5.1 - ESTABILIZAÇÃO: Correção de oscilação em campos de Temp/Volts via persistent cache.
  * v3.5.0 - ZERO LATENCY: Remoção de throttle de 30ms e uso de conflate() para fluxo instantâneo.
