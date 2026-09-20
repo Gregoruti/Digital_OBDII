@@ -1,11 +1,12 @@
 /**
- * ENGINE: ObdPollingEngine v3.5.0
+ * ENGINE: ObdPollingEngine v3.5.1
  * 
  * OBJETIVO:
  * Motor de busca de alta performance (Turbo Polling). Gerencia o ciclo de vida
- * das requisições OBD-II com agendador hierárquico e emissão instantânea.
+ * das requisições OBD-II com agendador hierárquico e emissão instantânea estável.
  *
  * HISTÓRICO:
+ * v3.5.1 - ESTABILIZAÇÃO: Uso de cache persistente para eliminar oscilação em sensores lentos.
  * v3.5.0 - ZERO LATENCY: Emissão sensor-a-sensor para atualização instantânea do display.
  * v3.4.0 - Agendador Hierárquico (8:1), Multi-PID, Benchmark e Circuit Breaker.
  * v3.1.2 - Revertido Timeout para 500ms (Estabilidade).
@@ -23,6 +24,7 @@ class ObdPollingEngine(
     private val transport: BluetoothConnectionManager
 ) {
     private val lastPollTimestamps = mutableMapOf<String, Long>()
+    private val persistentResults = mutableMapOf<ObdCommand, Double?>() // v3.5.1: Cache para estabilização
     private var cycleCount = 0
     private var highPriorityTick = 0
     private var lowPriorityIndex = 0
@@ -48,8 +50,6 @@ class ObdPollingEngine(
     }
 
     fun observe(commands: List<ObdCommand>, profile: VehicleProfile): Flow<Map<ObdCommand, Double?>> = flow {
-        val currentResults = mutableMapOf<ObdCommand, Double?>()
-        
         // Separação por Prioridade (v3.4.0)
         val highPriority = commands.filter { isHighPriority(it) }
         val lowPriority = commands.filter { !isHighPriority(it) }
@@ -70,15 +70,15 @@ class ObdPollingEngine(
             if (highPriorityTick < profile.interleavingRatio || lowPriority.isEmpty()) {
                 // EXECUÇÃO ALTA PRIORIDADE
                 if (profile.isMultiPidEnabled && highPriority.size > 1) {
-                    executeMultiPid(highPriority, currentResults)
+                    executeMultiPid(highPriority)
                 } else {
-                    highPriority.forEach { executeSinglePid(it, currentResults, profile) }
+                    highPriority.forEach { executeSinglePid(it, profile) }
                 }
                 highPriorityTick++
             } else {
                 // EXECUÇÃO BAIXA PRIORIDADE (Circular)
                 val cmd = lowPriority[lowPriorityIndex % lowPriority.size]
-                executeSinglePid(cmd, currentResults, profile)
+                executeSinglePid(cmd, profile)
                 lowPriorityIndex++
                 highPriorityTick = 0
             }
@@ -91,7 +91,6 @@ class ObdPollingEngine(
 
     private suspend fun FlowCollector<Map<ObdCommand, Double?>>.executeSinglePid(
         cmd: ObdCommand, 
-        results: MutableMap<ObdCommand, Double?>,
         profile: VehicleProfile
     ) {
         val sensorKey = getSensorKey(cmd)
@@ -112,17 +111,21 @@ class ObdPollingEngine(
 
             val result = ObdResponseParser.parse(raw, cmd)
             _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
-            results[cmd] = result
+            
+            // v3.5.1: Atualiza o cache persistente. Se o novo valor for null, mantém o último válido.
+            if (result != null) {
+                persistentResults[cmd] = result
+            }
+            
             lastPollTimestamps[sensorKey] = System.currentTimeMillis()
             
-            // v3.5.0: Emissão instantânea logo após o parse do sensor individual
-            emit(results.toMap())
+            // Emite o estado completo do cache para evitar oscilação
+            emit(persistentResults.toMap())
         }
     }
 
     private suspend fun FlowCollector<Map<ObdCommand, Double?>>.executeMultiPid(
-        cmds: List<ObdCommand>,
-        results: MutableMap<ObdCommand, Double?>
+        cmds: List<ObdCommand>
     ) {
         val pids = cmds.joinToString("") { it.pid }
         val query = "01${pids}1"
@@ -138,12 +141,11 @@ class ObdPollingEngine(
         cmds.forEach { cmd ->
             val result = ObdResponseParser.parse(raw, cmd)
             if (result != null) {
-                results[cmd] = result
+                persistentResults[cmd] = result
                 _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
             }
         }
-        // v3.5.0: Emite o bloco atualizado instantaneamente
-        emit(results.toMap())
+        emit(persistentResults.toMap())
     }
 
     private fun updateMetrics(rtt: Long, isError: Boolean) {

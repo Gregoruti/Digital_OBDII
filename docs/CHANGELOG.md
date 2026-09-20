@@ -1,5 +1,10 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.5.1] - 2026-09-08
+### Corrigido
+- **Estabilização de Sensores Lentos**: Implementado cache persistente no `ObdPollingEngine` para eliminar a oscilação visual ("flicker") nos campos de Temperatura e Voltagem durante a emissão de alta frequência do RPM.
+- **Veredito Técnico**: A solução de Zero-Latency Stream (v3.5.0) demonstrou-se altamente eficaz em testes com emulador ELM327, reduzindo drasticamente o RTT percebido e eliminando filas de processamento via software.
+
 ## [3.5.0] - 2026-09-08
 ### Otimizado
 - **Fluxo de Dados Zero Latência**: Removido o limitador de 30ms no `DashboardViewModel`, permitindo que cada sensor atualize a tela no exato momento em que é lido.
