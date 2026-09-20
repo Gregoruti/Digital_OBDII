@@ -1,5 +1,13 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.3.0] - 2026-09-08
+### Adicionado
+- **Ajuste Fino Multimídia pós-testes reais**: Atualização do preset "Multimídia (Menor)" com novas coordenadas Y:225 para Speed/Gears e altura de RPM reduzida para 39.9px.
+- **Sincronização de Versão Global**: Incremento para v3.3.0 em todos os componentes e exibição na UI.
+### Alterado
+- **Geometria da Barra de RPM**: Altura padrão reduzida de 50.0 para **39.9** para melhor encaixe visual em telas de 9".
+- **Posicionamento Multimídia**: SPEED e GEARS movidos verticalmente para Y:225 para equilíbrio com o arco de RPM.
+
 ## [3.2.0] - 2026-09-08
 ### Adicionado
 - **Turbo Polling v3.2.0**: Implementação de motor de busca ultra-performático com leitura em blocos (buffer) e latência reduzida.

@@ -1,5 +1,5 @@
 /**
- * ENGINE: ObdPollingEngine v3.1.0
+ * ENGINE: ObdPollingEngine v3.3.0
  * 
  * OBJETIVO:
  * Motor de busca de alta performance (Turbo Polling). Gerencia o ciclo de vida

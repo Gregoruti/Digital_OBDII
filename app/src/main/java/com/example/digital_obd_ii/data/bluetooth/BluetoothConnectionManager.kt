@@ -15,7 +15,7 @@ import java.util.UUID
 
 /**
  * Gerencia a conexão física via Bluetooth Classic (SPP).
- * v3.1.2 - Revertido timeout para 500ms por estabilidade.
+ * v3.3.0 - Consolidado com Turbo Polling e Buffer estável.
  * v2.1.0 - Thread-safe, com limpeza de buffer e timeout.
  */
 class BluetoothConnectionManager(

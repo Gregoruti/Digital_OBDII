@@ -12,6 +12,7 @@ package com.example.digital_obd_ii.data.repository
  * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
  * v2.7.1 - Ajuste fino de layout v2.
  * v3.1.3 - Correção de regressão na Posição Y padrão da Barra de RPM.
+ * v3.3.0 - Sincronização de altura RPM 39.9 e texto 25.0 pós-testes.
  */
 
 import android.content.Context
@@ -137,11 +138,11 @@ class ProfileRepositoryImpl @Inject constructor(
             isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] ?: true,
             maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE_V2] ?: 4000,
             isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] ?: true,
-            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] ?: 30f,
+            rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] ?: 25f,
             redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 50f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 39.9f,
             rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 50f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
             
