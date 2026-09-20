@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.digital_obd_ii.presentation.connection.ui.DeviceListScreen
+import com.example.digital_obd_ii.presentation.communication.ui.CommunicationScreen
 import com.example.digital_obd_ii.presentation.dashboard.ui.DashboardScreen
 import com.example.digital_obd_ii.presentation.debug.ui.ObdTerminalScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
@@ -20,6 +21,7 @@ sealed class Screen(val route: String) {
     object Terminal : Screen("terminal")
     object Dashboard : Screen("dashboard")
     object Performance : Screen("performance")
+    object Communication : Screen("communication")
 }
 
 @Composable
@@ -47,8 +49,12 @@ fun AppNavHost(
                 onDashboardClick = { navController.navigate(Screen.Dashboard.route) },
                 onVisualClick = { navController.navigate(Screen.VisualSettings.route) },
                 onBluetoothClick = { navController.navigate(Screen.DeviceList.route) },
-                onPerformanceClick = { navController.navigate(Screen.Performance.route) }
+                onPerformanceClick = { navController.navigate(Screen.Performance.route) },
+                onCommunicationClick = { navController.navigate(Screen.Communication.route) }
             )
+        }
+        composable(Screen.Communication.route) {
+            CommunicationScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.VisualSettings.route) {
             VisualSettingsScreen(onBack = { navController.popBackStack() })

@@ -1,5 +1,13 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.4.0] - 2026-09-08
+### Adicionado
+- **Motor de Polling com Prioridades**: Implementação de agendador hierárquico (ratio 8:1) para priorizar RPM, Velocidade e MAF sobre outros sensores.
+- **Modo Turbo (Multi-PID)**: Suporte para agrupar múltiplos PIDs em uma única requisição OBD-II, dobrando o throughput em adaptadores compatíveis.
+- **Nova Tela: Comunicação**: Painel avançado para configuração de protocolos CAN (11/29-bit, 250/500k), Timing Adaptativo e timeouts do chip.
+- **Benchmark em Tempo Real**: Monitoramento de latência (RTT), taxa de atualização (Hz) e taxa de erro diretamente na interface de comunicação.
+- **Circuit Breaker**: Função de interrupção manual da comunicação serial para diagnósticos seguros.
+
 ## [3.3.1] - 2026-09-08
 ### Adicionado
 - **Controle de Ghosting**: Novo botão de liga/desliga no menu de personalização visual para o efeito de "fundo apagado" (888) nos displays de 7 segmentos.

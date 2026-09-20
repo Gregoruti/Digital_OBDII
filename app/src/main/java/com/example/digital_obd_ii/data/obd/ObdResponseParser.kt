@@ -23,11 +23,12 @@ object ObdResponseParser {
         val normalizedPid = command.pid.uppercase().padStart(2, '0')
         val target = expectedEchoMode + normalizedPid
 
-        // Busca o target dentro da string
-        if (!clean.contains(target)) return null
-
-        // Pega apenas o que vem DEPOIS do target e limita ao tamanho esperado
-        val dataPart = clean.substringAfter(target)
+        // v3.4.0: Suporte a Multi-PID (Busca o PID simples se o eco global estiver presente)
+        val dataPart = when {
+            clean.contains(target) -> clean.substringAfter(target)
+            clean.startsWith(expectedEchoMode) && clean.contains(normalizedPid) -> clean.substringAfter(normalizedPid)
+            else -> return null
+        }
         
         // Se a resposta contém o ECO mas não contém os bytes de dados (caso do seu log NaN)
         if (dataPart.length < command.expectedBytes * 2) {

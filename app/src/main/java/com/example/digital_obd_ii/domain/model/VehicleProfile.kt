@@ -11,6 +11,7 @@
  * v3.0.0 - Matriz de Multi-Layout (10 Backgrounds x 2 Presets de Dispositivo).
  * v3.1.2 - Sincronização de layout Multimídia v1.
  * v3.3.1 - Adicionado controle de Efeito Ghosting.
+ * v3.4.0 - Configurações Avançadas de Comunicação e Protocolos CAN.
  *
  * Status: Estável.
  */
@@ -140,7 +141,15 @@ data class VehicleProfile(
     val pollingIntervals: Map<String, Int> = FactoryDefaults.POLLING_INTERVALS,
     
     // PERSISTÊNCIA BT
-    val lastConnectedDeviceAddress: String? = null
+    val lastConnectedDeviceAddress: String? = null,
+
+    // CONFIGURAÇÕES DE COMUNICAÇÃO (v3.4.0)
+    val obdProtocol: ObdProtocol = ObdProtocol.CAN_11BIT_500K,
+    val isMultiPidEnabled: Boolean = false,
+    val interleavingRatio: Int = 8, // 8 High : 1 Low
+    val maintenanceCycleInterval: Int = 500, // Ciclos entre comandos de manutenção
+    val adaptiveTiming: AdaptiveTiming = AdaptiveTiming.AUTO,
+    val atTimeoutMs: Int = 32 // AT ST 32 (128ms)
 )
 
 data class ElementConfig(
@@ -163,4 +172,18 @@ enum class DevicePreset(val label: String) {
 enum class ShiftLightTargetMode(val label: String) {
     ECONOMIC("Econômico (2.7k - 3k)"),
     PERFORMANCE("Performance (Início Redline)")
+}
+
+enum class ObdProtocol(val command: String, val label: String) {
+    AUTO("AT SP 0", "Automático (Bus Search)"),
+    CAN_11BIT_500K("AT SP 6", "CAN 11-bit 500k (Padrão)"),
+    CAN_29BIT_500K("AT SP 7", "CAN 29-bit 500k"),
+    CAN_11BIT_250K("AT SP 8", "CAN 11-bit 250k"),
+    CAN_29BIT_250K("AT SP 9", "CAN 29-bit 250k")
+}
+
+enum class AdaptiveTiming(val command: String, val label: String) {
+    OFF("AT AT 0", "Desativado"),
+    AUTO("AT AT 1", "Automático (Padrão)"),
+    AGGRESSIVE("AT AT 2", "Agressivo (Alta Vel.)")
 }

@@ -1,18 +1,20 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ProfileRepositoryImpl v3.0.0
+ * REPOSITORY: ProfileRepositoryImpl v3.4.0
  * 
  * OBJETIVO:
- * Gerenciar a persistência das configurações do perfil do veículo e layout do dashboard
- * utilizando Jetpack DataStore (Preferences). Suporta matriz de 20 layouts.
+ * Gerenciar a persistência das configurações do perfil, incluindo geometrias,
+ * layouts e parâmetros avançados de comunicação OBD-II.
  *
  * HISTÓRICO:
+ * v3.4.0 - Persistência de configurações avançadas (Protocolo, Multi-PID, Ratio).
  * v3.0.0 - MATRIZ DE LAYOUTS: Implementada persistência para 10 backgrounds x 2 presets.
  * v2.10.0 - SHIFT LIGHT CUSTOM: Adicionada persistência para shiftLightTargetMode e sensitivity.
  * v2.7.1 - Ajuste fino de layout v2.
  * v3.1.3 - Correção de regressão na Posição Y padrão da Barra de RPM.
  * v3.3.1 - Persistência do estado do Efeito Ghosting.
+ * v3.4.0 - Persistência de Configurações Avançadas de Comunicação.
  */
 
 import android.content.Context
@@ -83,6 +85,13 @@ class ProfileRepositoryImpl @Inject constructor(
 
         val SHIFT_LIGHT_TARGET_MODE = stringPreferencesKey("shift_light_target_mode")
         val SHIFT_LIGHT_SENSITIVITY = floatPreferencesKey("shift_light_sensitivity")
+
+        val OBD_PROTOCOL = stringPreferencesKey("obd_protocol")
+        val IS_MULTI_PID = booleanPreferencesKey("is_multi_pid")
+        val INTERLEAVING_RATIO = intPreferencesKey("interleaving_ratio")
+        val MAINTENANCE_INTERVAL = intPreferencesKey("maintenance_interval")
+        val ADAPTIVE_TIMING = stringPreferencesKey("adaptive_timing")
+        val AT_TIMEOUT = intPreferencesKey("at_timeout")
     }
 
     override fun getProfile(): Flow<VehicleProfile> = context.dataStore.data.map { preferences ->
@@ -163,7 +172,14 @@ class ProfileRepositoryImpl @Inject constructor(
             shiftLightSensitivity = preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] ?: 0.85f,
 
             pollingIntervals = sps,
-            lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS]
+            lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS],
+
+            obdProtocol = try { ObdProtocol.valueOf(preferences[PreferencesKeys.OBD_PROTOCOL] ?: ObdProtocol.CAN_11BIT_500K.name) } catch (e: Exception) { ObdProtocol.CAN_11BIT_500K },
+            isMultiPidEnabled = preferences[PreferencesKeys.IS_MULTI_PID] ?: false,
+            interleavingRatio = preferences[PreferencesKeys.INTERLEAVING_RATIO] ?: 8,
+            maintenanceCycleInterval = preferences[PreferencesKeys.MAINTENANCE_INTERVAL] ?: 500,
+            adaptiveTiming = try { AdaptiveTiming.valueOf(preferences[PreferencesKeys.ADAPTIVE_TIMING] ?: AdaptiveTiming.AUTO.name) } catch (e: Exception) { AdaptiveTiming.AUTO },
+            atTimeoutMs = preferences[PreferencesKeys.AT_TIMEOUT] ?: 32
         )
     }
 
@@ -220,6 +236,13 @@ class ProfileRepositoryImpl @Inject constructor(
 
             preferences[PreferencesKeys.POLLING_INTERVALS] = serializeSps(profile.pollingIntervals)
             profile.lastConnectedDeviceAddress?.let { preferences[PreferencesKeys.LAST_BT_ADDRESS] = it }
+
+            preferences[PreferencesKeys.OBD_PROTOCOL] = profile.obdProtocol.name
+            preferences[PreferencesKeys.IS_MULTI_PID] = profile.isMultiPidEnabled
+            preferences[PreferencesKeys.INTERLEAVING_RATIO] = profile.interleavingRatio
+            preferences[PreferencesKeys.MAINTENANCE_INTERVAL] = profile.maintenanceCycleInterval
+            preferences[PreferencesKeys.ADAPTIVE_TIMING] = profile.adaptiveTiming.name
+            preferences[PreferencesKeys.AT_TIMEOUT] = profile.atTimeoutMs
         }
     }
 

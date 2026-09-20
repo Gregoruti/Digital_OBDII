@@ -28,11 +28,11 @@ O `ObdResponseParser` utiliza um motor de busca "Fuzzy" e limpeza via Regex:
 - **Busca por Eco**: O parser localiza o padrão `(Mode + 40) + PID` (ex: `410C` para RPM) em qualquer posição da string, permitindo extração de dados mesmo se o comando de ocultar Headers/Eco falhar.
 - **Validação de Payload**: Se o adaptador retornar o Eco mas não os dados (caso de valores `NaN` em emuladores), o sistema identifica como `ADAPTER_ERROR`, evitando que o app processe valores nulos ou quebrados.
 
-## 4. Otimização de Performance (Turbo Polling v3.3.0)
-- **Leitura em Blocos (Fast Buffer)**: Implementada na v3.1.0, a leitura da resposta Bluetooth agora é feita em blocos de 1024 bytes, eliminando a latência de leitura byte-a-byte.
-- **Timeout Agressivo (500ms)**: Redução drástica do tempo de espera para evitar que o painel congele em caso de falha de um sensor secundário. (v3.1.2 - Estabilizado em 500ms).
-- **Emissão Imediata**: O `ObdPollingEngine` emite dados via `Flow` sensor a sensor, sem esperar o fim do ciclo de polling.
-- **Filtro de Display (33 FPS)**: O DashboardViewModel permite atualizações a cada 30ms, garantindo fluidez total em taxas de SPS elevadas.
+## 4. Otimização de Performance (Turbo Polling v3.4.0)
+- **Agendamento Hierárquico (Priority Interleaving)**: Implementação de um sistema de "ticks" onde sensores de alta frequência (RPM, Speed, MAF) são consultados N vezes para cada 1 consulta de sensores de baixa frequência (Temp, Volts).
+- **Multi-PID Request**: Uso de comandos agrupados (ex: `010C0D101`) para reduzir o overhead do rádio Bluetooth.
+- **Leitura em Blocos (Fast Buffer)**: Leitura da resposta em blocos de 1024 bytes.
+- **Auto-Tuning**: Monitoramento de erro em tempo real com timeout adaptativo.
 
 ---
-*Documento consolidado na v3.3.0*
+*Documento consolidado na v3.4.0*

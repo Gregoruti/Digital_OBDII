@@ -4,6 +4,7 @@
  * Correlações: Interage com ProfileRepository e ObdRepository (para diagnósticos).
  *
  * Histórico:
+ * v3.4.0 - Suporte para integração com configurações de comunicação.
  * v2.3.0 - Implementada lógica de troca de backgrounds nativos e gerenciamento de flags de customização.
  * v2.5.0 - Adicionada gestão de estado para a nova Escala de RPM Dinâmica.
  * v2.5.1 - Adicionada função updateRedlineStartRpm.

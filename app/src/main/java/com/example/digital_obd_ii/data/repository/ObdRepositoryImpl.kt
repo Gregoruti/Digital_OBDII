@@ -1,13 +1,14 @@
 package com.example.digital_obd_ii.data.repository
 
 /**
- * REPOSITORY: ObdRepositoryImpl v2.6.0
+ * REPOSITORY: ObdRepositoryImpl v3.4.0
  * 
  * OBJETIVO:
- * Implementação concreta do repositório OBD, gerenciando a conexão Bluetooth,
- * o motor de polling e o processamento de PIDs.
+ * Implementação do repositório OBD com suporte a inicialização dinâmica
+ * e integração com o motor de busca hierárquico.
  *
  * HISTÓRICO:
+ * v3.4.0 - Handshake dinâmico baseado no perfil (Protocolo CAN e Timing).
  * v2.6.0 - Persistência automática do endereço MAC para Auto-Conexão.
  * v2.5.3 - Estabilização de dados para as novas escalas visuais.
  * v2.1.4 - Motor de Polling Reativo com latência zero (yield).
@@ -46,13 +47,11 @@ class ObdRepositoryImpl @Inject constructor(
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
         if (result.isSuccess) {
-            // Inicialização Robusta v2.0
-            val initResult = reinitializeAdapter()
+            val currentProfile = profileRepository.getProfileSync()
+            // Inicialização Robusta v3.4.0 (Dinâmica)
+            val initResult = reinitializeAdapter(currentProfile)
             if (initResult.isFailure) return Result.failure(initResult.exceptionOrNull() ?: Exception("Init failed"))
             
-            // Persiste o endereço para Auto-Conexão v1.8.6/v2.6.0
-            // Captura o perfil atual e salva o novo endereço
-            val currentProfile = profileRepository.getProfileSync()
             profileRepository.saveProfile(currentProfile.copy(lastConnectedDeviceAddress = device.address))
         }
         return result
@@ -96,10 +95,14 @@ class ObdRepositoryImpl @Inject constructor(
     }
 
     override suspend fun reinitializeAdapter(): Result<Unit> {
+        val profile = profileRepository.getProfileSync()
+        return reinitializeAdapter(profile)
+    }
+
+    private suspend fun reinitializeAdapter(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
         return try {
-            Elm327Init.robustBootSequence.forEach { step ->
+            Elm327Init.getDynamicBootSequence(profile).forEach { step ->
                 val response = transport.send(step.command)
-                // Se definimos uma resposta esperada, validamos ela
                 step.expectedResponse?.let { expected ->
                     if (!response.uppercase().contains(expected.uppercase())) {
                         throw Exception("Falha no comando ${step.command}: Esperava $expected, recebeu $response")

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TrendingUp
@@ -33,6 +34,7 @@ fun VehicleProfileScreen(
     onVisualClick: () -> Unit,
     onBluetoothClick: () -> Unit,
     onPerformanceClick: () -> Unit,
+    onCommunicationClick: () -> Unit,
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -62,6 +64,9 @@ fun VehicleProfileScreen(
                     }
                     IconButton(onClick = { onTerminalClick() }) {
                         Icon(Icons.Default.Build, contentDescription = "Terminal Debug")
+                    }
+                    IconButton(onClick = { onCommunicationClick() }) {
+                        Icon(Icons.Default.Repeat, contentDescription = "Comunicação")
                     }
                     IconButton(onClick = { viewModel.saveProfile() }) {
                         Icon(Icons.Default.Check, contentDescription = "Salvar")
