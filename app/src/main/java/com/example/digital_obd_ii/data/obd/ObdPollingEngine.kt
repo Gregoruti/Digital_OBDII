@@ -22,6 +22,7 @@ import com.example.digital_obd_ii.domain.model.VehicleProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.yield
 
 class ObdPollingEngine(
     private val transport: BluetoothConnectionManager
@@ -53,11 +54,12 @@ class ObdPollingEngine(
     }
 
     private val penaltyBox = mutableMapOf<ObdCommand, Long>() // v3.7.2: Impede timeouts contínuos
+    private var cmdIndex = 0 // Ponteiro Round-Robin
 
     fun observe(commands: List<ObdCommand>, profile: VehicleProfile): Flow<Map<ObdCommand, Double?>> = flow {
-        // Separação por Prioridade removida no v3.7.2
-        // A nova engine usa "Overdue Ratio" para intercalar dinamicamente.
-
+        // Motor v3.7.3: Round-Robin com Skip Híbrido. 
+        // Zero Starvation e prioridade total respeitando intervalos.
+        
         while (transport.isConnected()) {
             if (!_isPollingActive.value) {
                 kotlinx.coroutines.delay(500)
@@ -72,7 +74,7 @@ class ObdPollingEngine(
 
             val now = System.currentTimeMillis()
             
-            // Filtra os comandos que não estão na "Penalty Box" (Não deram erro recentemente)
+            // Filtra comandos que estão banidos por erros consecutivos (NODATA/?)
             val availableCommands = commands.filter { now >= (penaltyBox[it] ?: 0L) }
             
             if (availableCommands.isEmpty()) {
@@ -80,27 +82,31 @@ class ObdPollingEngine(
                 continue
             }
 
-            // Descobre o comando mais atrasado matematicamente
-            val nextCmd = availableCommands.maxByOrNull { cmd ->
-                val interval = profile.pollingIntervals[getSensorKey(cmd)] ?: 250
-                val elapsed = now - (lastPollTimestamps[getSensorKey(cmd)] ?: 0L)
-                elapsed.toFloat() / interval.toFloat() // Overdue Ratio
-            }
+            var executedAny = false
 
-            if (nextCmd != null) {
-                val interval = profile.pollingIntervals[getSensorKey(nextCmd)] ?: 250
-                val elapsed = now - (lastPollTimestamps[getSensorKey(nextCmd)] ?: 0L)
-                
+            // Varre a roda (Round-Robin). Executa no máximo 1 por ciclo para não travar a Coroutine.
+            for (i in availableCommands.indices) {
+                val cmd = availableCommands[cmdIndex % availableCommands.size]
+                cmdIndex++ // Gira a roda
+
+                val interval = profile.pollingIntervals[getSensorKey(cmd)] ?: 250
+                val elapsed = System.currentTimeMillis() - (lastPollTimestamps[getSensorKey(cmd)] ?: 0L)
+
+                // Se já deu o tempo, executa e devolve controle para a UI.
                 if (elapsed >= interval) {
-                    // Executa APENAS este comando neste ciclo
-                    executeSinglePid(nextCmd, profile)
-                } else {
-                    // Nada atrasado ainda
-                    delay(10)
+                    executeSinglePid(cmd, profile)
+                    executedAny = true
+                    break
                 }
             }
-            
-            kotlinx.coroutines.yield()
+
+            // Se a roda girou inteira e NENHUM sensor estava no tempo de ser lido (todos em delay),
+            // damos um pequeno respiro no processador para não gastar 100% de bateria à toa.
+            if (!executedAny) {
+                delay(10)
+            } else {
+                yield()
+            }
         }
     }.flowOn(Dispatchers.IO)
 
