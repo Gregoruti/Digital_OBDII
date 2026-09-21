@@ -49,7 +49,7 @@ object FactoryDefaults {
         "SPEED" to ElementConfig(135f, 225f, 0.80f),
         "TEMP" to ElementConfig(135f, 365f, 0.55f),
         "KML" to ElementConfig(135f, 482f, 0.40f),
-        "VOLTS" to ElementConfig(800f, 365f, 0.55f),
+        "VOLTS" to ElementConfig(770f, 365f, 0.55f),
         "CLOCK" to ElementConfig(775f, 482f, 0.40f),
         "GEARS" to ElementConfig(840f, 225f, 0.80f),
         "TRIP_TIME" to ElementConfig(465f, 355f, 0.40f),
