@@ -91,7 +91,7 @@ class BluetoothConnectionManager(
                             }
                         } else {
                             // Pequena pausa para não fritar CPU enquanto aguarda buffer
-                            kotlinx.coroutines.yield()
+                            delay(2) // v3.7.2: delay real no lugar de yield() para evitar Buffer Starvation
                         }
                     }
                     responseBuilder.toString().trim()

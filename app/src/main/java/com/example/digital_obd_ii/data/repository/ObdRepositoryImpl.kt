@@ -32,6 +32,7 @@ import com.example.digital_obd_ii.domain.model.VehicleSnapshot
 import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -53,6 +54,10 @@ class ObdRepositoryImpl @Inject constructor(
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
         if (result.isSuccess) {
+            // WARM-UP FIX (v3.7.2): O adaptador Bluetooth SPP precisa de um tempo 
+            // após criar o socket antes de receber o primeiro caractere serial, senão perde o "AT Z".
+            delay(1500)
+            
             val currentProfile = profileRepository.getProfileSync()
             // Inicialização Robusta v3.4.0 (Dinâmica)
             val initResult = reinitializeAdapter(currentProfile)
@@ -90,6 +95,7 @@ class ObdRepositoryImpl @Inject constructor(
                 VehicleSnapshot(
                     speedKmh = speed,
                     rpm = rpm,
+                    maf = maf,
                     coolantTempC = data[ObdCommand.CoolantTemp]?.toInt() ?: 0,
                     ecuVoltage = data[ObdCommand.ControlModuleVoltage] ?: 0.0,
                     idealGear = gearRec.idealGear,

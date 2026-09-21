@@ -235,6 +235,7 @@ class VehicleProfileViewModel @Inject constructor(
     fun updateAdvancedConfig(updater: (VehicleProfile) -> VehicleProfile) {
         val updatedProfile = updater(_uiState.value.profile)
         _uiState.update { it.copy(profile = updatedProfile) }
+        saveProfile() // <-- FIX CRÍTICO: Persiste a alteração na hora
     }
 
     // v3.7.1: Modo de Segurança (Máxima estabilidade / Baixa performance)
@@ -257,6 +258,7 @@ class VehicleProfileViewModel @Inject constructor(
                 )
             )
         }
+        saveProfile() // <-- FIX CRÍTICO: Salva o modo de segurança no repositório
     }
 
     fun updateRpmColor(key: String, color: Long) {

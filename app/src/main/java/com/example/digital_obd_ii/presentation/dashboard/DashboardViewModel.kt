@@ -35,6 +35,7 @@ import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.UpdateTripSummaryUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
+import com.example.digital_obd_ii.domain.usecase.PredictiveRpmUseCase
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
@@ -53,6 +54,7 @@ class DashboardViewModel @Inject constructor(
     private val updateTrip: UpdateTripSummaryUseCase,
     private val calculateFuel: CalculateFuelConsumptionUseCase,
     private val calculateGear: CalculateIdealGearUseCase,
+    private val predictiveRpm: PredictiveRpmUseCase,
     private val profileRepository: ProfileRepository,
     private val tripDao: TripDao
 ) : ViewModel() {
@@ -120,14 +122,20 @@ class DashboardViewModel @Inject constructor(
                     val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
                     
                     val currentProfile = _uiState.value.profile
-                    val gearRec = calculateGear(snapshot.rpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
+                    
+                    // Lógica Preditiva de RPM (Zero Latency Illusion via MAF/Throttle)
+                    val realRpm = snapshot.rpm
+                    val predictedRpm = predictiveRpm.predict(realRpm, snapshot.maf, snapshot.throttlePosition)
+                    
+                    // Marcha sempre calculada sobre RPM REAL para não sugerir troca prematura
+                    val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
-                    // v2.10.0: Cálculo do estado de Blink (Shift Light)
-                    updateBlinkState(snapshot.rpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+                    // v2.10.0: Cálculo do estado de Blink (Shift Light) - Usa RPM Preditivo para reagir rápido!
+                    updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
 
                     _uiState.update { state ->
                         state.copy(
-                            snapshot = snapshot,
+                            snapshot = snapshot.copy(rpm = predictedRpm), // Injeta o RPM Preditivo na UI
                             trip = updatedTrip,
                             connectionState = ConnectionState.Connected,
                             gearAction = gearRec.action
