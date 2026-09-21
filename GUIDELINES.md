@@ -5,7 +5,7 @@ markdown
 # GUIDELINES — [NOME DO PROJETO] (Android/Kotlin)
 
 > Diretrizes de Desenvolvimento do Projeto
-> Última atualização: [DATA] | Mantenedor: [NOME/EQUIPE]
+> Última atualização: 2024 (Atualização Gemini 3.1 Preview & Gradle) | Mantenedor: [NOME/EQUIPE]
 > Stack: Kotlin + Jetpack Compose + Clean Architecture + Hilt + Room + Coroutines/Flow
 
 ---
@@ -13,15 +13,16 @@ markdown
 ## 0. Governança de IA (Pair Programming com Agentes)
 
 ### 0.1 Modelo(s) Padrão
-- **Assistente(s) oficial(is):** [ex.: GitHub Copilot Agent, Gemini Agent (Android Studio), Claude Code, Cursor]
-- **Modelo(s) utilizado(s):** [ex.: Gemini 2.x Pro/Flash, GPT-5, Claude Sonnet/Opus]
+- **Assistente(s) oficial(is):** Gemini Agent (Android Studio)
+- **Modelo(s) utilizado(s):** Gemini 3.1 Preview (Habilitado após atualização do Android Studio. Anteriormente limitado ao uso do Gemini Flash).
 - **Regra de uso:** manter rastreabilidade do modelo utilizado no header dos arquivos alterados e em `docs/CHANGELOG.md`.
+- **Sobre o Gemini 3.1 Preview:** Por ter melhor capacidade de raciocínio lógico, planejamento aprofundado e janela de contexto maior, permite a estruturação de artefatos de planejamento complexos (`implementation_plan.artifact.md`) e delegação de tarefas robustas (via ferramenta `task`). O modelo deve ser utilizado para coordenar refatorações, mas requer a mesma revisão cuidadosa de sempre em relação ao terminal e alterações no disco.
 
 ### 0.2 Operação com Agentes de IA no Android Studio
 - Utilizar `implementation_plan.artifact.md` para planejar mudanças complexas (novas telas, migrations, refatorações) antes de codificar.
 - Manter `task.artifact.md` sincronizado durante a execução.
 - Validar alterações via terminal integrado do Android Studio ou scripts `.bat` do projeto.
-- Preferir sessões curtas: **uma tela/use case/feature por vez**, com critério de aceite claro (compila + testa + roda no emulador/dispositivo).
+- Com o **Gemini 3.1 Preview**, as sessões podem abranger refatorações e integrações mais complexas. Ainda assim, recomenda-se organizar o trabalho em entregas lógicas iterativas, com critério de aceite claro (compila + testa + roda no emulador/dispositivo).
 - Sempre revisar o diff gerado pela IA antes de aplicar — atenção especial a `build.gradle.kts`, `AndroidManifest.xml` e migrations do Room.
 - Nunca permitir que o agente rode `git push --force` ou apague migrations existentes sem confirmação explícita.
 
@@ -541,9 +542,9 @@ Suporte a TalkBack testado nos fluxos críticos.
 Respeitar fontScale do sistema (usar sp, nunca dp para texto).
 10. Ferramentas e Ambiente
 10.1 Requisitos
-Android Studio (última versão estável)
+Android Studio (Versão atualizada recentemente com suporte oficial ao Gemini 3.1 Preview)
 JDK 17 (recomendado para AGP 8.x+; usar 11+ apenas se módulo legado exigir)
-Gradle 8.0+ / Android Gradle Plugin compatível
+Gradle (Versão atualizada em conjunto com o Android Studio) / Android Gradle Plugin compatível
 Git
 10.2 Dependências Principais
 Kotlin (última stable, com K2 compiler habilitado quando estável para o projeto)

@@ -22,6 +22,7 @@ package com.example.digital_obd_ii.data.repository
  */
 
 import android.bluetooth.BluetoothDevice
+import android.util.Log
 import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
 import com.example.digital_obd_ii.data.obd.Elm327Init
 import com.example.digital_obd_ii.data.obd.ObdCommand
@@ -43,6 +44,11 @@ class ObdRepositoryImpl @Inject constructor(
 ) : ObdRepository {
 
     override val diagnosticFlow: SharedFlow<ObdLogEntry> = pollingEngine.diagnosticFlow
+    override val isPollingActive: StateFlow<Boolean> = pollingEngine.isPollingActive
+
+    override fun setPollingState(active: Boolean) {
+        pollingEngine.setPollingState(active)
+    }
 
     override suspend fun connect(device: BluetoothDevice): Result<Unit> {
         val result = transport.connect(device)
@@ -102,10 +108,17 @@ class ObdRepositoryImpl @Inject constructor(
     private suspend fun reinitializeAdapter(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
         return try {
             Elm327Init.getDynamicBootSequence(profile).forEach { step ->
-                val response = transport.send(step.command)
+                val response = transport.send(step.command, timeoutMs = step.timeoutMs, interCommandDelayMs = profile.interCommandDelayMs.toLong())
                 step.expectedResponse?.let { expected ->
-                    if (!response.uppercase().contains(expected.uppercase())) {
-                        throw Exception("Falha no comando ${step.command}: Esperava $expected, recebeu $response")
+                    // v3.7.1: Relaxar validação na inicialização. Em clones v2.1, AT Z as vezes só retorna sujeira, 
+                    // mas o chip reinicia. Usar contains em vez de checagem exata, ou ignorar se tiver lixo.
+                    val cleanRes = response.uppercase().replace(Regex("[^A-Z0-9]"), "")
+                    val cleanExpected = expected.uppercase().replace(Regex("[^A-Z0-9]"), "")
+                    
+                    if (cleanExpected.isNotEmpty() && !cleanRes.contains(cleanExpected)) {
+                        // Não vamos explodir a Exception para não matar a conexão, apenas logamos.
+                        // Clones muito ruins podem retornar "?" ou ignorar comandos.
+                        Log.w("OBD_INIT", "Comando ${step.command} falhou: Esperava $expected, recebeu $response")
                     }
                 }
             }

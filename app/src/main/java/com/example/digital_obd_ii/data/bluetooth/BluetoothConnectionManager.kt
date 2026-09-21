@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -48,10 +49,15 @@ class BluetoothConnectionManager(
         }
     }
 
-    suspend fun send(command: String, timeoutMs: Long = 500L): String = mutex.withLock {
+    suspend fun send(command: String, timeoutMs: Long = 500L, interCommandDelayMs: Long = 0L): String = mutex.withLock {
         withContext(Dispatchers.IO) {
             val out = output ?: return@withContext "ERROR: No Output"
             val inp = input ?: return@withContext "ERROR: No Input"
+
+            // v3.7.0: Throttle (Delay Inter-comandos) para evitar engasgo no chip
+            if (interCommandDelayMs > 0L) {
+                delay(interCommandDelayMs)
+            }
 
             // v2.10.6: Timeout agressivo de 500ms para evitar travamento em simuladores/clones
             withTimeoutOrNull(timeoutMs) {

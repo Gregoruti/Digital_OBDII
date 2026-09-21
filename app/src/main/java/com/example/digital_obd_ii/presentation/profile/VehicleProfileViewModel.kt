@@ -17,6 +17,7 @@ package com.example.digital_obd_ii.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.digital_obd_ii.domain.model.AdaptiveTiming
 import com.example.digital_obd_ii.domain.model.ElementConfig
 import com.example.digital_obd_ii.domain.model.FuelType
 import com.example.digital_obd_ii.domain.model.DevicePreset
@@ -24,6 +25,7 @@ import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.domain.model.FactoryDefaults
 import com.example.digital_obd_ii.domain.model.ObdLogEntry
+import com.example.digital_obd_ii.domain.model.ObdProtocol
 import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -226,6 +228,34 @@ class VehicleProfileViewModel @Inject constructor(
             val currentMap = state.profile.pollingIntervals.toMutableMap()
             currentMap[key] = ms
             state.copy(profile = state.profile.copy(pollingIntervals = currentMap))
+        }
+    }
+
+    // v3.7.0: Atualizador dinâmico de configurações avançadas
+    fun updateAdvancedConfig(updater: (VehicleProfile) -> VehicleProfile) {
+        val updatedProfile = updater(_uiState.value.profile)
+        _uiState.update { it.copy(profile = updatedProfile) }
+    }
+
+    // v3.7.1: Modo de Segurança (Máxima estabilidade / Baixa performance)
+    fun applySafeMode() {
+        _uiState.update { state ->
+            val p = state.profile
+            state.copy(
+                profile = p.copy(
+                    interCommandDelayMs = 100,      // 100ms de pausa entre cada envio
+                    atTimeoutMs = 125,              // AT ST 7D (500ms de timeout no adaptador)
+                    initCycleCount = 3,             // 3 ciclos de reset na inicialização
+                    enableHeaders = false,          // Sem cabeçalhos
+                    enableSpaces = false,           // Sem espaços
+                    relaxedValidation = true,       // Validação permissiva
+                    obdProtocol = ObdProtocol.AUTO, // Tenta buscar automático
+                    adaptiveTiming = AdaptiveTiming.AUTO,
+                    isMultiPidEnabled = false,      // Desliga multi-pid
+                    // Coloca 1 segundo (1000ms) de delay para TODOS os sensores
+                    pollingIntervals = p.pollingIntervals.mapValues { 1000 }
+                )
+            )
         }
     }
 

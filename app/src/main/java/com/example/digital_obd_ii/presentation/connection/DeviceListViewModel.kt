@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
+import com.example.digital_obd_ii.domain.repository.ObdRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,8 @@ data class DeviceListUiState(
  */
 @HiltViewModel
 class DeviceListViewModel @Inject constructor(
-    private val connectionManager: BluetoothConnectionManager
+    private val connectionManager: BluetoothConnectionManager,
+    private val obdRepository: ObdRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceListUiState())
@@ -43,7 +45,8 @@ class DeviceListViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isConnecting = true, connectionError = null) }
             
-            val result = connectionManager.connect(device)
+            // Corrige a falha de não inicialização chamando o repositório que contém a rotina do Elm327Init
+            val result = obdRepository.connect(device)
             
             _uiState.update { 
                 it.copy(

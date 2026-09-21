@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +27,7 @@ fun ObdTerminalScreen(
     viewModel: ObdTerminalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isPollingActive by viewModel.isPollingActive.collectAsState(initial = true)
     var commandText by remember { mutableStateOf("") }
 
     Scaffold(
@@ -38,6 +41,13 @@ fun ObdTerminalScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.togglePolling(!isPollingActive) }) {
+                        Icon(
+                            imageVector = if (isPollingActive) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (isPollingActive) "Pausar Dashboard" else "Retomar Dashboard",
+                            tint = if (isPollingActive) Color.Yellow else Color.Green
+                        )
+                    }
                     IconButton(onClick = { viewModel.clearLogs() }) {
                         Icon(Icons.Default.Delete, contentDescription = "Limpar")
                     }

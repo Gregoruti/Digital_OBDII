@@ -1,7 +1,7 @@
 package com.example.digital_obd_ii.data.obd
 
 object ObdResponseParser {
-    fun parse(raw: String, command: ObdCommand): Double? {
+    fun parse(raw: String, command: ObdCommand, isRelaxed: Boolean = false): Double? {
         // Limpeza agressiva: remove TUDO que não for Hexadecimal ou ponto
         val clean = raw.uppercase()
             .replace(Regex("[^0-9A-F.]"), "")
@@ -23,9 +23,11 @@ object ObdResponseParser {
         val normalizedPid = command.pid.uppercase().padStart(2, '0')
         val target = expectedEchoMode + normalizedPid
 
-        // v3.4.0: Suporte a Multi-PID (Busca o PID simples se o eco global estiver presente)
+        // v3.4.0 e v3.7.0 (Relaxado)
         val dataPart = when {
-            clean.contains(target) -> clean.substringAfter(target)
+            isRelaxed && clean.contains(target) -> clean.substringAfter(target)
+            !isRelaxed && clean.startsWith(target) -> clean.substringAfter(target)
+            !isRelaxed && clean.contains(target) -> clean.substringAfter(target) // Compatibilidade multi-pid legacy
             clean.startsWith(expectedEchoMode) && clean.contains(normalizedPid) -> clean.substringAfter(normalizedPid)
             else -> return null
         }

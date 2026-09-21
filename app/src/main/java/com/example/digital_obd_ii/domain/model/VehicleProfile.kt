@@ -15,6 +15,7 @@
  * v3.5.2 - Ajustes finos Tablet (BG1) e Ghosting desativado por padrão.
  * v3.5.3 - Ajuste de coordenadas Tablet para novo background.
  * v3.6.0 - Consolidação de Layout Tablet e Visual Clean por padrão.
+ * v3.7.0 - Adição de configurações avançadas OBD (Throttle, Headers, Spaces, Relaxed Parser).
  *
  * Status: Estável.
  */
@@ -44,16 +45,16 @@ object FactoryDefaults {
     )
 
     val MULTIMEDIA_ELEMENTS_MAP = mapOf(
-        "RPM" to ElementConfig(435f, 270f, 0.65f),
-        "SPEED" to ElementConfig(135f, 225f, 0.90f),
-        "TEMP" to ElementConfig(135f, 365f, 0.65f),
-        "KML" to ElementConfig(135f, 482f, 0.65f),
-        "VOLTS" to ElementConfig(800f, 365f, 0.65f),
-        "CLOCK" to ElementConfig(775f, 482f, 0.65f),
-        "GEARS" to ElementConfig(840f, 225f, 0.90f),
-        "TRIP_TIME" to ElementConfig(470f, 355f, 0.50f),
-        "TRIP_DIST" to ElementConfig(500f, 430f, 0.50f),
-        "TRIP_FUEL" to ElementConfig(500f, 502f, 0.50f)
+        "RPM" to ElementConfig(415f, 270f, 0.55f),
+        "SPEED" to ElementConfig(135f, 225f, 0.80f),
+        "TEMP" to ElementConfig(135f, 365f, 0.55f),
+        "KML" to ElementConfig(135f, 482f, 0.40f),
+        "VOLTS" to ElementConfig(800f, 365f, 0.55f),
+        "CLOCK" to ElementConfig(775f, 482f, 0.40f),
+        "GEARS" to ElementConfig(840f, 225f, 0.80f),
+        "TRIP_TIME" to ElementConfig(465f, 355f, 0.40f),
+        "TRIP_DIST" to ElementConfig(500f, 430f, 0.40f),
+        "TRIP_FUEL" to ElementConfig(500f, 502f, 0.40f)
     )
 
     /**
@@ -125,7 +126,7 @@ data class VehicleProfile(
     val redlineStartRpm: Int = 2500, 
     val rpmBarCurvature: Float = 35f,
     val rpmBarWidth: Float = 22f,
-    val rpmBarHeight: Float = 50f,
+    val rpmBarHeight: Float = 40f,
     val rpmBarY: Float = 70f,
     val shiftLightBlinkMs: Int = 100,
     
@@ -152,7 +153,13 @@ data class VehicleProfile(
     val interleavingRatio: Int = 8, // 8 High : 1 Low
     val maintenanceCycleInterval: Int = 500, // Ciclos entre comandos de manutenção
     val adaptiveTiming: AdaptiveTiming = AdaptiveTiming.AUTO,
-    val atTimeoutMs: Int = 32 // AT ST 32 (128ms)
+    val atTimeoutMs: Int = 32, // AT ST 32 (128ms)
+    // CONFIGURAÇÕES DE COMUNICAÇÃO AVANÇADA (v3.7.0)
+    val enableHeaders: Boolean = false,       // ATH1 vs ATH0
+    val enableSpaces: Boolean = false,        // ATS1 vs ATS0
+    val initCycleCount: Int = 1,              // Quantidade de "reforços" de inicialização
+    val interCommandDelayMs: Int = 0,         // Delay após receber '>' antes do próximo comando
+    val relaxedValidation: Boolean = false    // Relaxamento no parser caso Headers/Espaços causem erro
 )
 
 data class ElementConfig(

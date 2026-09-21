@@ -72,7 +72,7 @@ class ObdPollingEngine(
             if (highPriorityTick < profile.interleavingRatio || lowPriority.isEmpty()) {
                 // EXECUÇÃO ALTA PRIORIDADE
                 if (profile.isMultiPidEnabled && highPriority.size > 1) {
-                    executeMultiPid(highPriority)
+                    executeMultiPid(highPriority, profile)
                 } else {
                     highPriority.forEach { executeSinglePid(it, profile) }
                 }
@@ -104,15 +104,15 @@ class ObdPollingEngine(
             val query = "${cmd.mode}${cmd.pid}"
             
             val tStart = System.currentTimeMillis()
-            val raw = transport.send(query)
+            val raw = transport.send(query, interCommandDelayMs = profile.interCommandDelayMs.toLong())
             val rtt = System.currentTimeMillis() - tStart
             
             updateMetrics(rtt, raw.startsWith("ERROR"))
 
             if (raw.startsWith("ERROR")) return
 
-            val result = ObdResponseParser.parse(raw, cmd)
-            _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
+            val result = ObdResponseParser.parse(raw, cmd, profile.relaxedValidation)
+            _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd, profile.relaxedValidation))
             
             // v3.5.1: Atualiza o cache persistente. Se o novo valor for null, mantém o último válido.
             if (result != null) {
@@ -127,13 +127,14 @@ class ObdPollingEngine(
     }
 
     private suspend fun FlowCollector<Map<ObdCommand, Double?>>.executeMultiPid(
-        cmds: List<ObdCommand>
+        cmds: List<ObdCommand>,
+        profile: VehicleProfile
     ) {
         val pids = cmds.joinToString("") { it.pid }
         val query = "01${pids}1"
         
         val tStart = System.currentTimeMillis()
-        val raw = transport.send(query)
+        val raw = transport.send(query, interCommandDelayMs = profile.interCommandDelayMs.toLong())
         val rtt = System.currentTimeMillis() - tStart
         
         updateMetrics(rtt, raw.startsWith("ERROR"))
@@ -141,10 +142,10 @@ class ObdPollingEngine(
         if (raw.startsWith("ERROR")) return
 
         cmds.forEach { cmd ->
-            val result = ObdResponseParser.parse(raw, cmd)
+            val result = ObdResponseParser.parse(raw, cmd, profile.relaxedValidation)
             if (result != null) {
                 persistentResults[cmd] = result
-                _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd))
+                _diagnosticFlow.tryEmit(createLogEntry(query, raw, result, cmd, profile.relaxedValidation))
             }
         }
         emit(persistentResults.toMap())
@@ -174,16 +175,18 @@ class ObdPollingEngine(
         else -> false
     }
 
-    private fun createLogEntry(query: String, raw: String, result: Double?, cmd: ObdCommand): ObdLogEntry {
+    private fun createLogEntry(query: String, raw: String, result: Double?, cmd: ObdCommand, isRelaxed: Boolean): ObdLogEntry {
         val clean = raw.uppercase().replace(Regex("[^0-9A-F]"), "")
         val expectedEchoMode = try { (cmd.mode.toInt(16) + 0x40).toString(16).uppercase() } catch (e: Exception) { "" }
         val target = expectedEchoMode + cmd.pid.padStart(2, '0')
         
+        val hasTarget = if (isRelaxed) clean.contains(target) else clean.startsWith(target)
+        
         val status = when {
             raw.isEmpty() || raw.contains("?") -> ObdLogEntry.LogStatus.TIMEOUT
             raw.contains("NODATA") || raw.contains("ERROR") -> ObdLogEntry.LogStatus.ADAPTER_ERROR
-            // Se contém o Eco (ex: 4111) mas não tem resultado (Payload vazio/NaN)
-            result == null && clean.contains(target) -> ObdLogEntry.LogStatus.ADAPTER_ERROR
+            // Se contém o Eco mas não tem resultado (Payload vazio/NaN)
+            result == null && hasTarget -> ObdLogEntry.LogStatus.ADAPTER_ERROR
             result == null -> ObdLogEntry.LogStatus.GARBLED
             result < cmd.minVal || result > cmd.maxVal -> ObdLogEntry.LogStatus.OUT_OF_RANGE
             else -> ObdLogEntry.LogStatus.SUCCESS

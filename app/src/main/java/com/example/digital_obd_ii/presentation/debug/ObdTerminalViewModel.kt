@@ -3,6 +3,7 @@ package com.example.digital_obd_ii.presentation.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digital_obd_ii.data.bluetooth.BluetoothConnectionManager
+import com.example.digital_obd_ii.domain.repository.ObdRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,11 +26,18 @@ data class TerminalUiState(
 
 @HiltViewModel
 class ObdTerminalViewModel @Inject constructor(
-    private val connectionManager: BluetoothConnectionManager
+    private val connectionManager: BluetoothConnectionManager,
+    private val obdRepository: ObdRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TerminalUiState(isConnected = connectionManager.isConnected()))
     val uiState: StateFlow<TerminalUiState> = _uiState.asStateFlow()
+    
+    val isPollingActive = obdRepository.isPollingActive
+
+    fun togglePolling(active: Boolean) {
+        obdRepository.setPollingState(active)
+    }
 
     fun sendCommand(command: String) {
         if (command.isBlank()) return
