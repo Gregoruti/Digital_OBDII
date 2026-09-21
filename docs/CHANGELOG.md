@@ -1,5 +1,21 @@
 # CHANGELOG - Digital OBD-II
 
+## [3.7.2] - Atual
+### Otimizado
+- **Dynamic Overdue Scheduler**: O motor de busca (`ObdPollingEngine`) não envia mais múltiplos comandos (RPM, MAF, SPEED) em lote. Agora utiliza um cálculo matemático baseado no intervalo requisitado ("Overdue Ratio"), rodando apenas o sensor mais atrasado por ciclo e garantindo máxima taxa de atualização (Hz) real.
+- **Penalty Box (Blacklist de PIDs)**: Se um sensor retornar `NODATA`, `ERROR` ou `?`, ele é jogado em um intervalo de espera de 30 segundos, impedindo que os longos timeouts de requisições de sensores não suportados penalizem a leitura do RPM e da Velocidade.
+
+## [3.7.1] - Anterior
+### Corrigido
+- **Handshake Estável em Clones**: Adicionado um delay vital de `1.5s` logo que a conexão Bluetooth é estabelecida (Warm-up do chip), permitindo que microcontroladores instáveis reiniciem corretamente.
+- **Limpeza de Protocolo Base**: Removido os espaços das strings de inicialização padrão (`ATZ` no lugar de `AT Z`) para garantir suporte a dongles com parse UART defeituoso.
+- **Estabilização de Thread**: Substituição do `yield()` por `delay(2)` no buffer manager para liberar CPU durante os testes de byte na porta serial.
+
+## [3.7.0] - Anterior
+### Adicionado
+- **Configurações Avançadas OBD-II**: Habilidade de ativar `Safe Mode`, alterar `Throttle Delay`, `AT Timeout` e ligar/desligar Headers/Spaces via UI.
+- **RPM Preditivo**: Lógica computacional avançada baseada em inércia (MAF e Throttle Position) que cria um empurrão (Boost) visual na agulha do RPM injetando dados preditivos antes da chegada dos dados OBD pelo Bluetooth.
+
 ## [3.6.0] - 2026-09-08
 ### Adicionado
 - **Consolidação de Alta Performance**: Formalização do motor de streaming sensor-a-sensor com cache persistente para estabilidade total.

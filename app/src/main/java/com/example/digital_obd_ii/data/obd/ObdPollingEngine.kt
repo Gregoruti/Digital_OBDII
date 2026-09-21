@@ -20,6 +20,7 @@ import com.example.digital_obd_ii.domain.model.ObdLogEntry
 import com.example.digital_obd_ii.domain.model.ObdMetrics
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
 class ObdPollingEngine(
@@ -51,10 +52,11 @@ class ObdPollingEngine(
         _isPollingActive.value = active
     }
 
+    private val penaltyBox = mutableMapOf<ObdCommand, Long>() // v3.7.2: Impede timeouts contínuos
+
     fun observe(commands: List<ObdCommand>, profile: VehicleProfile): Flow<Map<ObdCommand, Double?>> = flow {
-        // Separação por Prioridade (v3.4.0)
-        val highPriority = commands.filter { isHighPriority(it) }
-        val lowPriority = commands.filter { !isHighPriority(it) }
+        // Separação por Prioridade removida no v3.7.2
+        // A nova engine usa "Overdue Ratio" para intercalar dinamicamente.
 
         while (transport.isConnected()) {
             if (!_isPollingActive.value) {
@@ -68,25 +70,36 @@ class ObdPollingEngine(
                 Elm327Init.maintenanceSequence.forEach { transport.send(it) }
             }
 
-            // Agendamento Hierárquico: N High : 1 Low
-            if (highPriorityTick < profile.interleavingRatio || lowPriority.isEmpty()) {
-                // EXECUÇÃO ALTA PRIORIDADE
-                if (profile.isMultiPidEnabled && highPriority.size > 1) {
-                    executeMultiPid(highPriority, profile)
-                } else {
-                    highPriority.forEach { executeSinglePid(it, profile) }
-                }
-                highPriorityTick++
-            } else {
-                // EXECUÇÃO BAIXA PRIORIDADE (Circular)
-                val cmd = lowPriority[lowPriorityIndex % lowPriority.size]
-                executeSinglePid(cmd, profile)
-                lowPriorityIndex++
-                highPriorityTick = 0
+            val now = System.currentTimeMillis()
+            
+            // Filtra os comandos que não estão na "Penalty Box" (Não deram erro recentemente)
+            val availableCommands = commands.filter { now >= (penaltyBox[it] ?: 0L) }
+            
+            if (availableCommands.isEmpty()) {
+                delay(100)
+                continue
             }
 
-            // Removido emit(currentResults.toMap()) do loop principal v3.5.0
-            // A emissão agora ocorre dentro de cada função de execução para latência zero.
+            // Descobre o comando mais atrasado matematicamente
+            val nextCmd = availableCommands.maxByOrNull { cmd ->
+                val interval = profile.pollingIntervals[getSensorKey(cmd)] ?: 250
+                val elapsed = now - (lastPollTimestamps[getSensorKey(cmd)] ?: 0L)
+                elapsed.toFloat() / interval.toFloat() // Overdue Ratio
+            }
+
+            if (nextCmd != null) {
+                val interval = profile.pollingIntervals[getSensorKey(nextCmd)] ?: 250
+                val elapsed = now - (lastPollTimestamps[getSensorKey(nextCmd)] ?: 0L)
+                
+                if (elapsed >= interval) {
+                    // Executa APENAS este comando neste ciclo
+                    executeSinglePid(nextCmd, profile)
+                } else {
+                    // Nada atrasado ainda
+                    delay(10)
+                }
+            }
+            
             kotlinx.coroutines.yield()
         }
     }.flowOn(Dispatchers.IO)
@@ -108,6 +121,12 @@ class ObdPollingEngine(
             val rtt = System.currentTimeMillis() - tStart
             
             updateMetrics(rtt, raw.startsWith("ERROR"))
+
+            // Se o comando der NO DATA ou ERRO seguidas vezes, pune ele por 30 segundos!
+            // Isso evita que o ELM327 fique gastando 500ms em Timeout perguntando coisas que o carro não tem.
+            if (raw.contains("NODATA") || raw.contains("ERROR") || raw.contains("?")) {
+                penaltyBox[cmd] = System.currentTimeMillis() + 30_000L // 30 segundos
+            }
 
             if (raw.startsWith("ERROR")) return
 
@@ -168,11 +187,6 @@ class ObdPollingEngine(
             totalCommands = totalCmds,
             failedCommands = failedCmds
         )
-    }
-
-    private fun isHighPriority(cmd: ObdCommand): Boolean = when(cmd) {
-        ObdCommand.Rpm, ObdCommand.Speed, ObdCommand.MafRate -> true
-        else -> false
     }
 
     private fun createLogEntry(query: String, raw: String, result: Double?, cmd: ObdCommand, isRelaxed: Boolean): ObdLogEntry {
