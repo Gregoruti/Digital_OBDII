@@ -35,6 +35,7 @@ import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 class ObdRepositoryImpl @Inject constructor(
     private val transport: BluetoothConnectionManager,
@@ -83,17 +84,23 @@ class ObdRepositoryImpl @Inject constructor(
         return profileRepository.getProfile().flatMapLatest { profile ->
             pollingEngine.observe(commands, profile).map { data ->
                 val rpm = data[ObdCommand.Rpm]?.toInt() ?: 0
-                val speed = data[ObdCommand.Speed]?.toInt() ?: 0
+                val rawSpeed = data[ObdCommand.Speed]?.toInt() ?: 0
+                val displaySpeed = if (profile.isSpeedCorrectionEnabled && rawSpeed > 0) {
+                    (rawSpeed * (1.0f + profile.speedCorrectionPercent / 100.0f)).roundToInt()
+                } else {
+                    rawSpeed
+                }
                 val maf = data[ObdCommand.MafRate] ?: 0.0
                 val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
                 val obdFuelRate = data[ObdCommand.FuelRate]
                 
                 val lph = obdFuelRate ?: calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
-                val kml = calculateFuel.kmPerLiter(speed, lph)
-                val gearRec = calculateGear(rpm, speed, throttle, profile)
+                val kml = calculateFuel.kmPerLiter(rawSpeed, lph)
+                val gearRec = calculateGear(rpm, rawSpeed, throttle, profile)
 
                 VehicleSnapshot(
-                    speedKmh = speed,
+                    speedKmh = rawSpeed,
+                    displaySpeedKmh = displaySpeed,
                     rpm = rpm,
                     maf = maf,
                     coolantTempC = data[ObdCommand.CoolantTemp]?.toInt() ?: 0,

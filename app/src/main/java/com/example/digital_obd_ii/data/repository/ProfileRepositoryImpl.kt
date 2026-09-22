@@ -95,6 +95,9 @@ class ProfileRepositoryImpl @Inject constructor(
         val MAINTENANCE_INTERVAL = intPreferencesKey("maintenance_interval")
         val ADAPTIVE_TIMING = stringPreferencesKey("adaptive_timing")
         val AT_TIMEOUT = intPreferencesKey("at_timeout")
+
+        val IS_SPEED_CORRECTION_ENABLED = booleanPreferencesKey("is_speed_correction_enabled")
+        val SPEED_CORRECTION_PERCENT = floatPreferencesKey("speed_correction_percent")
     }
 
     override fun getProfile(): Flow<VehicleProfile> = context.dataStore.data.map { preferences ->
@@ -182,7 +185,10 @@ class ProfileRepositoryImpl @Inject constructor(
             interleavingRatio = preferences[PreferencesKeys.INTERLEAVING_RATIO] ?: 8,
             maintenanceCycleInterval = preferences[PreferencesKeys.MAINTENANCE_INTERVAL] ?: 500,
             adaptiveTiming = try { AdaptiveTiming.valueOf(preferences[PreferencesKeys.ADAPTIVE_TIMING] ?: AdaptiveTiming.AUTO.name) } catch (e: Exception) { AdaptiveTiming.AUTO },
-            atTimeoutMs = preferences[PreferencesKeys.AT_TIMEOUT] ?: 32
+            atTimeoutMs = preferences[PreferencesKeys.AT_TIMEOUT] ?: 32,
+
+            isSpeedCorrectionEnabled = preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] ?: false,
+            speedCorrectionPercent = preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] ?: 4.0f
         )
     }
 
@@ -246,6 +252,9 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.MAINTENANCE_INTERVAL] = profile.maintenanceCycleInterval
             preferences[PreferencesKeys.ADAPTIVE_TIMING] = profile.adaptiveTiming.name
             preferences[PreferencesKeys.AT_TIMEOUT] = profile.atTimeoutMs
+
+            preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] = profile.isSpeedCorrectionEnabled
+            preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] = profile.speedCorrectionPercent
         }
     }
 

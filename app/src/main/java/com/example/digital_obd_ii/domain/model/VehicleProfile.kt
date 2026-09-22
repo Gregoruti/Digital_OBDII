@@ -159,7 +159,11 @@ data class VehicleProfile(
     val enableSpaces: Boolean = false,        // ATS1 vs ATS0
     val initCycleCount: Int = 1,              // Quantidade de "reforços" de inicialização
     val interCommandDelayMs: Int = 0,         // Delay após receber '>' antes do próximo comando
-    val relaxedValidation: Boolean = false    // Relaxamento no parser caso Headers/Espaços causem erro
+    val relaxedValidation: Boolean = false,   // Relaxamento no parser caso Headers/Espaços causem erro
+
+    // CORREÇÃO DE VELOCIDADE (PAINEL DO VEÍCULO)
+    val isSpeedCorrectionEnabled: Boolean = false,
+    val speedCorrectionPercent: Float = 4.0f   // Fator de correção do velocímetro (ex: +4%)
 )
 
 data class ElementConfig(

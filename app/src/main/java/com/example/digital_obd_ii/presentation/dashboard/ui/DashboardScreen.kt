@@ -67,7 +67,7 @@ fun DashboardScreen(
         label = "DigitalRpmAnimation"
     )
     val animatedSpeed by animateIntAsState(
-        targetValue = uiState.snapshot.speedKmh,
+        targetValue = uiState.snapshot.displaySpeedKmh,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "DigitalSpeedAnimation"
     )

@@ -200,6 +200,40 @@ fun VehicleProfileScreen(
 
             item {
                 Divider()
+                Text("Correção do Velocímetro (Painel vs ECU)", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ativar Ajuste Fino (+%)", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.profile.isSpeedCorrectionEnabled,
+                        onCheckedChange = { viewModel.updateIsSpeedCorrectionEnabled(it) }
+                    )
+                }
+                if (uiState.profile.isSpeedCorrectionEnabled) {
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        Text(
+                            "Fator de Correção: +${uiState.profile.speedCorrectionPercent.toInt()}%",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = uiState.profile.speedCorrectionPercent,
+                            onValueChange = { viewModel.updateSpeedCorrectionPercent(it) },
+                            valueRange = 1f..15f,
+                            steps = 13
+                        )
+                        Text(
+                            "Os painéis digitais de fábrica costumam indicar ~3% a 5% acima da velocidade real lida pela ECU via OBD-II.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            item {
+                Divider()
                 Text("Ajustes de Shift Light (Blink)", style = MaterialTheme.typography.titleMedium)
             }
 

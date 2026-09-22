@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.7.2] - Atual
+## [3.8.0] - Atual (Aguardando Validação no Veículo Real)
+### Adicionado
+- **Ajuste Fino do Velocímetro (Correção de Offset do Painel)**: Nova opção de personalização no Perfil do Veículo que permite ajustar/equalizar a velocidade exibida no App em relação ao painel digital do carro (ex: +4%).
+- **Separação de Camadas (ECU vs Apresentação)**: A velocidade real da ECU (`speedKmh`) permanece 100% inalterada para garantir a precisão exata dos cálculos de Consumo de Combustível (km/L), Distância da Viagem (Trip) e Seleção de Marcha Ideal, enquanto a velocidade corrigida (`displaySpeedKmh`) é enviada unicamente para o Gauge de Velocidade na UI.
+
+## [3.7.2] - Anterior
 ### Otimizado
 - **Dynamic Overdue Scheduler**: O motor de busca (`ObdPollingEngine`) não envia mais múltiplos comandos (RPM, MAF, SPEED) em lote. Agora utiliza um cálculo matemático baseado no intervalo requisitado ("Overdue Ratio"), rodando apenas o sensor mais atrasado por ciclo e garantindo máxima taxa de atualização (Hz) real.
 - **Penalty Box (Blacklist de PIDs)**: Se um sensor retornar `NODATA`, `ERROR` ou `?`, ele é jogado em um intervalo de espera de 30 segundos, impedindo que os longos timeouts de requisições de sensores não suportados penalizem a leitura do RPM e da Velocidade.

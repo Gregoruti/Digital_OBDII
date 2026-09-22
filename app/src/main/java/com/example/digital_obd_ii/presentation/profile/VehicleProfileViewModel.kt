@@ -173,8 +173,21 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(isShiftLightMode = value)) }
     }
 
+    fun updateIsSpeedCorrectionEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(profile = it.profile.copy(isSpeedCorrectionEnabled = enabled)) }
+    }
+
+    fun updateSpeedCorrectionPercent(percent: Float) {
+        _uiState.update { it.copy(profile = it.profile.copy(speedCorrectionPercent = percent)) }
+    }
+
     fun updateIsRpmGlowEnabled(value: Boolean) {
-        _uiState.update { it.copy(profile = it.profile.copy(isRpmGlowEnabled = value)) }
+        _uiState.update { state ->
+            val newIntensity = if (value) {
+                if (state.profile.rpmGlowIntensity == 0) 2 else state.profile.rpmGlowIntensity
+            } else 0
+            state.copy(profile = state.profile.copy(rpmGlowIntensity = newIntensity))
+        }
     }
 
     fun updateMaxRpmScale(value: Int) {
