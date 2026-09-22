@@ -1,34 +1,18 @@
 package com.example.digital_obd_ii.presentation.dashboard
 
 /**
- * VIEWMODEL: DashboardViewModel v3.6.0
+ * VIEWMODEL: DashboardViewModel v3.9.4
  * 
  * OBJETIVO:
  * Orquestrar o fluxo de dados em tempo real entre o repositório OBD e a UI do Dashboard.
  * Gerencia o estado de conexão, consumo de combustível, marcha ideal e persistência de viagem.
  *
  * HISTÓRICO:
+ * v3.9.4 - Re-subscrição ativa pós autoConnect e prevenção de corrotinas concorrentes no coletor.
  * v3.6.0 - Consolidação de estabilidade e cache persistente.
- * v3.5.2 - Sincronização de versão e melhorias de performance consolidadas.
- * v3.5.1 - ESTABILIZAÇÃO: Correção de oscilação em campos de Temp/Volts via persistent cache.
- * v3.5.0 - ZERO LATENCY: Remoção de throttle de 30ms e uso de conflate() para fluxo instantâneo.
- * v3.3.1 - Ajustes de Ghosting e recalibração de versão.
- * v2.6.5 - Limpeza de debug visual e manutenção de lógica interna de resiliência.
- * v2.6.4 - Atraso no Watchdog (startup delay) e Feedback Visual de Depuração na UI.
- * v2.6.3 - Logs ultra-detalhados e verificação de permissões para depurar falha na auto-conexão.
- * v2.6.2 - Forçado início do Watchdog no init e adição de Logs de Diagnóstico (OBD_RESILIENCE).
- * v2.6.1 - Implementação de Watchdog de Re-conexão (tentativa automática a cada 5s se desconectado).
- * v2.6.0 - Implementação de Auto-Conexão Bluetooth (reconexão automática ao abrir o app).
- * v2.5.3 - Ajuste na lógica de escala de RPM para refletir mudanças no Gauge.
- * v2.5.0 - Sincronização com o sistema de Escala Dinâmica (4K/8K).
- * v2.1.0 - Integração com o Motor de Conexão Resiliente.
- * v1.8.6 - Persistência do último endereço Bluetooth conectado.
- *
- * CORRELAÇÕES:
- * - Consome: ObdRepository, ProfileRepository, TripDao
- * - Provê: DashboardUiState para DashboardScreen.kt
  */
 
+import android.bluetooth.BluetoothAdapter
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,7 +25,10 @@ import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.data.database.dao.TripDao
+import com.example.digital_obd_ii.data.database.entities.TripEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -65,22 +52,23 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private var lastTimestamp = System.currentTimeMillis()
-    private var watchdogJob: kotlinx.coroutines.Job? = null
+    private var watchdogJob: Job? = null
+    private var collectProfileJob: Job? = null
+    private var collectVehicleDataJob: Job? = null
 
     // LÓGICA DE BLINK (v2.10.0)
     private val _isBlinking = MutableStateFlow(false)
     val isBlinking: StateFlow<Boolean> = _isBlinking.asStateFlow()
 
     init {
-        android.util.Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Iniciando coletores e Watchdog.")
-        startCollecting() // v2.6.2: Força início imediato dos coletores
+        Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Iniciando coletores e Watchdog.")
+        startCollecting()
         startWatchdog()
     }
 
     private fun startWatchdog() {
         if (watchdogJob != null) return
         watchdogJob = viewModelScope.launch {
-            // v2.6.4: Aguarda 2 segundos antes do primeiro check para estabilizar Bluetooth/Profile
             delay(2000)
             
             while (true) {
@@ -105,18 +93,24 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun startCollecting() {
-        // Coletor 1: Sempre observa o perfil
-        viewModelScope.launch {
-            profileRepository.getProfile().collect { profile ->
-                android.util.Log.d("OBD_RESILIENCE", "Perfil Carregado: LastAddress=${profile.lastConnectedDeviceAddress}")
-                _uiState.update { it.copy(profile = profile) }
+        if (collectProfileJob?.isActive != true) {
+            collectProfileJob = viewModelScope.launch {
+                profileRepository.getProfile().collect { profile ->
+                    Log.d("OBD_RESILIENCE", "Perfil Carregado: LastAddress=${profile.lastConnectedDeviceAddress}")
+                    _uiState.update { it.copy(profile = profile) }
+                }
             }
         }
 
-        // Coletor 2: Dados do Veículo com Re-subscrição Automática pós-desconexão
-        viewModelScope.launch {
+        startVehicleDataCollection()
+    }
+
+    fun startVehicleDataCollection() {
+        collectVehicleDataJob?.cancel()
+        collectVehicleDataJob = viewModelScope.launch {
             while (true) {
                 if (obdRepository.isConnected()) {
+                    _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
                     obdRepository.observeVehicleData()
                         .onCompletion {
                             _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
@@ -124,31 +118,26 @@ class DashboardViewModel @Inject constructor(
                         .catch { e ->
                             _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                         }
-                        .conflate() // v3.5.0: Evita acúmulo de fila, priorizando sempre o último valor lido
+                        .conflate()
                         .collect { snapshot ->
                             val now = System.currentTimeMillis()
                             val deltaSec = (now - lastTimestamp) / 1000.0
                             
-                            // v3.5.0: Removido filtro de 30ms para processamento imediato de cada sensor
                             lastTimestamp = now
                             val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
                             val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
                             
                             val currentProfile = _uiState.value.profile
                             
-                            // Lógica Preditiva de RPM (Zero Latency Illusion via MAF/Throttle)
                             val realRpm = snapshot.rpm
                             val predictedRpm = predictiveRpm.predict(realRpm, snapshot.maf, snapshot.throttlePosition)
-                            
-                            // Marcha sempre calculada sobre RPM REAL para não sugerir troca prematura
                             val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
-                            // v2.10.0: Cálculo do estado de Blink (Shift Light) - Usa RPM Preditivo para reagir rápido!
                             updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
 
                             _uiState.update { state ->
                                 state.copy(
-                                    snapshot = snapshot.copy(rpm = predictedRpm), // Injeta o RPM Preditivo na UI
+                                    snapshot = snapshot.copy(rpm = predictedRpm),
                                     trip = updatedTrip,
                                     connectionState = ConnectionState.Connected,
                                     gearAction = gearRec.action
@@ -167,7 +156,6 @@ class DashboardViewModel @Inject constructor(
             return
         }
 
-        // Restrição v2.10.0: Sem alerta na 5ª marcha ou acima de 100 km/h
         if (gear >= 5 || speed > 100) {
             _isBlinking.value = false
             return
@@ -188,14 +176,13 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun autoConnect(address: String) {
-        // Previne múltiplas tentativas simultâneas
         if (_uiState.value.connectionState is ConnectionState.Connecting) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(connectionState = ConnectionState.Connecting) }
             
             try {
-                val adapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                val adapter = BluetoothAdapter.getDefaultAdapter()
                 if (adapter == null || !adapter.isEnabled) {
                     _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     return@launch
@@ -205,6 +192,7 @@ class DashboardViewModel @Inject constructor(
                 obdRepository.connect(device)
                     .onSuccess {
                         _uiState.update { it.copy(connectionState = ConnectionState.Connected) }
+                        startVehicleDataCollection() // Força re-início imediato da coleta com novo socket
                     }
                     .onFailure { e ->
                         _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
@@ -222,9 +210,9 @@ class DashboardViewModel @Inject constructor(
     private fun saveCurrentTrip() {
         val trip = _uiState.value.trip
         if (trip.distanceKm > 0.1) {
-            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO) {
                 tripDao.insert(
-                    com.example.digital_obd_ii.data.database.entities.TripEntity(
+                    TripEntity(
                         startTime = trip.startTime,
                         endTime = System.currentTimeMillis(),
                         distanceKm = trip.distanceKm,

@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.3] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.4] - Atual (Aguardando Validação no Veículo Real)
+### Corrigido
+- **Ação Imediata pós-autoConnect**: `DashboardViewModel.autoConnect()` agora dispara explicitamente `startVehicleDataCollection()` imediatamente após o sucesso da reconexão Bluetooth e Handshake.
+- **Prevenção de Corrotinas Duplicadas**: `startCollecting()` agora gerencia os Jobs das corrotinas (`collectProfileJob` e `collectVehicleDataJob`), cancelando instâncias antigas antes de iniciar um novo fluxo. Isso previne que múltiplas corrotinas concorrentes disputem o mesmo socket Bluetooth e garante atualização instantânea do Painel ao reconectar, sem necessidade de navegar para outras telas.
+
+## [3.9.3] - Anterior
 ### Corrigido
 - **Eliminação do Banimento do PenaltyBox em Sensores Essenciais**: Corrigida a lógica do `ObdPollingEngine` que colocava os comandos `RPM`, `SPEED`, `TEMP` e `VOLTS` em um banimento temporário de 30 segundos ao capturar erros de desconexão/timeout. Agora, os sensores essenciais jamais são banidos no `penaltyBox`.
 - **Limpeza de PenaltyBox na Re-inicialização**: Adicionada chamada preventiva de `pollingEngine.clearPenaltyBox()` ao realizar `reinitializeAdapter()`, garantindo a desinterdição imediata de todos os sensores assim que a conexão Bluetooth é restabelecida.
