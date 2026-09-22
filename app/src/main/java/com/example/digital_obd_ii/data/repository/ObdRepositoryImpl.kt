@@ -28,6 +28,7 @@ import com.example.digital_obd_ii.data.obd.Elm327Init
 import com.example.digital_obd_ii.data.obd.ObdCommand
 import com.example.digital_obd_ii.data.obd.ObdPollingEngine
 import com.example.digital_obd_ii.domain.model.ObdLogEntry
+import com.example.digital_obd_ii.domain.model.ObdProtocol
 import com.example.digital_obd_ii.domain.model.VehicleSnapshot
 import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
@@ -76,8 +77,7 @@ class ObdRepositoryImpl @Inject constructor(
             ObdCommand.CoolantTemp, 
             ObdCommand.ControlModuleVoltage,
             ObdCommand.MafRate,
-            ObdCommand.ThrottlePosition,
-            ObdCommand.FuelRate
+            ObdCommand.ThrottlePosition
         )
 
         // Fluxo reativo ao perfil para atualizar intervalos de polling em tempo real
@@ -92,9 +92,8 @@ class ObdRepositoryImpl @Inject constructor(
                 }
                 val maf = data[ObdCommand.MafRate] ?: 0.0
                 val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
-                val obdFuelRate = data[ObdCommand.FuelRate]
                 
-                val lph = obdFuelRate ?: calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
+                val lph = calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
                 val kml = calculateFuel.kmPerLiter(rawSpeed, lph)
                 val gearRec = calculateGear(rpm, rawSpeed, throttle, profile)
 
@@ -121,6 +120,8 @@ class ObdRepositoryImpl @Inject constructor(
     private suspend fun reinitializeAdapter(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
         return try {
             pollingEngine.clearPenaltyBox()
+            var handshakeSuccess = true
+
             Elm327Init.getDynamicBootSequence(profile).forEach { step ->
                 val response = transport.send(step.command, timeoutMs = step.timeoutMs, interCommandDelayMs = profile.interCommandDelayMs.toLong())
                 step.expectedResponse?.let { expected ->
@@ -130,12 +131,28 @@ class ObdRepositoryImpl @Inject constructor(
                     val cleanExpected = expected.uppercase().replace(Regex("[^A-Z0-9]"), "")
                     
                     if (cleanExpected.isNotEmpty() && !cleanRes.contains(cleanExpected)) {
-                        // Não vamos explodir a Exception para não matar a conexão, apenas logamos.
-                        // Clones muito ruins podem retornar "?" ou ignorar comandos.
                         Log.w("OBD_INIT", "Comando ${step.command} falhou: Esperava $expected, recebeu $response")
+                        if (step.command == "0100") {
+                            handshakeSuccess = false
+                        }
                     }
                 }
             }
+
+            // Fallback de Protocolo v3.9.6: Se o handshake '0100' falhou com protocolo forçado,
+            // tenta 'AT SP 0' (AUTO) para que o ELM327 negocie o protocolo CAN (11-bit ou 29-bit) sozinho.
+            if (!handshakeSuccess && profile.obdProtocol != ObdProtocol.AUTO) {
+                Log.w("OBD_INIT", "Handshake falhou no protocolo ${profile.obdProtocol.label}. Tentando fallback AUTO (AT SP 0)...")
+                transport.send("AT SP 0", timeoutMs = 1000L)
+                delay(200)
+                val fallbackRes = transport.send("0100", timeoutMs = 8000L)
+                val cleanFallback = fallbackRes.uppercase().replace(Regex("[^A-Z0-9]"), "")
+                if (cleanFallback.contains("4100")) {
+                    Log.i("OBD_INIT", "Fallback para Protocolo AUTO bem sucedido!")
+                    profileRepository.saveProfile(profile.copy(obdProtocol = ObdProtocol.AUTO))
+                }
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

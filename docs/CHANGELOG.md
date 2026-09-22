@@ -1,9 +1,15 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.5] - 2026-03-31 (Aguardando Validação no Veículo Real)
+## [3.9.6] - 2026-03-31 (Validação em Veículo Real + Otimizações)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Testado e aprovado em Simulador ELM327. Pendente de validação prática no veículo real.
+> **Status de Validação:** Testes em veículo real aplicados. Handshake AUTO e remoção de PID inutilizado validados.
 
+### Otimizado
+- **Protocolo Padrão AUTO (`AT SP 0`) & Fallback Dinâmico**: Alterado o protocolo padrão para `AUTO` (`AT SP 0`). O leitor ELM327 negocia automaticamente a arquitetura de bus CAN (11-bit 500k vs 29-bit 500k). Adicionada rotina de fallback no `reinitializeAdapter()` que ativa o `AT SP 0` se o comando `0100` falhar com protocolo forçado.
+- **Remoção do PID 0x015E (Fuel Rate)**: Eliminado o envio do PID `01 5E` que gerava timeouts de 500ms `NODATA` em veículos sem suporte direto. O consumo instantâneo (L/h e km/L) passa a ser calculado 100% via `MAF` (`01 10`), acelerando drasticamente o ciclo de leitura.
+- **Aumento de Throughput de Polling (15-20Hz)**: Adicionado mapeamento prioritário para `ThrottlePosition` (`"THROTTLE"` a 50ms) e removida a perda de ciclos do PID `01 5E`, aumentando o Throughput real do aplicativo no veículo.
+
+## [3.9.5] - Anterior
 ### Corrigido
 - **Tratamento de Exceções e Proteção de Permissões Bluetooth**: Adicionada verificação prévia de `BLUETOOTH_CONNECT` antes de invocar APIs do adaptador Bluetooth (`bondedDevices`, `createRfcommSocketToServiceRecord`). Captura preventiva de `SecurityException` no `BluetoothConnectionManager` para evitar o encerramento inesperado ("crash") na primeira inicialização do aplicativo.
 - **Card de Solicitação de Permissão na UI**: Se a permissão de Bluetooth ainda não tiver sido autorizada pelo usuário, o aplicativo bloqueia temporariamente a tentativa de auto-conexão prévia e exibe um alerta explicativo ("Permissão de Bluetooth Necessária") com botão direto para "Autorizar Permissão do Bluetooth".

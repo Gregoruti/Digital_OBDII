@@ -224,9 +224,9 @@ class ObdPollingEngine(
         ObdCommand.Rpm -> "RPM"
         ObdCommand.Speed -> "SPEED"
         ObdCommand.MafRate -> "MAF"
+        ObdCommand.ThrottlePosition -> "THROTTLE"
         ObdCommand.ControlModuleVoltage -> "VOLTS"
         ObdCommand.CoolantTemp -> "TEMP"
-        ObdCommand.FuelRate -> "FUEL_RATE"
         else -> "OTHER"
     }
 }

@@ -80,9 +80,9 @@ object FactoryDefaults {
         "RPM" to 50,
         "SPEED" to 50,
         "MAF" to 50,
+        "THROTTLE" to 50,
         "VOLTS" to 500,
-        "TEMP" to 1000,
-        "FUEL_RATE" to 50
+        "TEMP" to 1000
     )
 }
 
@@ -148,7 +148,7 @@ data class VehicleProfile(
     val lastConnectedDeviceAddress: String? = null,
 
     // CONFIGURAÇÕES DE COMUNICAÇÃO (v3.4.0)
-    val obdProtocol: ObdProtocol = ObdProtocol.CAN_11BIT_500K,
+    val obdProtocol: ObdProtocol = ObdProtocol.AUTO,
     val isMultiPidEnabled: Boolean = false,
     val interleavingRatio: Int = 8, // 8 High : 1 Low
     val maintenanceCycleInterval: Int = 500, // Ciclos entre comandos de manutenção
