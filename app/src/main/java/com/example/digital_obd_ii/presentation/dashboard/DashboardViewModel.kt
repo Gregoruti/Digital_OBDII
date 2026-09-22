@@ -29,6 +29,7 @@ package com.example.digital_obd_ii.presentation.dashboard
  * - Provê: DashboardUiState para DashboardScreen.kt
  */
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digital_obd_ii.domain.repository.ObdRepository
@@ -41,6 +42,7 @@ import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.data.database.dao.TripDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -78,20 +80,26 @@ class DashboardViewModel @Inject constructor(
     private fun startWatchdog() {
         if (watchdogJob != null) return
         watchdogJob = viewModelScope.launch {
-            // v2.6.4: Aguarda 3 segundos antes do primeiro check para estabilizar Bluetooth/Profile
-            kotlinx.coroutines.delay(3000)
+            // v2.6.4: Aguarda 2 segundos antes do primeiro check para estabilizar Bluetooth/Profile
+            delay(2000)
             
             while (true) {
                 val state = _uiState.value
-                val address = state.profile.lastConnectedDeviceAddress
+                val profile = state.profile
+                val address = profile.lastConnectedDeviceAddress
+                val isAutoConnect = profile.isAutoConnectEnabled
+                val isConnected = obdRepository.isConnected()
                 
-                android.util.Log.d("OBD_RESILIENCE", "Watchdog: ${state.connectionState::class.simpleName} | Last: ${address ?: "Nenhum"}")
+                Log.d("OBD_RESILIENCE", "Watchdog: Connected=$isConnected | AutoConnect=$isAutoConnect | Last: ${address ?: "Nenhum"}")
 
-                if (address != null && state.connectionState is ConnectionState.Disconnected) {
-                    autoConnect(address)
+                // Re-conecta automaticamente se a auto-conexão estiver ativa e o socket físico caiu
+                if (isAutoConnect && !address.isNullOrEmpty() && (!isConnected || state.connectionState is ConnectionState.Disconnected)) {
+                    if (state.connectionState !is ConnectionState.Connecting) {
+                        autoConnect(address)
+                    }
                 }
-                
-                kotlinx.coroutines.delay(5000) 
+
+                delay(3000)
             }
         }
     }

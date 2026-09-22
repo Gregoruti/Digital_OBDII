@@ -80,7 +80,10 @@ class BluetoothConnectionManager(
                     while (!foundPrompt) {
                         if (inp.available() > 0) {
                             val read = inp.read(buffer)
-                            if (read == -1) break
+                            if (read == -1) {
+                                disconnect()
+                                break
+                            }
                             for (i in 0 until read) {
                                 val c = buffer[i].toChar()
                                 if (c == '>') {
@@ -96,6 +99,7 @@ class BluetoothConnectionManager(
                     }
                     responseBuilder.toString().trim()
                 } catch (e: Exception) {
+                    disconnect()
                     "ERROR: ${e.message}"
                 }
             } ?: "ERROR: Timeout"

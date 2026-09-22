@@ -34,7 +34,7 @@ sealed class Screen(val route: String) {
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Dashboard.route
+    startDestination: String = Screen.DeviceList.route
 ) {
     NavHost(
         navController = navController,

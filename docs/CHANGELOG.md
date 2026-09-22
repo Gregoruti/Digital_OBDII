@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.0] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.1] - Atual (Aguardando Validação no Veículo Real)
+### Corrigido
+- **Auto-Conexão na Abertura do App**: Corrigido a rota inicial do `AppNavHost` para `Screen.DeviceList.route`. Ao abrir o App com Auto-Conexão ativada, a aplicação direciona imediatamente para a tela `ConnectionStatusScreen` executando a tentativa de conexão 1/3, handshake e transição de 500ms para o Painel.
+- **Detecção de Queda de Conexão Física**: Adicionada chamada preventiva de `disconnect()` no `BluetoothConnectionManager` ao capturar falha de I/O / socket interrompido na simulação, garantindo que o Watchdog identifique a desconexão e execute a reconexão automática assim que o simulador/adaptador retornar.
+
+## [3.9.0] - Anterior
 ### Adicionado
 - **Nova Tela de Status da Conexão (`ConnectionStatusScreen`)**: Tela dedicada para acompanhamento do ciclo de conexão com visualização dinâmica de fases e progresso de até 3 tentativas (1/3, 2/3, 3/3).
 - **Garantia de Não-Polling Pré-Handshake**: Garante que nenhuma requisição de sensores (RPM, Speed, Volts, MAF) seja emitida pelo módulo OBD antes da conclusão do handshake e da confirmação de conexão estabelecida.
