@@ -221,6 +221,10 @@ class VehicleProfileViewModel @Inject constructor(
     fun updateShiftLightSensitivity(sensitivity: Float) {
         _uiState.update { it.copy(profile = it.profile.copy(shiftLightSensitivity = sensitivity)) }
     }
+    
+    fun updateRpmGlowIntensity(intensity: Int) {
+        _uiState.update { it.copy(profile = it.profile.copy(rpmGlowIntensity = intensity)) }
+    }
 
     // PERFORMANCE SPS (v1.8.7)
     fun updatePollingInterval(key: String, ms: Int) {

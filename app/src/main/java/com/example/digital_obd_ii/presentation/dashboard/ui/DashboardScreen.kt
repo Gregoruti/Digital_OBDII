@@ -119,7 +119,7 @@ fun DashboardScreen(
         ArchedRpmGauge(
             currentRpm = animatedRpm.toFloat(),
             isShiftLightMode = uiState.profile.isShiftLightMode,
-            isGlowEnabled = uiState.profile.isRpmGlowEnabled,
+            glowIntensity = uiState.profile.rpmGlowIntensity,
             isScaleVisible = uiState.profile.isRpmScaleVisible,
             maxScaleRpm = uiState.profile.maxRpmScale,
             scaleTextSize = uiState.profile.rpmScaleTextSize,

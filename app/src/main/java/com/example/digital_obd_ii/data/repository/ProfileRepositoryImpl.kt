@@ -79,7 +79,8 @@ class ProfileRepositoryImpl @Inject constructor(
         val IS_RPM_SCALE_VISIBLE_V2 = booleanPreferencesKey("is_rpm_scale_visible_v2")
         val RPM_SCALE_TEXT_SIZE_V2 = floatPreferencesKey("rpm_scale_text_size_v2")
         val REDLINE_START_RPM_V2 = intPreferencesKey("redline_start_rpm_v2")
-        val IS_GLOW_ENABLED_V2 = booleanPreferencesKey("is_glow_enabled_v2")
+        val IS_GLOW_ENABLED_V2 = booleanPreferencesKey("is_glow_enabled_v2") // Legado
+        val RPM_GLOW_INTENSITY = intPreferencesKey("rpm_glow_intensity")
         val SHIFT_LIGHT_BLINK_MS_V2 = intPreferencesKey("shift_light_blink_ms_v2")
 
         val POLLING_INTERVALS = stringPreferencesKey("polling_intervals_v1")
@@ -148,14 +149,14 @@ class ProfileRepositoryImpl @Inject constructor(
             elements = activeElements,
 
             isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] ?: true,
-            isRpmGlowEnabled = preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] ?: true,
+            rpmGlowIntensity = preferences[PreferencesKeys.RPM_GLOW_INTENSITY] ?: if (preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] == false) 0 else 2,
             maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE_V2] ?: 4000,
             isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] ?: true,
             rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] ?: 25f,
             redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
             rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
-            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 50f,
+            rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 40f,
             rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 70f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
             
@@ -215,7 +216,7 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.ELEMENTS_CONFIG] = serializeElements(profile.elements)
 
             preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] = profile.isShiftLightMode
-            preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] = profile.isRpmGlowEnabled
+            preferences[PreferencesKeys.RPM_GLOW_INTENSITY] = profile.rpmGlowIntensity
             preferences[PreferencesKeys.MAX_RPM_SCALE_V2] = profile.maxRpmScale
             preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] = profile.isRpmScaleVisible
             preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] = profile.rpmScaleTextSize

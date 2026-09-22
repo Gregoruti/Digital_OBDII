@@ -119,7 +119,7 @@ data class VehicleProfile(
 
     // Barra de RPM
     val isShiftLightMode: Boolean = true,
-    val isRpmGlowEnabled: Boolean = true,
+    val rpmGlowIntensity: Int = 2, // 0 = Desativado, 1 a 4 = Intensidade
     val maxRpmScale: Int = 4000, 
     val isRpmScaleVisible: Boolean = true,
     val rpmScaleTextSize: Float = 25f, 

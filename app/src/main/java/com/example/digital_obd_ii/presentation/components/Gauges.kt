@@ -240,7 +240,7 @@ fun SevenSegmentText(
 fun ArchedRpmGauge(
     currentRpm: Float,
     isShiftLightMode: Boolean = false,
-    isGlowEnabled: Boolean = true,
+    glowIntensity: Int = 2,
     isScaleVisible: Boolean = true, // NOVO v2.5.0
     maxScaleRpm: Int = 8000,       // NOVO v2.5.0
     scaleTextSize: Float = 14f,    // NOVO v2.5.0
@@ -321,15 +321,16 @@ fun ArchedRpmGauge(
                 val x2 = cx + (outerR * cos(angle))
                 val y2 = cy + (outerR * sin(angle))
 
-                // Efeito Glow (v2.4.0)
-                if (isGlowEnabled && isActive) {
+                // Efeito Glow (v3.8.0)
+                if (glowIntensity > 0 && isActive) {
+                    val blurRadius = glowIntensity * 7.5f
                     drawIntoCanvas { canvas ->
                         val paint = Paint().apply {
                             isAntiAlias = true
                             this.color = color.toArgb()
                             strokeWidth = barWidth * 1.5f
                             strokeCap = Paint.Cap.BUTT
-                            maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
+                            maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
                         }
                         canvas.nativeCanvas.drawLine(x1, y1, x2, y2, paint)
                     }
@@ -339,15 +340,16 @@ fun ArchedRpmGauge(
             } else {
                 val x = startOffsetX + (drawingWidth * fraction)
                 
-                // Efeito Glow (v2.4.0)
-                if (isGlowEnabled && isActive) {
+                // Efeito Glow (v3.8.0)
+                if (glowIntensity > 0 && isActive) {
+                    val blurRadius = glowIntensity * 7.5f
                     drawIntoCanvas { canvas ->
                         val paint = Paint().apply {
                             isAntiAlias = true
                             this.color = color.toArgb()
                             strokeWidth = barWidth * 1.5f
                             strokeCap = Paint.Cap.BUTT
-                            maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
+                            maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
                         }
                         canvas.nativeCanvas.drawLine(x, 0f, x, barHeight, paint)
                     }

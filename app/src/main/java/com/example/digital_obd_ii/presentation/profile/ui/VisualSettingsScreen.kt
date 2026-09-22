@@ -252,10 +252,8 @@ fun VisualSettingsScreen(
                         Text("Modo Shift Light", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isShiftLightMode, onCheckedChange = { viewModel.updateIsShiftLightMode(it) })
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Efeito Glow (Brilho)", modifier = Modifier.weight(1f))
-                        Switch(checked = uiState.profile.isRpmGlowEnabled, onCheckedChange = { viewModel.updateIsRpmGlowEnabled(it) })
-                    }
+                    ControlSlider("Intensidade Glow (Brilho)", uiState.profile.rpmGlowIntensity.toFloat(), 0f, 4f, steps = 3) { viewModel.updateRpmGlowIntensity(it.toInt()) }
+                    
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Efeito Ghosting (Displays)", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isGhostEnabled, onCheckedChange = { viewModel.updateIsGhostEnabled(it) })
@@ -291,6 +289,7 @@ fun VisualSettingsScreen(
                     }
 
                     ControlSlider("Ângulo (0=Reta)", uiState.profile.rpmBarCurvature, 0f, 60f) { viewModel.updateRpmBarCurvature(it) }
+                    ControlSlider("Largura", uiState.profile.rpmBarWidth, 5f, 60f) { viewModel.updateRpmBarWidth(it) }
                     ControlSlider("Altura", uiState.profile.rpmBarHeight, 10f, 100f) { viewModel.updateRpmBarHeight(it) }
                     ControlSlider("Posição Y", uiState.profile.rpmBarY, 0f, 400f) { viewModel.updateRpmBarY(it) }
                 }
@@ -395,7 +394,7 @@ fun VisualSettingsScreen(
                     ArchedRpmGauge(
                         currentRpm = simRpm,
                         isShiftLightMode = uiState.profile.isShiftLightMode,
-                        isGlowEnabled = uiState.profile.isRpmGlowEnabled,
+                        glowIntensity = uiState.profile.rpmGlowIntensity,
                         isScaleVisible = uiState.profile.isRpmScaleVisible,
                         maxScaleRpm = uiState.profile.maxRpmScale,
                         scaleTextSize = uiState.profile.rpmScaleTextSize,
@@ -501,9 +500,9 @@ fun ElementConfigControl(label: String, config: com.example.digital_obd_ii.domai
 }
 
 @Composable
-private fun ControlSlider(label: String, value: Float, min: Float, max: Float, onValueChange: (Float) -> Unit) {
+private fun ControlSlider(label: String, value: Float, min: Float, max: Float, steps: Int = 0, onValueChange: (Float) -> Unit) {
     Column {
         Text(text = "$label: ${String.format("%.1f", value)}", style = MaterialTheme.typography.bodySmall)
-        Slider(value = value, onValueChange = onValueChange, valueRange = min..max)
+        Slider(value = value, onValueChange = onValueChange, valueRange = min..max, steps = steps)
     }
 }
