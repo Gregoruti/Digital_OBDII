@@ -163,7 +163,10 @@ data class VehicleProfile(
 
     // CORREÇÃO DE VELOCIDADE (PAINEL DO VEÍCULO)
     val isSpeedCorrectionEnabled: Boolean = false,
-    val speedCorrectionPercent: Float = 4.0f   // Fator de correção do velocímetro (ex: +4%)
+    val speedCorrectionPercent: Float = 4.0f,  // Fator de correção do velocímetro (ex: +4%)
+
+    // AUTO-CONEXÃO BLUETOOTH (v3.9.0)
+    val isAutoConnectEnabled: Boolean = false  // Conectar automaticamente ao iniciar o App
 )
 
 data class ElementConfig(

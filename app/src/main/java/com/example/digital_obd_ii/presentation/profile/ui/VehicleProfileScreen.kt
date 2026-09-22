@@ -99,6 +99,28 @@ fun VehicleProfileScreen(
             }
 
             item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Auto-Conexão Bluetooth", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = if (uiState.profile.lastConnectedDeviceAddress != null)
+                                "Último: ${uiState.profile.lastConnectedDeviceAddress}"
+                            else "Nenhum adaptador salvo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = uiState.profile.isAutoConnectEnabled,
+                        onCheckedChange = { viewModel.updateIsAutoConnectEnabled(it) }
+                    )
+                }
+            }
+
+            item {
                 Text("Tipo de Combustível", style = MaterialTheme.typography.titleMedium)
                 FuelTypeSelector(
                     selectedType = uiState.profile.fuelType,

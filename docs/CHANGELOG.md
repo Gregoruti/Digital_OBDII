@@ -1,6 +1,13 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.8.0] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.0] - Atual (Aguardando Validação no Veículo Real)
+### Adicionado
+- **Nova Tela de Status da Conexão (`ConnectionStatusScreen`)**: Tela dedicada para acompanhamento do ciclo de conexão com visualização dinâmica de fases e progresso de até 3 tentativas (1/3, 2/3, 3/3).
+- **Garantia de Não-Polling Pré-Handshake**: Garante que nenhuma requisição de sensores (RPM, Speed, Volts, MAF) seja emitida pelo módulo OBD antes da conclusão do handshake e da confirmação de conexão estabelecida.
+- **Transição Automatizada de 500ms**: Após a conclusão com sucesso do Handshake OBD-II e exibição da mensagem "Conectado!", aguarda 500ms antes de navegar automaticamente para o Painel Principal (Dashboard).
+- **Recuperação de Dispositivo & Auto-Conexão**: Salva o endereço do último adaptador Bluetooth pareado e adiciona a chave de "Auto-Conexão ao Iniciar", permitindo reconexão imediata assim que o App é aberto.
+
+## [3.8.0] - Anterior
 ### Adicionado
 - **Ajuste Fino do Velocímetro (Correção de Offset do Painel)**: Nova opção de personalização no Perfil do Veículo que permite ajustar/equalizar a velocidade exibida no App em relação ao painel digital do carro (ex: +4%).
 - **Separação de Camadas (ECU vs Apresentação)**: A velocidade real da ECU (`speedKmh`) permanece 100% inalterada para garantir a precisão exata dos cálculos de Consumo de Combustível (km/L), Distância da Viagem (Trip) e Seleção de Marcha Ideal, enquanto a velocidade corrigida (`displaySpeedKmh`) é enviada unicamente para o Gauge de Velocidade na UI.

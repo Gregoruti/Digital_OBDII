@@ -3,11 +3,14 @@ package com.example.digital_obd_ii.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.digital_obd_ii.presentation.connection.ui.DeviceListScreen
+import androidx.navigation.navArgument
 import com.example.digital_obd_ii.presentation.communication.ui.CommunicationScreen
+import com.example.digital_obd_ii.presentation.connection.ui.ConnectionStatusScreen
+import com.example.digital_obd_ii.presentation.connection.ui.DeviceListScreen
 import com.example.digital_obd_ii.presentation.dashboard.ui.DashboardScreen
 import com.example.digital_obd_ii.presentation.debug.ui.ObdTerminalScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
@@ -16,6 +19,9 @@ import com.example.digital_obd_ii.presentation.profile.ui.VisualSettingsScreen
 
 sealed class Screen(val route: String) {
     object DeviceList : Screen("device_list")
+    object ConnectionStatus : Screen("connection_status/{deviceAddress}") {
+        fun createRoute(deviceAddress: String) = "connection_status/$deviceAddress"
+    }
     object Profile : Screen("profile")
     object VisualSettings : Screen("visual_settings")
     object Terminal : Screen("terminal")
@@ -36,11 +42,30 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Screen.DeviceList.route) {
-            DeviceListScreen(onDeviceConnected = {
-                navController.navigate(Screen.Dashboard.route) {
-                    popUpTo(Screen.DeviceList.route) { inclusive = true }
+            DeviceListScreen(
+                onDeviceSelected = { deviceAddress ->
+                    navController.navigate(Screen.ConnectionStatus.createRoute(deviceAddress))
                 }
-            })
+            )
+        }
+        composable(
+            route = Screen.ConnectionStatus.route,
+            arguments = listOf(navArgument("deviceAddress") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val address = backStackEntry.arguments?.getString("deviceAddress") ?: ""
+            ConnectionStatusScreen(
+                deviceAddress = address,
+                onConnectedAndReady = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.DeviceList.route) { inclusive = true }
+                    }
+                },
+                onBackToDeviceList = {
+                    navController.navigate(Screen.DeviceList.route) {
+                        popUpTo(Screen.DeviceList.route) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Screen.Profile.route) {
             VehicleProfileScreen(

@@ -98,6 +98,7 @@ class ProfileRepositoryImpl @Inject constructor(
 
         val IS_SPEED_CORRECTION_ENABLED = booleanPreferencesKey("is_speed_correction_enabled")
         val SPEED_CORRECTION_PERCENT = floatPreferencesKey("speed_correction_percent")
+        val IS_AUTO_CONNECT_ENABLED = booleanPreferencesKey("is_auto_connect_enabled")
     }
 
     override fun getProfile(): Flow<VehicleProfile> = context.dataStore.data.map { preferences ->
@@ -188,7 +189,8 @@ class ProfileRepositoryImpl @Inject constructor(
             atTimeoutMs = preferences[PreferencesKeys.AT_TIMEOUT] ?: 32,
 
             isSpeedCorrectionEnabled = preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] ?: false,
-            speedCorrectionPercent = preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] ?: 4.0f
+            speedCorrectionPercent = preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] ?: 4.0f,
+            isAutoConnectEnabled = preferences[PreferencesKeys.IS_AUTO_CONNECT_ENABLED] ?: false
         )
     }
 
@@ -255,6 +257,7 @@ class ProfileRepositoryImpl @Inject constructor(
 
             preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] = profile.isSpeedCorrectionEnabled
             preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] = profile.speedCorrectionPercent
+            preferences[PreferencesKeys.IS_AUTO_CONNECT_ENABLED] = profile.isAutoConnectEnabled
         }
     }
 

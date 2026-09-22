@@ -181,6 +181,11 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(speedCorrectionPercent = percent)) }
     }
 
+    fun updateIsAutoConnectEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(profile = it.profile.copy(isAutoConnectEnabled = enabled)) }
+        saveProfile()
+    }
+
     fun updateIsRpmGlowEnabled(value: Boolean) {
         _uiState.update { state ->
             val newIntensity = if (value) {
