@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.1] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.2] - Atual (Aguardando Validação no Veículo Real)
+### Corrigido
+- **Circuit Breaker de Timeouts Consecutivos**: `BluetoothConnectionManager` contabiliza respostas de erro/timeout. Após 3 timeouts consecutivos (1.5s com simulação pausada), o socket travado é encerrado automaticamente, permitindo que a queda seja identificada sem necessitar navegar por menus.
+- **Re-subscrição Reativa no Painel**: Implementado loop contínuo de coleta em `DashboardViewModel`. Quando a conexão cai e o Watchdog re-estabelece o Bluetooth com o simulador/adaptador, o fluxo de dados dos sensores é retomado na hora no Painel sem intervenção manual do usuário.
+
+## [3.9.1] - Anterior
 ### Corrigido
 - **Auto-Conexão na Abertura do App**: Corrigido a rota inicial do `AppNavHost` para `Screen.DeviceList.route`. Ao abrir o App com Auto-Conexão ativada, a aplicação direciona imediatamente para a tela `ConnectionStatusScreen` executando a tentativa de conexão 1/3, handshake e transição de 500ms para o Painel.
 - **Detecção de Queda de Conexão Física**: Adicionada chamada preventiva de `disconnect()` no `BluetoothConnectionManager` ao capturar falha de I/O / socket interrompido na simulação, garantindo que o Watchdog identifique a desconexão e execute a reconexão automática assim que o simulador/adaptador retornar.

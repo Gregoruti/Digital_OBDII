@@ -113,43 +113,51 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-        // Coletor 2: Dados do Veículo
+        // Coletor 2: Dados do Veículo com Re-subscrição Automática pós-desconexão
         viewModelScope.launch {
-            obdRepository.observeVehicleData()
-                .catch { e ->
-                    _uiState.update { it.copy(connectionState = ConnectionState.Error(e.message ?: "Erro na conexão")) }
-                }
-                .conflate() // v3.5.0: Evita acúmulo de fila, priorizando sempre o último valor lido
-                .collect { snapshot ->
-                    val now = System.currentTimeMillis()
-                    val deltaSec = (now - lastTimestamp) / 1000.0
-                    
-                    // v3.5.0: Removido filtro de 30ms para processamento imediato de cada sensor
-                    lastTimestamp = now
-                    val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
-                    val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
-                    
-                    val currentProfile = _uiState.value.profile
-                    
-                    // Lógica Preditiva de RPM (Zero Latency Illusion via MAF/Throttle)
-                    val realRpm = snapshot.rpm
-                    val predictedRpm = predictiveRpm.predict(realRpm, snapshot.maf, snapshot.throttlePosition)
-                    
-                    // Marcha sempre calculada sobre RPM REAL para não sugerir troca prematura
-                    val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
+            while (true) {
+                if (obdRepository.isConnected()) {
+                    obdRepository.observeVehicleData()
+                        .onCompletion {
+                            _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                        }
+                        .catch { e ->
+                            _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                        }
+                        .conflate() // v3.5.0: Evita acúmulo de fila, priorizando sempre o último valor lido
+                        .collect { snapshot ->
+                            val now = System.currentTimeMillis()
+                            val deltaSec = (now - lastTimestamp) / 1000.0
+                            
+                            // v3.5.0: Removido filtro de 30ms para processamento imediato de cada sensor
+                            lastTimestamp = now
+                            val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
+                            val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
+                            
+                            val currentProfile = _uiState.value.profile
+                            
+                            // Lógica Preditiva de RPM (Zero Latency Illusion via MAF/Throttle)
+                            val realRpm = snapshot.rpm
+                            val predictedRpm = predictiveRpm.predict(realRpm, snapshot.maf, snapshot.throttlePosition)
+                            
+                            // Marcha sempre calculada sobre RPM REAL para não sugerir troca prematura
+                            val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
-                    // v2.10.0: Cálculo do estado de Blink (Shift Light) - Usa RPM Preditivo para reagir rápido!
-                    updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+                            // v2.10.0: Cálculo do estado de Blink (Shift Light) - Usa RPM Preditivo para reagir rápido!
+                            updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
 
-                    _uiState.update { state ->
-                        state.copy(
-                            snapshot = snapshot.copy(rpm = predictedRpm), // Injeta o RPM Preditivo na UI
-                            trip = updatedTrip,
-                            connectionState = ConnectionState.Connected,
-                            gearAction = gearRec.action
-                        )
-                    }
+                            _uiState.update { state ->
+                                state.copy(
+                                    snapshot = snapshot.copy(rpm = predictedRpm), // Injeta o RPM Preditivo na UI
+                                    trip = updatedTrip,
+                                    connectionState = ConnectionState.Connected,
+                                    gearAction = gearRec.action
+                                )
+                            }
+                        }
                 }
+                delay(1000)
+            }
         }
     }
 

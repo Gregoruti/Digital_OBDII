@@ -25,6 +25,7 @@ class BluetoothConnectionManager(
     private var socket: BluetoothSocket? = null
     private var input: InputStream? = null
     private var output: OutputStream? = null
+    private var consecutiveErrors = 0
     private val mutex = Mutex()
 
     companion object {
@@ -41,9 +42,11 @@ class BluetoothConnectionManager(
         mutex.withLock {
             runCatching {
                 adapter.cancelDiscovery()
+                disconnectInternal()
                 socket = device.createRfcommSocketToServiceRecord(SPP_UUID).also { it.connect() }
                 input = socket?.inputStream
                 output = socket?.outputStream
+                consecutiveErrors = 0
                 Unit
             }
         }
@@ -60,7 +63,7 @@ class BluetoothConnectionManager(
             }
 
             // v2.10.6: Timeout agressivo de 500ms para evitar travamento em simuladores/clones
-            withTimeoutOrNull(timeoutMs) {
+            val response = withTimeoutOrNull(timeoutMs) {
                 try {
                     // 1. Limpa lixo residual do buffer RAPIDAMENTE
                     if (inp.available() > 0) {
@@ -81,7 +84,7 @@ class BluetoothConnectionManager(
                         if (inp.available() > 0) {
                             val read = inp.read(buffer)
                             if (read == -1) {
-                                disconnect()
+                                disconnectInternal()
                                 break
                             }
                             for (i in 0 until read) {
@@ -99,14 +102,30 @@ class BluetoothConnectionManager(
                     }
                     responseBuilder.toString().trim()
                 } catch (e: Exception) {
-                    disconnect()
+                    disconnectInternal()
                     "ERROR: ${e.message}"
                 }
             } ?: "ERROR: Timeout"
+
+            if (response.startsWith("ERROR") || response.isEmpty()) {
+                consecutiveErrors++
+                if (consecutiveErrors >= 3) {
+                    disconnectInternal()
+                    consecutiveErrors = 0
+                }
+            } else {
+                consecutiveErrors = 0
+            }
+
+            response
         }
     }
 
     fun disconnect() {
+        disconnectInternal()
+    }
+
+    private fun disconnectInternal() {
         runCatching {
             input?.close()
             output?.close()
@@ -115,6 +134,7 @@ class BluetoothConnectionManager(
         input = null
         output = null
         socket = null
+        consecutiveErrors = 0
     }
 
     fun isConnected(): Boolean = socket?.isConnected == true
