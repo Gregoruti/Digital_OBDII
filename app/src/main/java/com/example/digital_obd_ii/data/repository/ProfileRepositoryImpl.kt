@@ -159,7 +159,7 @@ class ProfileRepositoryImpl @Inject constructor(
             rpmScaleTextSize = preferences[PreferencesKeys.RPM_SCALE_TEXT_SIZE_V2] ?: 25f,
             redlineStartRpm = preferences[PreferencesKeys.REDLINE_START_RPM_V2] ?: 2500,
             rpmBarCurvature = preferences[PreferencesKeys.RPM_CURVATURE_V2] ?: 35f,
-            rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 22f,
+            rpmBarWidth = preferences[PreferencesKeys.RPM_BAR_WIDTH_V2] ?: 12f,
             rpmBarHeight = preferences[PreferencesKeys.RPM_BAR_HEIGHT_V2] ?: 40f,
             rpmBarY = preferences[PreferencesKeys.RPM_BAR_Y_V2] ?: 70f,
             shiftLightBlinkMs = preferences[PreferencesKeys.SHIFT_LIGHT_BLINK_MS_V2] ?: 100,
@@ -181,14 +181,14 @@ class ProfileRepositoryImpl @Inject constructor(
             pollingIntervals = sps,
             lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS],
 
-            obdProtocol = try { ObdProtocol.valueOf(preferences[PreferencesKeys.OBD_PROTOCOL] ?: ObdProtocol.CAN_11BIT_500K.name) } catch (e: Exception) { ObdProtocol.CAN_11BIT_500K },
+            obdProtocol = try { ObdProtocol.valueOf(preferences[PreferencesKeys.OBD_PROTOCOL] ?: ObdProtocol.AUTO.name) } catch (e: Exception) { ObdProtocol.AUTO },
             isMultiPidEnabled = preferences[PreferencesKeys.IS_MULTI_PID] ?: false,
             interleavingRatio = preferences[PreferencesKeys.INTERLEAVING_RATIO] ?: 8,
             maintenanceCycleInterval = preferences[PreferencesKeys.MAINTENANCE_INTERVAL] ?: 500,
             adaptiveTiming = try { AdaptiveTiming.valueOf(preferences[PreferencesKeys.ADAPTIVE_TIMING] ?: AdaptiveTiming.AUTO.name) } catch (e: Exception) { AdaptiveTiming.AUTO },
             atTimeoutMs = preferences[PreferencesKeys.AT_TIMEOUT] ?: 32,
 
-            isSpeedCorrectionEnabled = preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] ?: false,
+            isSpeedCorrectionEnabled = preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] ?: true,
             speedCorrectionPercent = preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] ?: 4.0f,
             isAutoConnectEnabled = preferences[PreferencesKeys.IS_AUTO_CONNECT_ENABLED] ?: false
         )

@@ -125,7 +125,7 @@ data class VehicleProfile(
     val rpmScaleTextSize: Float = 25f, 
     val redlineStartRpm: Int = 2500, 
     val rpmBarCurvature: Float = 35f,
-    val rpmBarWidth: Float = 22f,
+    val rpmBarWidth: Float = 12f,
     val rpmBarHeight: Float = 40f,
     val rpmBarY: Float = 70f,
     val shiftLightBlinkMs: Int = 100,
@@ -162,7 +162,7 @@ data class VehicleProfile(
     val relaxedValidation: Boolean = false,   // Relaxamento no parser caso Headers/Espaços causem erro
 
     // CORREÇÃO DE VELOCIDADE (PAINEL DO VEÍCULO)
-    val isSpeedCorrectionEnabled: Boolean = false,
+    val isSpeedCorrectionEnabled: Boolean = true,
     val speedCorrectionPercent: Float = 4.0f,  // Fator de correção do velocímetro (ex: +4%)
 
     // AUTO-CONEXÃO BLUETOOTH (v3.9.0)

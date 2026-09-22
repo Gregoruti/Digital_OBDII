@@ -1,9 +1,14 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.7] - 2026-03-31 (Otimização de Latência & Zero Lag no Painel)
+## [3.9.8] - 2026-03-31 (Novos Padrões Visuais & Calibração)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Redução de latência de ~850ms para ~100ms. Testado em compilação e pronto para validação no veículo.
+> **Status de Validação:** Padrões visuais atualizados no modelo e repositório. Testado e aprovado em compilação.
 
+### Alterado
+- **Redução da Largura da Barra de RPM**: Valor padrão de `rpmBarWidth` reduzido de `22f` para `12f` para uma estética mais fina, moderna e integrada no arco do painel.
+- **Ativação Padrão da Correção de Velocidade (+4%)**: O recurso de ajuste de offset de velocidade para equalizar com o velocímetro original do carro (`isSpeedCorrectionEnabled`) agora vem ativado por padrão (`true`) com fator de +4%.
+
+## [3.9.7] - Anterior
 ### Otimizado
 - **Priority Interleaving para RPM e Velocidade**: Implementado agendamento prioritário no `ObdPollingEngine`. O comando `RPM` (`010C`) passa a ser lido em **todos os ciclos ímpares** (frequência dedicada de 10-15Hz), enquanto `SPEED`, `MAF` e `THROTTLE` dividem os ciclos pares.
 - **Leitura Nativa Blocking no Socket SPP**: Substituído o polling com `delay(2)` e `inp.available()` em `BluetoothConnectionManager` por chamadas diretas de leitura nativa `inp.read(buffer)`, eliminando até 100ms de suspensão desnecessária de corrotina por comando.
