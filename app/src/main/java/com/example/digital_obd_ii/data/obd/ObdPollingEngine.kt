@@ -89,19 +89,28 @@ class ObdPollingEngine(
 
             var executedAny = false
 
-            // Varre a roda (Round-Robin). Executa no máximo 1 por ciclo para não travar a Coroutine.
-            for (i in availableCommands.indices) {
-                val cmd = availableCommands[cmdIndex % availableCommands.size]
-                cmdIndex++ // Gira a roda
+            // Priority Interleaving (v3.9.7): Nos ciclos ímpares, prioriza RPM se o intervalo de 50ms tiver passado.
+            val rpmCmd = availableCommands.firstOrNull { it == ObdCommand.Rpm }
+            val rpmElapsed = if (rpmCmd != null) System.currentTimeMillis() - (lastPollTimestamps["RPM"] ?: 0L) else 0L
 
-                val interval = profile.pollingIntervals[getSensorKey(cmd)] ?: 250
-                val elapsed = System.currentTimeMillis() - (lastPollTimestamps[getSensorKey(cmd)] ?: 0L)
+            if (cycleCount % 2 == 1 && rpmCmd != null && rpmElapsed >= (profile.pollingIntervals["RPM"] ?: 50)) {
+                executeSinglePid(rpmCmd, profile)
+                executedAny = true
+            } else {
+                // Varre a roda (Round-Robin). Executa no máximo 1 por ciclo para não travar a Coroutine.
+                for (i in availableCommands.indices) {
+                    val cmd = availableCommands[cmdIndex % availableCommands.size]
+                    cmdIndex++ // Gira a roda
 
-                // Se já deu o tempo, executa e devolve controle para a UI.
-                if (elapsed >= interval) {
-                    executeSinglePid(cmd, profile)
-                    executedAny = true
-                    break
+                    val interval = profile.pollingIntervals[getSensorKey(cmd)] ?: 250
+                    val elapsed = System.currentTimeMillis() - (lastPollTimestamps[getSensorKey(cmd)] ?: 0L)
+
+                    // Se já deu o tempo, executa e devolve controle para a UI.
+                    if (elapsed >= interval) {
+                        executeSinglePid(cmd, profile)
+                        executedAny = true
+                        break
+                    }
                 }
             }
 

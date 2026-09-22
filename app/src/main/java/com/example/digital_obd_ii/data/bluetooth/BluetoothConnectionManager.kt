@@ -89,23 +89,18 @@ class BluetoothConnectionManager(
                     var foundPrompt = false
                     
                     while (!foundPrompt) {
-                        if (inp.available() > 0) {
-                            val read = inp.read(buffer)
-                            if (read == -1) {
-                                disconnectInternal()
+                        val read = inp.read(buffer)
+                        if (read == -1) {
+                            disconnectInternal()
+                            break
+                        }
+                        for (i in 0 until read) {
+                            val c = buffer[i].toChar()
+                            if (c == '>') {
+                                foundPrompt = true
                                 break
                             }
-                            for (i in 0 until read) {
-                                val c = buffer[i].toChar()
-                                if (c == '>') {
-                                    foundPrompt = true
-                                    break
-                                }
-                                responseBuilder.append(c)
-                            }
-                        } else {
-                            // Pequena pausa para não fritar CPU enquanto aguarda buffer
-                            delay(2) // v3.7.2: delay real no lugar de yield() para evitar Buffer Starvation
+                            responseBuilder.append(c)
                         }
                     }
                     responseBuilder.toString().trim()

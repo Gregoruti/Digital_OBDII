@@ -50,6 +50,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+
 @Composable
 fun DashboardScreen(
     onSettingsClick: () -> Unit, // NOVA NAVEGAÇÃO v1.8.6
@@ -60,15 +63,15 @@ fun DashboardScreen(
     val context = LocalContext.current
     val isBlinking by viewModel.isBlinking.collectAsState()
 
-    // Animações para suavizar os valores digitais (v1.9.1)
+    // Animações de alta velocidade (v3.9.7) para resposta imediata de RPM e Velocidade
     val animatedRpm by animateIntAsState(
         targetValue = uiState.snapshot.rpm,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = tween(durationMillis = 60, easing = LinearEasing),
         label = "DigitalRpmAnimation"
     )
     val animatedSpeed by animateIntAsState(
         targetValue = uiState.snapshot.displaySpeedKmh,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = tween(durationMillis = 60, easing = LinearEasing),
         label = "DigitalSpeedAnimation"
     )
 
