@@ -34,20 +34,28 @@ class BluetoothConnectionManager(
 
     @SuppressLint("MissingPermission")
     fun getPairedDevices(): List<BluetoothDevice> {
-        return adapter.bondedDevices.toList()
+        return try {
+            adapter.bondedDevices?.toList() ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     @SuppressLint("MissingPermission")
     suspend fun connect(device: BluetoothDevice): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
             runCatching {
-                adapter.cancelDiscovery()
+                adapter?.cancelDiscovery()
                 disconnectInternal()
                 socket = device.createRfcommSocketToServiceRecord(SPP_UUID).also { it.connect() }
                 input = socket?.inputStream
                 output = socket?.outputStream
                 consecutiveErrors = 0
                 Unit
+            }.onFailure { e ->
+                if (e is SecurityException) {
+                    throw Exception("Permissão de Bluetooth não concedida. Por favor, autorize o acesso ao Bluetooth no aplicativo.")
+                }
             }
         }
     }

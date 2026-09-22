@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.4] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.5] - Atual (Aguardando Validação no Veículo Real)
+### Corrigido
+- **Tratamento de Exceções e Proteção de Permissões Bluetooth**: Adicionada verificação prévia de `BLUETOOTH_CONNECT` antes de invocar APIs do adaptador Bluetooth (`bondedDevices`, `createRfcommSocketToServiceRecord`). Captura preventiva de `SecurityException` no `BluetoothConnectionManager` para evitar o encerramento inesperado ("crash") na primeira inicialização do aplicativo.
+- **Card de Solicitação de Permissão na UI**: Se a permissão de Bluetooth ainda não tiver sido autorizada pelo usuário, o aplicativo bloqueia temporariamente a tentativa de auto-conexão prévia e exibe um alerta explicativo ("Permissão de Bluetooth Necessária") com botão direto para "Autorizar Permissão do Bluetooth".
+
+## [3.9.4] - Anterior
 ### Corrigido
 - **Ação Imediata pós-autoConnect**: `DashboardViewModel.autoConnect()` agora dispara explicitamente `startVehicleDataCollection()` imediatamente após o sucesso da reconexão Bluetooth e Handshake.
 - **Prevenção de Corrotinas Duplicadas**: `startCollecting()` agora gerencia os Jobs das corrotinas (`collectProfileJob` e `collectVehicleDataJob`), cancelando instâncias antigas antes de iniciar um novo fluxo. Isso previne que múltiplas corrotinas concorrentes disputem o mesmo socket Bluetooth e garante atualização instantânea do Painel ao reconectar, sem necessidade de navegar para outras telas.
