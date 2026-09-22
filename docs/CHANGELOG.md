@@ -1,6 +1,11 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.2] - Atual (Aguardando Validação no Veículo Real)
+## [3.9.3] - Atual (Aguardando Validação no Veículo Real)
+### Corrigido
+- **Eliminação do Banimento do PenaltyBox em Sensores Essenciais**: Corrigida a lógica do `ObdPollingEngine` que colocava os comandos `RPM`, `SPEED`, `TEMP` e `VOLTS` em um banimento temporário de 30 segundos ao capturar erros de desconexão/timeout. Agora, os sensores essenciais jamais são banidos no `penaltyBox`.
+- **Limpeza de PenaltyBox na Re-inicialização**: Adicionada chamada preventiva de `pollingEngine.clearPenaltyBox()` ao realizar `reinitializeAdapter()`, garantindo a desinterdição imediata de todos os sensores assim que a conexão Bluetooth é restabelecida.
+
+## [3.9.2] - Anterior
 ### Corrigido
 - **Circuit Breaker de Timeouts Consecutivos**: `BluetoothConnectionManager` contabiliza respostas de erro/timeout. Após 3 timeouts consecutivos (1.5s com simulação pausada), o socket travado é encerrado automaticamente, permitindo que a queda seja identificada sem necessitar navegar por menus.
 - **Re-subscrição Reativa no Painel**: Implementado loop contínuo de coleta em `DashboardViewModel`. Quando a conexão cai e o Watchdog re-estabelece o Bluetooth com o simulador/adaptador, o fluxo de dados dos sensores é retomado na hora no Painel sem intervenção manual do usuário.

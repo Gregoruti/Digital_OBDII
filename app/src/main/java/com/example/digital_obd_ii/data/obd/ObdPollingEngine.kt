@@ -53,6 +53,11 @@ class ObdPollingEngine(
         _isPollingActive.value = active
     }
 
+    fun clearPenaltyBox() {
+        penaltyBox.clear()
+        lastPollTimestamps.clear()
+    }
+
     private val penaltyBox = mutableMapOf<ObdCommand, Long>() // v3.7.2: Impede timeouts contínuos
     private var cmdIndex = 0 // Ponteiro Round-Robin
 
@@ -128,9 +133,10 @@ class ObdPollingEngine(
             
             updateMetrics(rtt, raw.startsWith("ERROR"))
 
-            // Se o comando der NO DATA ou ERRO seguidas vezes, pune ele por 30 segundos!
-            // Isso evita que o ELM327 fique gastando 500ms em Timeout perguntando coisas que o carro não tem.
-            if (raw.contains("NODATA") || raw.contains("ERROR") || raw.contains("?")) {
+            // Se o comando der NO DATA em sensores opcionais, coloca no penaltyBox por 30s.
+            // Erros de conexão ou timeouts (ERROR / ?) NÃO devem banir sensores essenciais!
+            val isEssentialSensor = cmd == ObdCommand.Rpm || cmd == ObdCommand.Speed || cmd == ObdCommand.CoolantTemp || cmd == ObdCommand.ControlModuleVoltage
+            if (raw.contains("NODATA") && !isEssentialSensor) {
                 penaltyBox[cmd] = System.currentTimeMillis() + 30_000L // 30 segundos
             }
 

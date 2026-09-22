@@ -120,6 +120,7 @@ class ObdRepositoryImpl @Inject constructor(
 
     private suspend fun reinitializeAdapter(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
         return try {
+            pollingEngine.clearPenaltyBox()
             Elm327Init.getDynamicBootSequence(profile).forEach { step ->
                 val response = transport.send(step.command, timeoutMs = step.timeoutMs, interCommandDelayMs = profile.interCommandDelayMs.toLong())
                 step.expectedResponse?.let { expected ->
