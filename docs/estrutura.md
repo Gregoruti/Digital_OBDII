@@ -528,11 +528,74 @@ Solicite via `ActivityResultContracts.RequestMultiplePermissions()` antes de abr
 
 ---
 
-Se quiser, posso detalhar mais a fundo algum módulo específico — por exemplo:
-- o **algoritmo completo de detecção de PIDs suportados** (`0100`, `0120`, `0140`...),
-- a implementação do **Canvas do velocímetro completo** (como na imagem, com marcações e zona vermelha),
-- ou o **Foreground Service** completo com binder.
+Se quiser, posso detalhar mais a fundo algum módulo específico.
 
-Me diga por qual parte você quer que eu aprofunde primeiro.
+---
+
+## 12. Mapeamento da Estrutura Atual do Projeto (v3.9.5)
+
+> **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
+> **Status de Validação:** Testado e Aprovado em Simulador ELM327. Pendente de validação em veículo real.
+
+### Árvore de Módulos Implementada
+```
+com.example.digital_obd_ii/
+├── data/
+│   ├── bluetooth/
+│   │   └── BluetoothConnectionManager.kt   # Conexão SPP, buffer, circuit breaker (3 timeouts) e try-catch SecurityException
+│   ├── database/
+│   │   ├── AppDatabase.kt                  # Banco de dados Room
+│   │   ├── dao/TripDao.kt                  # Persistência de viagens
+│   │   └── entities/TripEntity.kt          # Entidade de histórico
+│   ├── obd/
+│   │   ├── Elm327Init.kt                   # Sequência de boot AT (ATZ, ATE0, ATSP...)
+│   │   ├── ObdCommand.kt                   # PIDs OBD-II (RPM, Speed, MAF, Temp, Volts...)
+│   │   ├── ObdPollingEngine.kt             # Motor Turbo Polling, Round-Robin, PenaltyBox imune a sensores essenciais
+│   │   └── ObdResponseParser.kt            # Parser hexadecimal de respostas
+│   └── repository/
+│       ├── ObdRepositoryImpl.kt            # Implementação de leitura OBD, warm-up e limpeza do PenaltyBox
+│       └── ProfileRepositoryImpl.kt        # Persistência DataStore de perfil, layouts, auto-conexão e offset de velocímetro
+├── domain/
+│   ├── model/
+│   │   ├── VehicleProfile.kt               # Perfil do veículo, geometrias, isSpeedCorrectionEnabled, isAutoConnectEnabled
+│   │   ├── VehicleSnapshot.kt              # Snapshot instantâneo: speedKmh (ECU real) vs displaySpeedKmh (Ajustado)
+│   │   └── ObdLogEntry.kt / ObdMetrics.kt  # Métricas e diagnóstico
+│   ├── repository/
+│   │   ├── ObdRepository.kt
+│   │   └── ProfileRepository.kt
+│   └── usecase/
+│       ├── CalculateFuelConsumptionUseCase.kt
+│       ├── CalculateIdealGearUseCase.kt
+│       ├── PredictiveRpmUseCase.kt         # RPM Preditivo com aceleração baseada em inércia (MAF/Throttle)
+│       └── UpdateTripSummaryUseCase.kt
+├── presentation/
+│   ├── communication/
+│   │   ├── CommunicationViewModel.kt
+│   │   └── ui/CommunicationScreen.kt
+│   ├── components/
+│   │   ├── Gauges.kt                       # Gauge de RPM em arco (ArchedRpmGauge), SevenSegment display
+│   │   └── VersionBadge.kt
+│   ├── connection/
+│   │   ├── ConnectionStatusViewModel.kt    # Gerenciador da tela de status (3 tentativas, handshake, auto-conexão)
+│   │   ├── DeviceListViewModel.kt          # Listagem de pareados e chave de auto-conexão
+│   │   └── ui/
+│   │       ├── ConnectionStatusScreen.kt   # Status da Conexão (Tentando Conexão 1/3 -> Handshake -> 500ms -> Dashboard)
+│   │       └── DeviceListScreen.kt         # Lista de dispositivos, alerta de permissão e switch de auto-conexão
+│   ├── dashboard/
+│   │   ├── DashboardViewModel.kt           # Orquestrador em tempo real, Watchdog de reconexão e coletor com re-subscrição
+│   │   └── ui/DashboardScreen.kt          # Painel principal com renderização de displaySpeedKmh
+│   ├── debug/
+│   │   ├── ObdTerminalViewModel.kt
+│   │   └── ui/ObdTerminalScreen.kt
+│   ├── navigation/
+│   │   └── AppNavHost.kt                   # Grafo de navegação central (Start: DeviceList -> ConnectionStatus -> Dashboard)
+│   └── profile/
+│       ├── VehicleProfileViewModel.kt      # ViewModel do perfil e personalização visual
+│       └── ui/
+│           ├── PerformanceSettingsScreen.kt
+│           ├── VehicleProfileScreen.kt     # Tela de perfil (Combustível, RPM, Shift Light, Offset Velocímetro, Auto-Conexão)
+│           └── VisualSettingsScreen.kt
+```
+
 
 
