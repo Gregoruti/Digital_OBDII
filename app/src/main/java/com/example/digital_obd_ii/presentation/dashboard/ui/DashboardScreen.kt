@@ -183,6 +183,7 @@ fun DashboardScreen(
                 "RPM" -> 4 
                 "SPEED" -> 3 
                 "TEMP" -> 3 // v2.8.0: 3 dígitos para temperatura
+                "TRIP_DIST" -> 5 // 4 dígitos visíveis + 1 para o ponto decimal "000.0"
                 else -> 0 
             }
             

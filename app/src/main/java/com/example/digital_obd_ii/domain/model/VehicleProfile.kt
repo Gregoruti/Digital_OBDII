@@ -34,7 +34,7 @@ object FactoryDefaults {
     val CLOCK = ElementConfig(765f, 482f, 0.70f)
     val GEARS = ElementConfig(830f, 235f, 1.00f)
     val TRIP_TIME = ElementConfig(470f, 355f, 0.55f)
-    val TRIP_DIST = ElementConfig(500f, 430f, 0.55f)
+    val TRIP_DIST = ElementConfig(485f, 430f, 0.55f) // Movido 15px para esquerda para acomodar pad de 4 dígitos
     val TRIP_FUEL = ElementConfig(500f, 502f, 0.55f)
 
     val ELEMENTS_MAP = mapOf(
@@ -53,7 +53,7 @@ object FactoryDefaults {
         "CLOCK" to ElementConfig(775f, 482f, 0.40f),
         "GEARS" to ElementConfig(840f, 225f, 0.80f),
         "TRIP_TIME" to ElementConfig(465f, 355f, 0.40f),
-        "TRIP_DIST" to ElementConfig(500f, 430f, 0.40f),
+        "TRIP_DIST" to ElementConfig(485f, 430f, 0.40f), // Movido 15px para esquerda para acomodar pad de 4 dígitos
         "TRIP_FUEL" to ElementConfig(500f, 502f, 0.40f)
     )
 
