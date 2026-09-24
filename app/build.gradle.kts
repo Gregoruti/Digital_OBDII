@@ -14,8 +14,8 @@ android {
         applicationId = "com.example.digital_obd_ii"
         minSdk = 24
         targetSdk = 37
-        versionCode = 498
-        versionName = "3.9.8"
+        versionCode = 499
+        versionName = "3.9.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
