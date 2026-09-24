@@ -1,9 +1,15 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.0.0] - Atual (Aguardando Validação no Veículo Real)
+## [4.1.0] - Atual (Aguardando Validação no Veículo Real)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Tela de calibração implementada. Cálculo atualizado. Testes unitários passando.
+> **Status de Validação:** Refatoração de Boot concluída baseada em Engenharia Reversa. Compilação bem sucedida.
 
+### Corrigido (Engenharia Reversa de Boot ELM327)
+- **Ordenação Crítica de Inicialização**: A sequência em `Elm327Init.kt` foi completamente remodelada para imitar o comportamento de inicialização bem-sucedido de aplicativos OBD comerciais (ex: RevHeadz). O protocolo da rede (ex: `AT SP 0`) agora é definido imediatamente após o Reset (`AT Z`), antes de qualquer formatação de dados, evitando a perda de contexto do adaptador.
+- **Mensagens Longas (CAN)**: Adicionado o comando vital `AT AL` (Allow Long Messages), essencial para evitar respostas `NO DATA` em barramentos CAN modernos de 29-bit (onde o cabeçalho e checksum exigem mais de 7 bytes).
+- **Timeouts Dinâmicos no Handshake**: Modificado o Timeout para um valor explicitamente alto (`AT ST 80` = ~512ms) exclusivamente antes de disparar o comando de handshake `0100`, de modo a não abortar enquanto o adaptador devolve a mensagem `SEARCHING...`. Logo após o handshake `0100` responder com sucesso, o Timeout é reduzido para a configuração do usuário (ex: `AT ST 32`) maximizando a velocidade do motor de polling.
+
+## [4.0.0] - Anterior
 ### Adicionado
 - **Módulo de Calibração de Consumo de Combustível**: O cálculo de consumo via sensor MAF assume que o motor tem 100% de Eficiência Volumétrica (VE). Foi adicionada a nova tela `FuelCalibrationScreen` para ajustar a discrepância entre a teoria estequiométrica e o consumo real.
 - **Calculadora Interativa de Fator MAF**: Nova interface permite que o usuário digite a quilometragem e litros reais na bomba de combustível, juntamente com o consumo indicado pelo App. O sistema então gera automaticamente um "Fator Multiplicador" (ex: 1.633x) e aplica nativamente ao cálculo estequiométrico `CalculateFuelConsumptionUseCase`.

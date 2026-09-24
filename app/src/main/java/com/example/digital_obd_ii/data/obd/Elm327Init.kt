@@ -16,31 +16,41 @@ object Elm327Init {
         val timeoutMs: Long = 1000L
     )
 
-    // Gera a sequência baseada no perfil v3.4.0 e v3.7.0 (Avançado)
+    // Gera a sequência baseada no perfil e engenharia reversa do app "RevHeadz" (v4.1.0)
     fun getDynamicBootSequence(profile: VehicleProfile): List<InitStep> {
         val steps = mutableListOf<InitStep>()
         
         repeat(profile.initCycleCount) {
-            // AT Z pode demorar até 3 segundos para o chip reiniciar
-            // Removidos espaços (ATZ em vez de AT Z) para compatibilidade com clones ruins
+            // 1. Reset Total
             steps.add(InitStep("ATZ", "ELM327", "Reset Total", timeoutMs = 5000L))
-            steps.add(InitStep("ATD", "OK", "Padrões de Fábrica"))
+            
+            // 2. Set Protocol (Antes de qualquer formatação)
+            val protocolCmd = profile.obdProtocol.command.replace(" ", "")
+            steps.add(InitStep(protocolCmd, "OK", profile.obdProtocol.label))
+
+            // 3. Allow Long Messages (CRÍTICO para redes CAN modernas)
+            steps.add(InitStep("ATAL", "OK", "Permitir Mensagens Longas"))
+
+            // 4. Configurações de Formatação
             steps.add(InitStep("ATE0", "OK", "Echo Off"))
             steps.add(InitStep("ATL0", "OK", "Linefeeds Off"))
-            
             val spacesCmd = if (profile.enableSpaces) "ATS1" else "ATS0"
             steps.add(InitStep(spacesCmd, "OK", "Espaços " + if(profile.enableSpaces) "On" else "Off"))
-            
             val headersCmd = if (profile.enableHeaders) "ATH1" else "ATH0"
             steps.add(InitStep(headersCmd, "OK", "Headers " + if(profile.enableHeaders) "On" else "Off"))
-            
+
+            // 5. Adaptive Timing
             steps.add(InitStep(profile.adaptiveTiming.command.replace(" ", ""), "OK", profile.adaptiveTiming.label))
-            steps.add(InitStep("ATST${profile.atTimeoutMs.toString(16).uppercase()}", "OK", "Timeout ${profile.atTimeoutMs}ms"))
-            steps.add(InitStep(profile.obdProtocol.command.replace(" ", ""), "OK", profile.obdProtocol.label))
         }
-        
-        // 0100 (Handshake) pode demorar muito devido ao "SEARCHING..." na rede CAN
+
+        // 6. Timeout longo (80 = ~512ms) para permitir "SEARCHING..." durante o Handshake
+        steps.add(InitStep("ATST80", "OK", "Timeout de Boot (512ms)"))
+
+        // 7. Handshake "Acorda a ECU"
         steps.add(InitStep("0100", "4100", "Handshake ECU", timeoutMs = 8000L))
+
+        // 8. Retorna o Timeout para a configuração rápida escolhida no perfil para iniciar o polling
+        steps.add(InitStep("ATST${profile.atTimeoutMs.toString(16).uppercase()}", "OK", "Timeout de Otimização (${profile.atTimeoutMs}ms)"))
         
         return steps
     }
