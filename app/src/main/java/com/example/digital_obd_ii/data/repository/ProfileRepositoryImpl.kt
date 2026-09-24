@@ -177,7 +177,7 @@ class ProfileRepositoryImpl @Inject constructor(
                     preferences[PreferencesKeys.SHIFT_LIGHT_TARGET_MODE] ?: ShiftLightTargetMode.ECONOMIC.name
                 )
             } catch (e: Exception) { ShiftLightTargetMode.ECONOMIC },
-            shiftLightSensitivity = preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] ?: 0.85f,
+            shiftLightSensitivity = preferences[PreferencesKeys.SHIFT_LIGHT_SENSITIVITY] ?: 1.0f,
 
             pollingIntervals = sps,
             lastConnectedDeviceAddress = preferences[PreferencesKeys.LAST_BT_ADDRESS],
@@ -192,7 +192,7 @@ class ProfileRepositoryImpl @Inject constructor(
             isSpeedCorrectionEnabled = preferences[PreferencesKeys.IS_SPEED_CORRECTION_ENABLED] ?: true,
             speedCorrectionPercent = preferences[PreferencesKeys.SPEED_CORRECTION_PERCENT] ?: 4.0f,
             isAutoConnectEnabled = preferences[PreferencesKeys.IS_AUTO_CONNECT_ENABLED] ?: false,
-            fuelCorrectionFactor = preferences[PreferencesKeys.FUEL_CORRECTION_FACTOR] ?: 1.0f
+            fuelCorrectionFactor = preferences[PreferencesKeys.FUEL_CORRECTION_FACTOR] ?: 1.633f
         )
     }
 

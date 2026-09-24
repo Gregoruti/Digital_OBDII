@@ -183,7 +183,9 @@ fun DashboardScreen(
                 "RPM" -> 4 
                 "SPEED" -> 3 
                 "TEMP" -> 3 // v2.8.0: 3 dígitos para temperatura
-                "TRIP_DIST" -> 5 // 4 dígitos visíveis + 1 para o ponto decimal "000.0"
+                "TRIP_DIST" -> 4 // 4 dígitos para manter alinhamento (ex: "  0.0" -> "999.9")
+                "TRIP_TIME" -> 4 // 4 dígitos para manter alinhamento (ex: " 1:25" -> "10:25")
+                "TRIP_FUEL" -> 4 // 4 dígitos para manter alinhamento (ex: "  2.1" -> "123.4")
                 else -> 0 
             }
             

@@ -1,9 +1,16 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.1.0] - Atual (Aguardando Validação no Veículo Real)
+## [4.1.1] - Atual (Aguardando Validação no Veículo Real)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Refatoração de Boot concluída baseada em Engenharia Reversa. Compilação bem sucedida.
+> **Status de Validação:** Correção de Padrões e Alinhamentos aplicados. Testes locais unitários passando.
 
+### Corrigido e Otimizado
+- **Alinhamento do Trip Summary**: Modificado o campo `padLength` dinâmico do `DashboardScreen.kt`. O padding agora se assegura em 4 dígitos para os dados do sumário de viagem (`TRIP_DIST`, `TRIP_TIME`, `TRIP_FUEL`), impedindo a quebra de alinhamento ou re-posicionamento visual das caixas quando a distância avança para a casa das dezenas/centenas ou o tempo sobe a escala das horas.
+- **Novos Defaults Práticos**:
+  - `fuelCorrectionFactor` ajustado como default para `1.633f` no `VehicleProfile` a fim de corrigir a margem clássica de eficiência MAF x Litragem diretamente na inicialização do App.
+  - `shiftLightSensitivity` ajustada de 85% para `1.0f` (100%), permitindo que a indicação do *Shift Light* do painel ocorra apenas no estágio final do giro limite alvo de troca por padrão.
+
+## [4.1.0] - Anterior
 ### Corrigido (Engenharia Reversa de Boot ELM327)
 - **Ordenação Crítica de Inicialização**: A sequência em `Elm327Init.kt` foi completamente remodelada para imitar o comportamento de inicialização bem-sucedido de aplicativos OBD comerciais (ex: RevHeadz). O protocolo da rede (ex: `AT SP 0`) agora é definido imediatamente após o Reset (`AT Z`), antes de qualquer formatação de dados, evitando a perda de contexto do adaptador.
 - **Mensagens Longas (CAN)**: Adicionado o comando vital `AT AL` (Allow Long Messages), essencial para evitar respostas `NO DATA` em barramentos CAN modernos de 29-bit (onde o cabeçalho e checksum exigem mais de 7 bytes).
