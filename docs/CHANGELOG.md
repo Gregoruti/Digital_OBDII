@@ -1,9 +1,17 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.1.1] - Atual (Aguardando Validação no Veículo Real)
+## [4.1.2] - Atual (Aguardando Validação no Veículo Real)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Correção de Padrões e Alinhamentos aplicados. Testes locais unitários passando.
+> **Status de Validação:** Atualização visual implementada. Testado em compilação e aguardando testes de campo.
 
+### Corrigido e Otimizado
+- **Ajuste Fino de Alinhamento X no Trip Summary**: Para equilibrar a estética após a fixação do Padding de 4 dígitos inserida na `v4.1.1`, os componentes `TRIP_TIME`, `TRIP_DIST` e `TRIP_FUEL` tiveram suas posições `X` de fábrica calibradas manualmente no arquivo `VehicleProfile.kt`.
+  - Posições (Tablet e Multimídia) sincronizadas em:
+  - `TRIP_TIME`: x = `440f`
+  - `TRIP_DIST`: x = `440f`
+  - `TRIP_FUEL`: x = `435f`
+
+## [4.1.1] - Anterior
 ### Corrigido e Otimizado
 - **Alinhamento do Trip Summary**: Modificado o campo `padLength` dinâmico do `DashboardScreen.kt`. O padding agora se assegura em 4 dígitos para os dados do sumário de viagem (`TRIP_DIST`, `TRIP_TIME`, `TRIP_FUEL`), impedindo a quebra de alinhamento ou re-posicionamento visual das caixas quando a distância avança para a casa das dezenas/centenas ou o tempo sobe a escala das horas.
 - **Novos Defaults Práticos**:

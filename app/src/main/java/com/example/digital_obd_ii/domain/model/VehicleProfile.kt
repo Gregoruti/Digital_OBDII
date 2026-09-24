@@ -33,9 +33,9 @@ object FactoryDefaults {
     val VOLTS = ElementConfig(790f, 365f, 0.70f)
     val CLOCK = ElementConfig(765f, 482f, 0.70f)
     val GEARS = ElementConfig(830f, 235f, 1.00f)
-    val TRIP_TIME = ElementConfig(470f, 355f, 0.55f)
-    val TRIP_DIST = ElementConfig(420f, 430f, 0.55f)
-    val TRIP_FUEL = ElementConfig(500f, 502f, 0.55f)
+    val TRIP_TIME = ElementConfig(440f, 355f, 0.55f)
+    val TRIP_DIST = ElementConfig(440f, 430f, 0.55f)
+    val TRIP_FUEL = ElementConfig(435f, 502f, 0.55f)
 
     val ELEMENTS_MAP = mapOf(
         "RPM" to RPM, "SPEED" to SPEED, "TEMP" to TEMP,
@@ -52,9 +52,9 @@ object FactoryDefaults {
         "VOLTS" to ElementConfig(770f, 365f, 0.55f),
         "CLOCK" to ElementConfig(775f, 482f, 0.40f),
         "GEARS" to ElementConfig(840f, 225f, 0.80f),
-        "TRIP_TIME" to ElementConfig(465f, 355f, 0.40f),
-        "TRIP_DIST" to ElementConfig(420f, 430f, 0.40f),
-        "TRIP_FUEL" to ElementConfig(500f, 502f, 0.40f)
+        "TRIP_TIME" to ElementConfig(440f, 355f, 0.40f),
+        "TRIP_DIST" to ElementConfig(440f, 430f, 0.40f),
+        "TRIP_FUEL" to ElementConfig(435f, 502f, 0.40f)
     )
 
     /**
