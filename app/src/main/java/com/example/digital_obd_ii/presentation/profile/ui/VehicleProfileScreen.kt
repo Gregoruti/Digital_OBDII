@@ -35,6 +35,7 @@ fun VehicleProfileScreen(
     onBluetoothClick: () -> Unit,
     onPerformanceClick: () -> Unit,
     onCommunicationClick: () -> Unit,
+    onFuelCalibrationClick: () -> Unit,
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -126,6 +127,15 @@ fun VehicleProfileScreen(
                     selectedType = uiState.profile.fuelType,
                     onTypeSelected = { viewModel.updateFuelType(it) }
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onFuelCalibrationClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Settings, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Calibrar Consumo (Fator MAF)")
+                }
             }
 
             item {

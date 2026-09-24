@@ -13,6 +13,7 @@ import com.example.digital_obd_ii.presentation.connection.ui.ConnectionStatusScr
 import com.example.digital_obd_ii.presentation.connection.ui.DeviceListScreen
 import com.example.digital_obd_ii.presentation.dashboard.ui.DashboardScreen
 import com.example.digital_obd_ii.presentation.debug.ui.ObdTerminalScreen
+import com.example.digital_obd_ii.presentation.profile.ui.FuelCalibrationScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VehicleProfileScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VisualSettingsScreen
@@ -28,6 +29,7 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Performance : Screen("performance")
     object Communication : Screen("communication")
+    object FuelCalibration : Screen("fuel_calibration")
 }
 
 @Composable
@@ -75,11 +77,15 @@ fun AppNavHost(
                 onVisualClick = { navController.navigate(Screen.VisualSettings.route) },
                 onBluetoothClick = { navController.navigate(Screen.DeviceList.route) },
                 onPerformanceClick = { navController.navigate(Screen.Performance.route) },
-                onCommunicationClick = { navController.navigate(Screen.Communication.route) }
+                onCommunicationClick = { navController.navigate(Screen.Communication.route) },
+                onFuelCalibrationClick = { navController.navigate(Screen.FuelCalibration.route) }
             )
         }
         composable(Screen.Communication.route) {
             CommunicationScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.FuelCalibration.route) {
+            FuelCalibrationScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.VisualSettings.route) {
             VisualSettingsScreen(onBack = { navController.popBackStack() })

@@ -186,6 +186,11 @@ class VehicleProfileViewModel @Inject constructor(
         saveProfile()
     }
 
+    fun updateFuelCorrectionFactor(factor: Float) {
+        _uiState.update { it.copy(profile = it.profile.copy(fuelCorrectionFactor = factor)) }
+        saveProfile()
+    }
+
     fun updateIsRpmGlowEnabled(value: Boolean) {
         _uiState.update { state ->
             val newIntensity = if (value) {

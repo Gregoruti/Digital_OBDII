@@ -93,7 +93,12 @@ class ObdRepositoryImpl @Inject constructor(
                 val maf = data[ObdCommand.MafRate] ?: 0.0
                 val throttle = data[ObdCommand.ThrottlePosition] ?: 0.0
                 
-                val lph = calculateFuel.litersPerHour(maf, profile.fuelType.afr, profile.fuelType.density)
+                val lph = calculateFuel.litersPerHour(
+                    mafGs = maf, 
+                    afr = profile.fuelType.afr, 
+                    fuelDensity = profile.fuelType.density,
+                    correctionFactor = profile.fuelCorrectionFactor.toDouble()
+                )
                 val kml = calculateFuel.kmPerLiter(rawSpeed, lph)
                 val gearRec = calculateGear(rpm, rawSpeed, throttle, profile)
 

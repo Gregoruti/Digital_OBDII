@@ -1,9 +1,14 @@
 # CHANGELOG - Digital OBD-II
 
-## [3.9.9] - 2026-03-31 (Encerramento da v3.x e Road to v4.0)
+## [4.0.0] - Atual (Aguardando Validação no Veículo Real)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
-> **Status de Validação:** Documentação atualizada compilando todo o aprendizado.
+> **Status de Validação:** Tela de calibração implementada. Cálculo atualizado. Testes unitários passando.
 
+### Adicionado
+- **Módulo de Calibração de Consumo de Combustível**: O cálculo de consumo via sensor MAF assume que o motor tem 100% de Eficiência Volumétrica (VE). Foi adicionada a nova tela `FuelCalibrationScreen` para ajustar a discrepância entre a teoria estequiométrica e o consumo real.
+- **Calculadora Interativa de Fator MAF**: Nova interface permite que o usuário digite a quilometragem e litros reais na bomba de combustível, juntamente com o consumo indicado pelo App. O sistema então gera automaticamente um "Fator Multiplicador" (ex: 1.633x) e aplica nativamente ao cálculo estequiométrico `CalculateFuelConsumptionUseCase`.
+
+## [3.9.9] - Anterior
 ### Documentação
 - **Criação do Documento `V4_PREP_STATE_AND_ROADMAP.md`**: Criado documento oficializando as 3 maiores conquistas técnicas de performance (Leitura Bloqueante Nativa, Priority Interleaving e Animação Linear de 60ms) que garantiram a redução da latência de quase 1 segundo para ~100ms.
 - **Registro do Débito Técnico Crítico (Handshake)**: Mapeado oficialmente em `PENDING_CAR_VALIDATIONS.md` e no Roadmap que o aplicativo atualmente falha em inicializar a comunicação OBD-II a frio por conta própria. O app depende do "aquecimento" do ELM327 e negociação prévia do barramento (29-bit 500k) feito por outros apps de terceiros. A resolução autônoma desse handshake será a prioridade número 1 da versão 4.0.

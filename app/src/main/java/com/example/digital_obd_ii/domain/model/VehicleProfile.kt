@@ -166,7 +166,10 @@ data class VehicleProfile(
     val speedCorrectionPercent: Float = 4.0f,  // Fator de correção do velocímetro (ex: +4%)
 
     // AUTO-CONEXÃO BLUETOOTH (v3.9.0)
-    val isAutoConnectEnabled: Boolean = false  // Conectar automaticamente ao iniciar o App
+    val isAutoConnectEnabled: Boolean = false,  // Conectar automaticamente ao iniciar o App
+
+    // CALIBRAÇÃO DE CONSUMO (FATOR MAF v4.0.0)
+    val fuelCorrectionFactor: Float = 1.0f     // Multiplicador de ajuste fino de combustível (App / Bomba)
 )
 
 data class ElementConfig(
