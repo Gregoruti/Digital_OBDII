@@ -1,0 +1,21 @@
+@echo off
+"C:\\Users\\grego\\AppData\\Local\\Android\\Sdk\\cmake\\4.1.2\\bin\\cmake.exe" ^
+  "-HD:\\Softwares\\Digital_OBDII\\engine-audio" ^
+  "-DCMAKE_SYSTEM_NAME=Android" ^
+  "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ^
+  "-DCMAKE_SYSTEM_VERSION=26" ^
+  "-DANDROID_ABI=arm64-v8a" ^
+  "-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a" ^
+  "-DANDROID_NDK=C:\\Users\\grego\\AppData\\Local\\Android\\Sdk\\ndk\\28.2.13676358" ^
+  "-DCMAKE_ANDROID_NDK=C:\\Users\\grego\\AppData\\Local\\Android\\Sdk\\ndk\\28.2.13676358" ^
+  "-DCMAKE_TOOLCHAIN_FILE=C:\\Users\\grego\\AppData\\Local\\Android\\Sdk\\ndk\\28.2.13676358\\build\\cmake\\android.toolchain.cmake" ^
+  "-DCMAKE_MAKE_PROGRAM=C:\\Users\\grego\\AppData\\Local\\Android\\Sdk\\cmake\\4.1.2\\bin\\ninja.exe" ^
+  "-DCMAKE_CXX_FLAGS=-std=c++17" ^
+  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=D:\\Softwares\\Digital_OBDII\\engine-audio\\build\\intermediates\\cxx\\Release\\4h334l17\\obj\\arm64-v8a" ^
+  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=D:\\Softwares\\Digital_OBDII\\engine-audio\\build\\intermediates\\cxx\\Release\\4h334l17\\obj\\arm64-v8a" ^
+  "-DCMAKE_FIND_ROOT_PATH=D:\\Softwares\\Digital_OBDII\\engine-audio\\.cxx\\Release\\4h334l17\\prefab\\arm64-v8a\\prefab" ^
+  "-BD:\\Softwares\\Digital_OBDII\\engine-audio\\.cxx\\Release\\4h334l17\\arm64-v8a" ^
+  -GNinja ^
+  "-DANDROID_STL=c++_shared" ^
+  "-DANDROID_PLATFORM=android-26" ^
+  "-DCMAKE_BUILD_TYPE=Release"

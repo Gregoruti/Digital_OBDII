@@ -1,0 +1,3 @@
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/grego/OneDrive/ExcelContacts/Desktop/Dev_APPs/Engine_Sounds/engine-audio/.cxx/Release/2p3g4h15/armeabi-v7a

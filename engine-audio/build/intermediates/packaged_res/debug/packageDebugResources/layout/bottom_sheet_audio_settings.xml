@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#161824"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="32dp">
+
+        <!-- Barra de arraste do BottomSheet -->
+        <View
+            android:layout_width="48dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="#3A3F58" />
+
+        <!-- Cabeçalho -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Configurações de Áudio"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="V6 Twin-Turbo DSP Sound Engine"
+                    android:textColor="#8E94B2"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnClose"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="#8E94B2"
+                android:contentDescription="Fechar" />
+        </LinearLayout>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 0: OPÇÕES DE MOTOR (MODELOS ACÚSTICOS)                       -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEngineSelection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🏎️ ESCOLHA DO MOTOR"
+                        android:textColor="#00E5FF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.1" />
+
+                    <TextView
+                        android:id="@+id/tvEngineBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="V6 TT"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:background="#2E334D"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:overScrollMode="never">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- 1. Nissan GT-R GT3 -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionGTR"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitleGTR"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Nissan GT-R GT3"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="3.8L VR38DETT"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 7.500 RPM"
+                                android:textColor="#FF2E63"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- 2. Audi RS4 Avant V8 -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionRS4"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitleRS4"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Audi RS4 Avant"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="4.2L FSI V8"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 8.250 RPM"
+                                android:textColor="#FF8C00"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- 3. Alfa Romeo Giulia QV -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionGiulia"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitleGiulia"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Giulia QV"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="2.9L Bi-Turbo V6"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 7.300 RPM"
+                                android:textColor="#00E5FF"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- Box Informativa do Motor Selecionado -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#151724"
+                    android:padding="12dp"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:id="@+id/tvEngineSelectedName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="V6 Twin-Turbo (3.8L GT Sport)"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvEngineSelectedDescription"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tom metálico esportivo, harmônicos cortantes, assobio agressivo de duas turbinas e válvula de alívio (stu-tu-tu)."
+                        android:textColor="#7A81A4"
+                        android:textSize="11sp"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 1: CONTROLE PRINCIPAL                                        -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Switch Ativar/Desativar Som -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Som do Motor"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ativa a síntese sonora em tempo real"
+                            android:textColor="#7A81A4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchEngineSound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="12dp"
+                    android:background="#2E334D" />
+
+                <!-- Volume Master -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Volume Principal"
+                        android:textColor="#C5CAE9"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvMasterVolumeValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="85%"
+                        android:textColor="#00E5FF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <SeekBar
+                    android:id="@+id/seekMasterVolume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="85"
+                    android:progressTint="#00E5FF"
+                    android:thumbTint="#00E5FF" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 2: CORTE DE RPM & SINCRONIZAÇÃO COM SHIFT LIGHT             -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 2: CORTE DE MOTOR & SINCRONIZAÇÃO COM O FLASH LIGHT          -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#211F36"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡ CORTE DE MOTOR &amp; FLASH LIGHT (PAINEL)"
+                    android:textColor="#FF5252"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
+
+                <!-- Displays digitais lado a lado -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="14dp">
+
+                    <!-- Box Corte Máximo do Motor -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:background="#151426"
+                        android:padding="10dp"
+                        android:layout_marginEnd="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="LIMITE MÁXIMO"
+                            android:textColor="#8E94B2"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/tvLimiterRpmValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="6800 RPM"
+                            android:textColor="#FF5252"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <!-- Box Status Flash Light -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:background="#151426"
+                        android:padding="10dp"
+                        android:layout_marginStart="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="FLASH LIGHT"
+                            android:textColor="#8E94B2"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/tvShiftLightRpmValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SINCRONIZADO"
+                            android:textColor="#FFD600"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Slider: Rotação de Corte Máximo (Rev Limiter de proteção) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Corte Físico de Rotação Máxima (Rev Limiter):"
+                    android:textColor="#C5CAE9"
+                    android:textSize="13sp" />
+
+                <SeekBar
+                    android:id="@+id/seekLimiterRpm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="7000"
+                    android:progress="5300"
+                    android:progressTint="#FF5252"
+                    android:thumbTint="#FF5252"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Switch para amarrar ao Flash Light do painel -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#1B1930"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Amarrar corte ao Flash Light do Painel"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="O som do motor corta e estoura exatamente quando o Flash Light piscar no Dashboard."
+                            android:textColor="#8E94B2"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoSync"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- BOTÃO PARA TESTAR CORTE DO FLASH LIGHT -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSyncShiftLight"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="⚡ Testar Som de Corte do Flash Light"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="#D32F2F"
+                    android:layout_marginTop="12dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 3: EFEITOS DE TURBO & VÁLVULA DE ALÍVIO (BOV)                 -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Assobio do Turbo (Twin-Turbo)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Spool dinâmico (2–8 kHz) e BOV stu-tu-tu"
+                            android:textColor="#7A81A4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchTurbo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Ganho do Turbo"
+                        android:textColor="#C5CAE9"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvTurboVolumeValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="70%"
+                        android:textColor="#00E5FF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <SeekBar
+                    android:id="@+id/seekTurboVolume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="70"
+                    android:progressTint="#00E5FF"
+                    android:thumbTint="#00E5FF" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 4: ESTALOS DE ESCAPE (POPS & BANGS)                          -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pops &amp; Bangs no Escape"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Estalos e pipocos na desaceleração (freio motor)"
+                            android:textColor="#7A81A4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchPops"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Botão Concluir -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDone"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Concluir"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="14dp"
+            app:backgroundTint="#00E5FF" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

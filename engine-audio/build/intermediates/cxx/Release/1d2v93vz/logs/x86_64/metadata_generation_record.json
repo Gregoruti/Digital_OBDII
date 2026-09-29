@@ -1,0 +1,48 @@
+[
+{
+  "message": "Start JSON generation. Platform version: 26 min SDK version: x86_64",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "rebuilding JSON D:\\Softwares\\Digital_OBDII\\engine-audio\\.cxx\\Release\\1d2v93vz\\x86_64\\android_gradle_build.json due to:",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "- no fingerprint file, will remove stale configuration folder",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "@echo off\n\"C:\\\\Users\\\\grego\\\\.gradle\\\\jdks\\\\eclipse_adoptium-21-amd64-windows.2\\\\bin\\\\java\" ^\n  --enable-native-access ^\n  ALL-UNNAMED ^\n  --class-path ^\n  \"C:\\\\Users\\\\grego\\\\.gradle\\\\caches\\\\modules-2\\\\files-2.1\\\\com.google.prefab\\\\cli\\\\2.1.0\\\\aa32fec809c44fa531f01dcfb739b5b3304d3050\\\\cli-2.1.0-all.jar\" ^\n  com.google.prefab.cli.AppKt ^\n  --build-system ^\n  cmake ^\n  --platform ^\n  android ^\n  --abi ^\n  x86_64 ^\n  --os-version ^\n  26 ^\n  --stl ^\n  c++_static ^\n  --ndk-version ^\n  28 ^\n  --output ^\n  \"C:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Temp\\\\agp-prefab-staging10422705479758107088\\\\staged-cli-output\" ^\n  \"C:\\\\Users\\\\grego\\\\.gradle\\\\caches\\\\9.6.0\\\\transforms\\\\7c4def1ff0b4453be122a18acd998026\\\\transformed\\\\jetified-oboe-1.9.3\\\\prefab\"\n",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "Received process result: 0",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "level": "LIFECYCLE",
+  "message": "com.google.prefab.api.NoMatchingLibraryException: No compatible library found for //oboe/oboe. Rejected the following libraries:",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "android.arm64-v8a: User is targeting x86_64 but library is for arm64-v8a",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "android.armeabi-v7a: User is targeting x86_64 but library is for armeabi-v7a",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+},
+{
+  "message": "android.x86: User is targeting x86_64 but library is for x86",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|x86_64"
+}
+]

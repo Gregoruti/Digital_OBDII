@@ -1,0 +1,5 @@
+ninja: Entering directory `C:\Users\grego\OneDrive\ExcelContacts\Desktop\Dev_APPs\Engine_Sounds\engine-audio\.cxx\Release\2p3g4h15\x86_64'
+[1/4] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/synth/EngineSynth.cpp.o
+[2/4] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/jni/JniBridge.cpp.o
+[3/4] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/audio/AudioOutput.cpp.o
+[4/4] Linking CXX shared library C:\Users\grego\OneDrive\ExcelContacts\Desktop\Dev_APPs\Engine_Sounds\engine-audio\build\intermediates\cxx\Release\2p3g4h15\obj\x86_64\libengine_audio.so

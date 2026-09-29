@@ -24,4 +24,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "Digital_OBD-II"
 include(":app")
- 
+
+// ─── Módulo de Áudio V6 Twin-Turbo ───────────────────────────────────────────
+// Referencia o módulo engine-audio de outro diretório no filesystem.
+// Desta forma não é preciso copiar código — ele fica em Engine_Sounds e é
+// compartilhado como submódulo local neste projeto.
+include(":engine-audio")

@@ -12,12 +12,17 @@ android {
 
     defaultConfig {
         applicationId = "com.example.digital_obd_ii"
-        minSdk = 24
+        minSdk = 26      // engine-audio requer API 26+ (AAudio estável). Era 24 — ajuste mínimo necessário.
         targetSdk = 37
-        versionCode = 503
-        versionName = "4.1.2"
+        versionCode = 504
+        versionName = "4.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Necessário para o módulo :engine-audio (compilação C++ com NDK)
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -36,6 +41,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -66,6 +77,11 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // ─── Módulo de Áudio V6 Twin-Turbo ────────────────────────────────────────
+    // Síntese procedural C++ (Oboe/AAudio) com latência ~5ms.
+    // API: V6AudioEngine(context).startEngine() / .updateTelemetry(rpm, throttle, gear, speed)
+    implementation(project(":engine-audio"))
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

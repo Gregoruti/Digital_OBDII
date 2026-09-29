@@ -1,0 +1,27 @@
+R_DEF: Internal format may change without notice
+local
+id btnClose
+id btnDone
+id btnEngineOptionGTR
+id btnEngineOptionGiulia
+id btnEngineOptionRS4
+id btnSyncShiftLight
+id cardEngineSelection
+id seekLimiterRpm
+id seekMasterVolume
+id seekTurboVolume
+id switchAutoSync
+id switchEngineSound
+id switchPops
+id switchTurbo
+id tvEngineBadge
+id tvEngineSelectedDescription
+id tvEngineSelectedName
+id tvLimiterRpmValue
+id tvMasterVolumeValue
+id tvOptionTitleGTR
+id tvOptionTitleGiulia
+id tvOptionTitleRS4
+id tvShiftLightRpmValue
+id tvTurboVolumeValue
+layout bottom_sheet_audio_settings

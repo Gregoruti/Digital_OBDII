@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Engine Audio Library Manifest
+        No additional permissions required — AAudio (Oboe) does not
+        need RECORD_AUDIO for output-only streams.
+
+        If the host app targets Android 12+ (API 31+), the
+        BLUETOOTH_CONNECT permission may improve audio routing
+        when Bluetooth audio is involved, but is NOT required.
+    -->
+
+</manifest>

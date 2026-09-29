@@ -2,11 +2,11 @@
 GUIDELINES.md, pronto para ser salvo na raiz da pasta docs/ (ou raiz do repositório) do seu novo projeto Android/Kotlin.
 
 markdown
-# GUIDELINES — [NOME DO PROJETO] (Android/Kotlin)
+# GUIDELINES — Digital OBD-II (Android/Kotlin/C++)creionão s
 
-> Diretrizes de Desenvolvimento do Projeto
-> Última atualização: 2024 (Atualização Gemini 3.1 Preview & Gradle) | Mantenedor: [NOME/EQUIPE]
-> Stack: Kotlin + Jetpack Compose + Clean Architecture + Hilt + Room + Coroutines/Flow
+> Diretrizes de Desenvolvimento do Projeto (Colaboração Antigravity & AI Agents)
+> Última atualização: 2024 (Atualização Gemini 3.1 Preview, NDK & Engine Sound) | Mantenedor: Equipe Antigravity
+> Stack: Kotlin + Jetpack Compose + Clean Architecture + Hilt + Room + NDK/C++ (Oboe)
 
 ---
 
@@ -40,8 +40,9 @@ markdown
 6. Arquivos de código diretamente relacionados à tarefa (Entity, DAO, Repository, UseCase, ViewModel, Screen)
 
 ### 0.5 Boas Práticas de Prompt Engineering para o Projeto
-- Fornecer ao agente: **objetivo**, **camada afetada** (presentation/domain/data), **critérios de aceite** e **arquivos relevantes**.
+- Fornecer ao agente: **objetivo**, **camada afetada** (presentation/domain/data/native), **critérios de aceite** e **arquivos relevantes**.
 - Para mudanças no Room: sempre informar a versão atual do banco e pedir explicitamente a criação da `Migration`.
+- Para alterações no **Engine Sound (C++)**: especificar claramente se a mudança é na interface (Compose), na ponte de comunicação (JNI/Kotlin) ou na lógica de processamento de sinal (DSP C++).
 - Para Compose: pedir sempre `@Preview` junto com o componente novo.
 - Fragmentar tarefas grandes em subtarefas por camada (ex.: "1. Entity + Migration", "2. DAO + Repository", "3. UseCase", "4. ViewModel", "5. Screen").
 - Validar toda resposta contra este documento antes de aceitar (arquitetura, nomenclatura, testes, PowerShell, segurança).
@@ -92,6 +93,11 @@ data/                  # Fontes de dados
 └── repository/        # Implementações de repositório
 
 di/                    # Módulos Hilt (AppModule, DatabaseModule, NetworkModule...)
+
+engine-audio/          # Módulo Nativo NDK/C++ (Motor de Áudio V6)
+├── src/main/cpp/      # DSP, Oboe wrapper, Sintetizador, JNI Bridge
+├── src/main/kotlin/   # Interfaces Kotlin (V6AudioEngine) e Callbacks
+└── CMakeLists.txt     # Build scripts nativos CMake
 
 ruby
 
@@ -522,6 +528,14 @@ Rotas tipadas (sealed class ou @Serializable com Navigation 2.8+) em vez de Stri
 Argumentos de navegação sempre validados/nulos tratados.
 Um NavHost central em presentation/navigation/.
 Deep links documentados quando existirem.
+
+8.6 NDK, C++ e Motor de Áudio (Oboe / V6 Twin-Turbo) ⭐ NOVO
+- **Performance no Audio Callback (Regra de Ouro):** Dentro da função de callback de áudio do Oboe (onde o som é sintetizado), é **estritamente proibido** alocar memória dinâmica (usar `new`, `malloc`, ou collections do STL que aloquem), usar locks bloqueantes (como `std::mutex`) ou fazer operações de I/O de disco/rede. A sincronização de parâmetros (RPM, Throttle) entre Kotlin e C++ deve ser feita exclusivamente via variáveis atômicas (`std::atomic`).
+- **Compatibilidade 16KB Page Size (Android 15+):** Bibliotecas nativas precisam ser alinhadas em 16KB. NUNCA use a constante de sistema `PAGE_SIZE` ou o valor hardcoded `4096` em operações C++. O arquivo `build.gradle.kts` já injeta `-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON` no CMake.
+- **JNI Bridge:** A ponte entre Kotlin e C++ (`JniBridge.cpp`) deve ser o mais fina possível, repassando valores sem conversões custosas para não sobrecarregar a Thread principal ou o Garbage Collector do Android.
+- **Otimizações Matemáticas (CMake):** A síntese de áudio exige máxima performance. Em builds de tipo `Release`, garantir que o CMake use `-O3`, `-ffast-math`, `-fno-math-errno` e `-funroll-loops`. 
+- **Cross-Compilation Cuidado:** Configurações específicas de arquitetura (ex: `-march=armv8-a`) devem ser isoladas com lógicas condicionais no `CMakeLists.txt` (`if(CMAKE_ANDROID_ARCH_ABI MATCHES "arm")`) para não impedir que o código compile para Emuladores de PC (`x86_64`).
+
 9. Design System
 9.1 Cores
 Seguir Material Design 3 (Material You / dynamic color quando aplicável).

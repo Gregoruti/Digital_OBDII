@@ -14,6 +14,7 @@ import com.example.digital_obd_ii.presentation.connection.ui.DeviceListScreen
 import com.example.digital_obd_ii.presentation.dashboard.ui.DashboardScreen
 import com.example.digital_obd_ii.presentation.debug.ui.ObdTerminalScreen
 import com.example.digital_obd_ii.presentation.profile.ui.FuelCalibrationScreen
+import com.example.digital_obd_ii.presentation.profile.ui.AudioSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VehicleProfileScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VisualSettingsScreen
@@ -28,6 +29,7 @@ sealed class Screen(val route: String) {
     object Terminal : Screen("terminal")
     object Dashboard : Screen("dashboard")
     object Performance : Screen("performance")
+    object AudioSettings : Screen("audio_settings")
     object Communication : Screen("communication")
     object FuelCalibration : Screen("fuel_calibration")
 }
@@ -78,7 +80,8 @@ fun AppNavHost(
                 onBluetoothClick = { navController.navigate(Screen.DeviceList.route) },
                 onPerformanceClick = { navController.navigate(Screen.Performance.route) },
                 onCommunicationClick = { navController.navigate(Screen.Communication.route) },
-                onFuelCalibrationClick = { navController.navigate(Screen.FuelCalibration.route) }
+                onFuelCalibrationClick = { navController.navigate(Screen.FuelCalibration.route) },
+                onAudioClick = { navController.navigate(Screen.AudioSettings.route) }
             )
         }
         composable(Screen.Communication.route) {
@@ -95,6 +98,9 @@ fun AppNavHost(
         }
         composable(Screen.Performance.route) {
             PerformanceSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.AudioSettings.route) {
+            AudioSettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(onSettingsClick = { navController.navigate(Screen.Profile.route) })

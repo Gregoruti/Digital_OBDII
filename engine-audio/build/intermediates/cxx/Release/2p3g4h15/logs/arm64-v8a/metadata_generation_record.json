@@ -1,0 +1,197 @@
+[
+  {
+    "level_": 0,
+    "message_": "Start JSON generation. Platform version: 26 min SDK version: arm64-v8a",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "rebuilding JSON C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\.cxx\\Release\\2p3g4h15\\arm64-v8a\\android_gradle_build.json due to:",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "- a file changed",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "  - C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt (LAST_MODIFIED_CHANGED)",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "@echo off\n\"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-17.0.16.8-hotspot\\\\bin\\\\java\" ^\n  --class-path ^\n  \"C:\\\\Users\\\\grego\\\\.gradle\\\\caches\\\\modules-2\\\\files-2.1\\\\com.google.prefab\\\\cli\\\\2.1.0\\\\aa32fec809c44fa531f01dcfb739b5b3304d3050\\\\cli-2.1.0-all.jar\" ^\n  com.google.prefab.cli.AppKt ^\n  --build-system ^\n  cmake ^\n  --platform ^\n  android ^\n  --abi ^\n  arm64-v8a ^\n  --os-version ^\n  26 ^\n  --stl ^\n  c++_shared ^\n  --ndk-version ^\n  27 ^\n  --output ^\n  \"C:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Temp\\\\agp-prefab-staging8280462694702528088\\\\staged-cli-output\" ^\n  \"C:\\\\Users\\\\grego\\\\.gradle\\\\caches\\\\8.11.1\\\\transforms\\\\261e7d2cb4997819ffa98b68b8aa8c07\\\\transformed\\\\oboe-1.10.0\\\\prefab\"\n",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "Received process result: 0",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "keeping json folder \u0027C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\.cxx\\Release\\2p3g4h15\\arm64-v8a\u0027 but regenerating project",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "executing cmake @echo off\n\"C:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\cmake\\\\4.1.2\\\\bin\\\\cmake.exe\" ^\n  \"-HC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\" ^\n  \"-DCMAKE_SYSTEM_NAME\u003dAndroid\" ^\n  \"-DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON\" ^\n  \"-DCMAKE_SYSTEM_VERSION\u003d26\" ^\n  \"-DANDROID_ABI\u003darm64-v8a\" ^\n  \"-DCMAKE_ANDROID_ARCH_ABI\u003darm64-v8a\" ^\n  \"-DANDROID_NDK\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\" ^\n  \"-DCMAKE_ANDROID_NDK\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\" ^\n  \"-DCMAKE_TOOLCHAIN_FILE\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\\\\build\\\\cmake\\\\android.toolchain.cmake\" ^\n  \"-DCMAKE_MAKE_PROGRAM\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\cmake\\\\4.1.2\\\\bin\\\\ninja.exe\" ^\n  \"-DCMAKE_CXX_FLAGS\u003d-std\u003dc++17\" ^\n  \"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\build\\\\intermediates\\\\cxx\\\\Release\\\\2p3g4h15\\\\obj\\\\arm64-v8a\" ^\n  \"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\build\\\\intermediates\\\\cxx\\\\Release\\\\2p3g4h15\\\\obj\\\\arm64-v8a\" ^\n  \"-DCMAKE_FIND_ROOT_PATH\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\.cxx\\\\Release\\\\2p3g4h15\\\\prefab\\\\arm64-v8a\\\\prefab\" ^\n  \"-BC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\.cxx\\\\Release\\\\2p3g4h15\\\\arm64-v8a\" ^\n  -GNinja ^\n  \"-DANDROID_STL\u003dc++_shared\" ^\n  \"-DANDROID_PLATFORM\u003dandroid-26\" ^\n  \"-DCMAKE_BUILD_TYPE\u003dRelease\" ^\n  \"-DCMAKE_SHARED_LINKER_FLAGS\u003d-Wl,-z,max-page-size\u003d16384\"\n",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "@echo off\n\"C:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\cmake\\\\4.1.2\\\\bin\\\\cmake.exe\" ^\n  \"-HC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\" ^\n  \"-DCMAKE_SYSTEM_NAME\u003dAndroid\" ^\n  \"-DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON\" ^\n  \"-DCMAKE_SYSTEM_VERSION\u003d26\" ^\n  \"-DANDROID_ABI\u003darm64-v8a\" ^\n  \"-DCMAKE_ANDROID_ARCH_ABI\u003darm64-v8a\" ^\n  \"-DANDROID_NDK\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\" ^\n  \"-DCMAKE_ANDROID_NDK\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\" ^\n  \"-DCMAKE_TOOLCHAIN_FILE\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\ndk\\\\27.0.12077973\\\\build\\\\cmake\\\\android.toolchain.cmake\" ^\n  \"-DCMAKE_MAKE_PROGRAM\u003dC:\\\\Users\\\\grego\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\cmake\\\\4.1.2\\\\bin\\\\ninja.exe\" ^\n  \"-DCMAKE_CXX_FLAGS\u003d-std\u003dc++17\" ^\n  \"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\build\\\\intermediates\\\\cxx\\\\Release\\\\2p3g4h15\\\\obj\\\\arm64-v8a\" ^\n  \"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\build\\\\intermediates\\\\cxx\\\\Release\\\\2p3g4h15\\\\obj\\\\arm64-v8a\" ^\n  \"-DCMAKE_FIND_ROOT_PATH\u003dC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\.cxx\\\\Release\\\\2p3g4h15\\\\prefab\\\\arm64-v8a\\\\prefab\" ^\n  \"-BC:\\\\Users\\\\grego\\\\OneDrive\\\\ExcelContacts\\\\Desktop\\\\Dev_APPs\\\\Engine_Sounds\\\\engine-audio\\\\.cxx\\\\Release\\\\2p3g4h15\\\\arm64-v8a\" ^\n  -GNinja ^\n  \"-DANDROID_STL\u003dc++_shared\" ^\n  \"-DANDROID_PLATFORM\u003dandroid-26\" ^\n  \"-DCMAKE_BUILD_TYPE\u003dRelease\" ^\n  \"-DCMAKE_SHARED_LINKER_FLAGS\u003d-Wl,-z,max-page-size\u003d16384\"\n",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "Received process result: 0",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "Exiting generation of C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\.cxx\\Release\\2p3g4h15\\arm64-v8a\\compile_commands.json.bin normally",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "done executing cmake",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "deleted unexpected build output C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\build\\intermediates\\cxx\\Release\\2p3g4h15\\obj\\arm64-v8a\\libc++_shared.so in incremental regenerate",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "deleted unexpected build output C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\build\\intermediates\\cxx\\Release\\2p3g4h15\\obj\\arm64-v8a\\liboboe.so in incremental regenerate",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "JSON generation completed without problems",
+    "file_": "C:\\Users\\grego\\OneDrive\\ExcelContacts\\Desktop\\Dev_APPs\\Engine_Sounds\\engine-audio\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  }
+]

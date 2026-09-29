@@ -1,0 +1,17 @@
+[
+{
+  "message": "Start JSON generation. Platform version: 26 min SDK version: armeabi-v7a",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+},
+{
+  "message": "JSON \u0027D:\\Softwares\\Digital_OBDII\\engine-audio\\.cxx\\Release\\5i4i1h4e\\armeabi-v7a\\android_gradle_build.json\u0027 was up-to-date",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+},
+{
+  "message": "JSON generation completed without problems",
+  "file": "D:\\Softwares\\Digital_OBDII\\engine-audio\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+}
+]

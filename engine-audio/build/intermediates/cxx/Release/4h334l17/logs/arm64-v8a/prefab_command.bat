@@ -1,0 +1,22 @@
+@echo off
+"C:\\Users\\grego\\.gradle\\jdks\\eclipse_adoptium-21-amd64-windows.2\\bin\\java" ^
+  --enable-native-access ^
+  ALL-UNNAMED ^
+  --class-path ^
+  "C:\\Users\\grego\\.gradle\\caches\\modules-2\\files-2.1\\com.google.prefab\\cli\\2.1.0\\aa32fec809c44fa531f01dcfb739b5b3304d3050\\cli-2.1.0-all.jar" ^
+  com.google.prefab.cli.AppKt ^
+  --build-system ^
+  cmake ^
+  --platform ^
+  android ^
+  --abi ^
+  arm64-v8a ^
+  --os-version ^
+  26 ^
+  --stl ^
+  c++_shared ^
+  --ndk-version ^
+  28 ^
+  --output ^
+  "C:\\Users\\grego\\AppData\\Local\\Temp\\agp-prefab-staging14458305520333773291\\staged-cli-output" ^
+  "C:\\Users\\grego\\.gradle\\caches\\9.6.0\\transforms\\62aefa08f18b6519bcf0208d719a126f\\transformed\\jetified-oboe-1.9.0\\prefab"

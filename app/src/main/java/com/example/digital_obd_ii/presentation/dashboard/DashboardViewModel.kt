@@ -33,6 +33,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.engineaudio.V6AudioEngine
 
 /**
  * ViewModel que orquestra os dados em tempo real para o Dashboard.
@@ -134,6 +135,19 @@ class DashboardViewModel @Inject constructor(
                             val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
 
                             updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+
+                            // Telemetria acústica V6 em tempo real
+                            try {
+                                V6AudioEngine.updateTelemetry(
+                                    rpm = predictedRpm.toFloat(),
+                                    throttle = (snapshot.throttlePosition.toFloat() / 100f).coerceIn(0f, 1f),
+                                    gear = gearRec.idealGear.coerceAtLeast(1),
+                                    speed = snapshot.speedKmh.toFloat(),
+                                    isShiftLightActive = _isBlinking.value
+                                )
+                            } catch (e: Throwable) {
+                                // Silent fallback se o motor de áudio estiver inativo
+                            }
 
                             _uiState.update { state ->
                                 state.copy(

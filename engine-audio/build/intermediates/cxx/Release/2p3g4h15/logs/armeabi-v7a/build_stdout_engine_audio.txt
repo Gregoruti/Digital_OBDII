@@ -1,0 +1,8 @@
+ninja: Entering directory `C:\Users\grego\OneDrive\ExcelContacts\Desktop\Dev_APPs\Engine_Sounds\engine-audio\.cxx\Release\2p3g4h15\armeabi-v7a'
+[1/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/synth/TurboEffect.cpp.o
+[2/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/synth/RevLimiter.cpp.o
+[3/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/synth/EngineSynth.cpp.o
+[4/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/audio/AudioOutput.cpp.o
+[5/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/jni/JniBridge.cpp.o
+[6/7] Building CXX object CMakeFiles/engine_audio.dir/src/main/cpp/EngineAudioEngine.cpp.o
+[7/7] Linking CXX shared library C:\Users\grego\OneDrive\ExcelContacts\Desktop\Dev_APPs\Engine_Sounds\engine-audio\build\intermediates\cxx\Release\2p3g4h15\obj\armeabi-v7a\libengine_audio.so

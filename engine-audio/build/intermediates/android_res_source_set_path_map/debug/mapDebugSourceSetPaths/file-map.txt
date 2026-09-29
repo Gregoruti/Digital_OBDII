@@ -1,0 +1,10 @@
+com.engineaudio.engine-audio-pngs-0 D:\Softwares\Digital_OBDII\engine-audio\build\generated\res\pngs\debug
+com.engineaudio.engine-audio-resValues-1 D:\Softwares\Digital_OBDII\engine-audio\build\generated\res\resValues\debug
+com.engineaudio.engine-audio-updated_navigation_xml-2 D:\Softwares\Digital_OBDII\engine-audio\build\generated\updated_navigation_xml\debug
+com.engineaudio.engine-audio-mergeDebugResources-3 D:\Softwares\Digital_OBDII\engine-audio\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.engineaudio.engine-audio-mergeDebugResources-4 D:\Softwares\Digital_OBDII\engine-audio\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.engineaudio.engine-audio-debug-5 D:\Softwares\Digital_OBDII\engine-audio\build\intermediates\merged_res\debug\mergeDebugResources
+com.engineaudio.engine-audio-debug-6 D:\Softwares\Digital_OBDII\engine-audio\build\intermediates\packaged_res\debug\packageDebugResources
+com.engineaudio.engine-audio-debug-7 D:\Softwares\Digital_OBDII\engine-audio\src\debug\res
+com.engineaudio.engine-audio-main-8 D:\Softwares\Digital_OBDII\engine-audio\src\main\res
+gradleHome-0 C:\Users\grego\.gradle
