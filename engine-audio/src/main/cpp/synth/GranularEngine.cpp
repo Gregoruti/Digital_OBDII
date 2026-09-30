@@ -98,6 +98,16 @@ void GranularEngine::setSpeedPredictiveEnabled(bool enabled) {
     LOGI("GranularEngine: Speed Predictive Mode set to %d", enabled ? 1 : 0);
 }
 
+void GranularEngine::setSingleTrackModeEnabled(bool enabled) {
+    m_isSingleTrackModeEnabled.store(enabled, std::memory_order_relaxed);
+    LOGI("GranularEngine: Single-Track Mode set to %d", enabled ? 1 : 0);
+}
+
+void GranularEngine::setSingleTrackIndex(int trackIndex) {
+    m_singleTrackIndex.store(std::clamp(trackIndex, 0, TRACK_COUNT - 1), std::memory_order_relaxed);
+    LOGI("GranularEngine: Single-Track Index set to %d", trackIndex);
+}
+
 void GranularEngine::triggerLimiterCut() {
     m_manualLimiterTrigger.store(true, std::memory_order_relaxed);
 }
@@ -191,6 +201,33 @@ void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* out
 
     float loadScale = 0.88f + 0.12f * throttle;
 
+    // ── FEATURE: MODO FAIXA ÚNICA SELECIONÁVEL (0 A 4000+ RPM SEM CROSSFADING) ──
+    // Permite que qualquer carro opere com uma única faixa contínua sem nenhum crossfading intermediário
+    if (m_isSingleTrackModeEnabled.load(std::memory_order_relaxed)) {
+        int target = m_singleTrackIndex.load(std::memory_order_relaxed);
+        if (target < 0 || target >= TRACK_COUNT) target = TRACK_LOW;
+
+        // Fallback caso a track solicitada não esteja carregada no perfil ativo
+        if (!m_tracks[target].isLoaded()) {
+            if (m_tracks[TRACK_LOW].isLoaded()) target = TRACK_LOW;
+            else if (m_tracks[TRACK_IDLE].isLoaded()) target = TRACK_IDLE;
+            else if (m_tracks[TRACK_MID].isLoaded()) target = TRACK_MID;
+            else if (m_tracks[TRACK_HIGH].isLoaded()) target = TRACK_HIGH;
+        }
+
+        outWeights[target] = 1.0f * loadScale;
+
+        // Desaceleração / freio-motor opcional se não for Modo Puro
+        if (!m_isPureSoundMode.load(std::memory_order_relaxed) && m_isPopsEnabled.load(std::memory_order_relaxed)) {
+            if (throttle < 0.10f && rpm > 1500.0f && m_tracks[TRACK_DECEL].isLoaded()) {
+                float decelMix = (1.0f - (throttle / 0.10f)) * std::clamp((rpm - 1400.0f) / 1200.0f, 0.0f, 1.0f);
+                outWeights[TRACK_DECEL] = decelMix * 0.60f;
+                outWeights[target] *= (1.0f - decelMix * 0.40f);
+            }
+        }
+        return;
+    }
+
     // ── MODO 2: FAIXA SELECIONADA POR MARCHA / PREDIÇÃO POR VELOCIDADE ──
     if (m_isGearLockEnabled.load(std::memory_order_relaxed) || m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed)) {
         if (m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed)) {
@@ -209,6 +246,13 @@ void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* out
             } else {
                 targetTrack = TRACK_HIGH;   // 4ª, 5ª ou superior -> Preso no High (high_on.wav)
             }
+            // Fallback caso a track não esteja carregada no perfil ativo (ex: Audi RS4 V2 Single Track)
+            if (!m_tracks[targetTrack].isLoaded()) {
+                if (m_tracks[TRACK_LOW].isLoaded()) targetTrack = TRACK_LOW;
+                else if (m_tracks[TRACK_IDLE].isLoaded()) targetTrack = TRACK_IDLE;
+                else if (m_tracks[TRACK_MID].isLoaded()) targetTrack = TRACK_MID;
+                else if (m_tracks[TRACK_HIGH].isLoaded()) targetTrack = TRACK_HIGH;
+            }
             outWeights[targetTrack] = 1.0f * loadScale;
         }
 
@@ -222,6 +266,19 @@ void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* out
                 }
             }
         }
+        return;
+    }
+
+    bool hasIdle = m_tracks[TRACK_IDLE].isLoaded();
+    bool hasLow  = m_tracks[TRACK_LOW].isLoaded();
+    bool hasMid  = m_tracks[TRACK_MID].isLoaded();
+    bool hasHigh = m_tracks[TRACK_HIGH].isLoaded();
+
+    // ── PERFIL DE FAIXA ÚNICA (ex: Audi RS4 V2 com Single Track Low) ──
+    // Se temos apenas a faixa Low carregada (sem Idle, Mid ou High):
+    // Toca Track Low continuamente de 0 até o limitador (8.500+ RPM) com 100% de ganho e ZERO crossfading!
+    if (hasLow && !hasIdle && !hasMid && !hasHigh) {
+        outWeights[TRACK_LOW] = 1.0f * loadScale;
         return;
     }
 
@@ -294,9 +351,28 @@ void GranularEngine::calculateSpeedPredictiveWeights(float rpm, float throttle, 
 
     float loadScale = 0.88f + 0.12f * throttle;
 
-    // Se o carro estiver parado ou neutro com velocidade mínima: 100% Lenta (IDLE)
+    // Se Modo Faixa Única estiver ativado pelo usuário:
+    if (m_isSingleTrackModeEnabled.load(std::memory_order_relaxed)) {
+        int target = m_singleTrackIndex.load(std::memory_order_relaxed);
+        if (target < 0 || target >= TRACK_COUNT) target = TRACK_LOW;
+        if (!m_tracks[target].isLoaded()) {
+            if (m_tracks[TRACK_LOW].isLoaded()) target = TRACK_LOW;
+            else if (m_tracks[TRACK_IDLE].isLoaded()) target = TRACK_IDLE;
+        }
+        outWeights[target] = 1.0f * loadScale;
+        return;
+    }
+
+    // Se for perfil de faixa única nativo (ex: apenas Low carregada):
+    if (m_tracks[TRACK_LOW].isLoaded() && !m_tracks[TRACK_IDLE].isLoaded() && !m_tracks[TRACK_MID].isLoaded() && !m_tracks[TRACK_HIGH].isLoaded()) {
+        outWeights[TRACK_LOW] = 1.0f * loadScale;
+        return;
+    }
+
+    // Se o carro estiver parado ou neutro com velocidade mínima: 100% Lenta (IDLE ou fallback LOW)
     if (speedKmh <= 2.5f || (gear == 0 && speedKmh < 6.0f)) {
-        outWeights[TRACK_IDLE] = 1.0f * loadScale;
+        int idleTrack = m_tracks[TRACK_IDLE].isLoaded() ? TRACK_IDLE : TRACK_LOW;
+        outWeights[idleTrack] = 1.0f * loadScale;
         return;
     }
 

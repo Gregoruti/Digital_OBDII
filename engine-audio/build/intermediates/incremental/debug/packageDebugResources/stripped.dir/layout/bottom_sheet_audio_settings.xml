@@ -198,6 +198,7 @@
                                 android:layout_marginTop="4dp" />
                         </LinearLayout>
 
+
                         <!-- 3. Alfa Romeo Giulia QV -->
                         <LinearLayout
                             android:id="@+id/btnEngineOptionGiulia"
@@ -279,7 +280,7 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:padding="12dp"
-                            android:background="#282D44">
+                            android:layout_marginEnd="8dp">
 
                             <TextView
                                 android:id="@+id/tvOptionTitleMC20"
@@ -303,6 +304,116 @@
                                 android:layout_height="wrap_content"
                                 android:text="Corte: 7.500 RPM"
                                 android:textColor="#42A5F5"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- 6. Audi RS3 Performance -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionRS3"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitleRS3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Audi RS3"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="2.5L TFSI I5"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 7.200 RPM"
+                                android:textColor="#00E676"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- 7. Porsche 911 RSR GTE -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionRSR"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitleRSR"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Porsche 911 RSR"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="4.2L Flat-6 Racing"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 9.200 RPM"
+                                android:textColor="#FF1744"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- 8. Porsche Panamera Turbo S -->
+                        <LinearLayout
+                            android:id="@+id/btnEngineOptionPanamera"
+                            android:layout_width="132dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="#282D44">
+
+                            <TextView
+                                android:id="@+id/tvOptionTitlePanamera"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Panamera Turbo"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="4.0L Bi-Turbo V8"
+                                android:textColor="#8E94B2"
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Corte: 7.000 RPM"
+                                android:textColor="#E040FB"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
                                 android:layout_marginTop="4dp" />
@@ -888,6 +999,290 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 5: MODO FAIXA ÚNICA CONTÍNUA (0 A 4.000+ RPM)                -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardSingleTrack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Switch Ativar Faixa Única -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Modo Faixa Única Contínua"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Toca 1 única faixa de 0 a 4.000+ RPM com ZERO crossfade intermediário"
+                            android:textColor="#7A81A4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchSingleTrackMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Seletor de Faixas Disponíveis -->
+                <LinearLayout
+                    android:id="@+id/layoutSingleTrackSelector"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="12dp">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#2E334D"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ESCOLHA A FAIXA DE OPERAÇÃO (DENTRE AS DISPONÍVEIS):"
+                        android:textColor="#00E5FF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="4">
+
+                        <!-- Faixa Idle (0) -->
+                        <TextView
+                            android:id="@+id/btnTrackIdle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Lenta\n(Idle)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Faixa Low (1) -->
+                        <TextView
+                            android:id="@+id/btnTrackLow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Baixa\n(Low)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Faixa Mid (2) -->
+                        <TextView
+                            android:id="@+id/btnTrackMid"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Média\n(Mid)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Faixa High (3) -->
+                        <TextView
+                            android:id="@+id/btnTrackHigh"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Alta\n(High)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Descrição informativa da faixa selecionada -->
+                    <TextView
+                        android:id="@+id/tvSingleTrackDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Faixa Low (Baixa): opera de 0 a 4.000+ RPM com pitch contínuo. Ideal para marcha lenta incorpada sem micro-peaks."
+                        android:textColor="#00E5FF"
+                        android:textSize="11sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 6: VERSÕES E CONTROLE DE ATUALIZAÇÃO                         -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#141923"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Header de Versão -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="VERSÕES E CONTROLE DE ATUALIZAÇÃO"
+                            android:textColor="#00E5FF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rastreabilidade de Bugfixes e Novas Features"
+                            android:textColor="#7A81A4"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/btnToggleChangelog"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ocultar"
+                        android:textColor="#00E5FF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:padding="6dp" />
+                </LinearLayout>
+
+                <!-- Box da Versão Ativa -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp"
+                    android:background="#0D1B2A"
+                    android:padding="10dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ENGINE DE ÁUDIO"
+                            android:textColor="#00E676"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvEngineVersionName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="v1.07"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:id="@+id/tvEngineBuildDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Build 30/09/2026"
+                            android:textColor="#8E94B2"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Container do Changelog Expansível -->
+                <LinearLayout
+                    android:id="@+id/layoutChangelogContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible"
+                    android:layout_marginTop="10dp"
+                    android:background="#151724"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:id="@+id/tvChangelogContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#CFD8DC"
+                        android:textSize="11sp"
+                        android:lineSpacingExtra="3dp" />
                 </LinearLayout>
 
             </LinearLayout>

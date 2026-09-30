@@ -120,6 +120,40 @@ enum class EngineType(
         badge = "RS3 2.5 TFSI",
         soundDescription = "Gravação oficial de pista: o inconfundível som rasgado de 5 cilindros em linha 2.5L TFSI (ordem de ignição 1-2-4-5-3), espirro metálico de turbina e estalos secos DSG nas trocas de marcha.",
         baseRpms = floatArrayOf(800f, 2000f, 3500f, 6500f, 3200f)
+    ),
+
+    PORSCHE_911_RSR(
+        id = 6,
+        folderName = "porsche_911_rsr",
+        displayName = "Porsche 911 RSR GTE",
+        subtitle = "4.2L Flat-6 Atmospheric Racing",
+        cylinderCount = 6,
+        idleRpm = 950f,
+        limiterRpm = 9200f,
+        maxRpm = 9500f,
+        primaryColorHex = 0xFFFF1744,
+        accentColorHex = 0xFFFF5252,
+        hasTurbo = false,
+        badge = "911 RSR GTE",
+        soundDescription = "Gravação oficial de competição (Le Mans GTE): o lendário berro metálico e estridente do motor 4.2L Boxer-6 aspirado a 9.200 RPM com caixa sequencial e estalos secos.",
+        baseRpms = floatArrayOf(950f, 2800f, 5400f, 8000f, 3800f)
+    ),
+
+    PORSCHE_PANAMERA_V8(
+        id = 7,
+        folderName = "porsche_panamera",
+        displayName = "Porsche Panamera Turbo S",
+        subtitle = "4.0L Bi-Turbo V8 MSB",
+        cylinderCount = 8,
+        idleRpm = 800f,
+        limiterRpm = 7000f,
+        maxRpm = 7500f,
+        primaryColorHex = 0xFFE040FB,
+        accentColorHex = 0xFFEA80FC,
+        hasTurbo = true,
+        badge = "PANAMERA V8",
+        soundDescription = "Gravação oficial: motor 4.0L V8 Twin-Turbo com virabrequim crossplane, ronco encorpado e musculoso em baixa, turbinas com sopro e estalos esportivos no escape.",
+        baseRpms = floatArrayOf(800f, 2400f, 4400f, 6600f, 3200f)
     );
 
     companion object {

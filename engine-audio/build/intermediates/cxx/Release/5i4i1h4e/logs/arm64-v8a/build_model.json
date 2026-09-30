@@ -32,7 +32,9 @@
     "variantName": "release",
     "isDebuggableEnabled": false,
     "validAbiList": [
-      "arm64-v8a"
+      "armeabi-v7a",
+      "arm64-v8a",
+      "x86_64"
     ],
     "buildTargetSet": [],
     "implicitBuildTargetSet": [],
@@ -158,7 +160,6 @@
         "rootBuildGradleFolder": "D:\\Softwares\\Digital_OBDII",
         "sdkFolder": "C:\\Users\\grego\\AppData\\Local\\Android\\Sdk",
         "isBuildOnlyTargetAbiEnabled": true,
-        "ideBuildTargetAbi": "arm64-v8a",
         "isCmakeBuildCohabitationEnabled": false,
         "isPrefabEnabled": true
       },

@@ -1,6 +1,18 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.3.0] - Atual (Equipe Antigravity)
+## [4.4.0] - Atual (Equipe Antigravity)
+> **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
+> **Status de Validação:** Novos sons de motor e seletor de áudio no painel de configurações.
+
+### Adicionado e Otimizado
+- **Novos Perfis de Áudio no Engine Sound**:
+  - Adição de suporte a diferentes sons de motor e tipos de veículos diretamente na camada de síntese (C++).
+  - Implementação de opções dinâmicas para o usuário selecionar o timbre do motor de sua preferência.
+- **Integração de Interface (Audio Track Selection)**:
+  - O painel de opções de Áudio (`AudioSettingsScreen`) agora possui o mecanismo de seleção de faixa de áudio (Audio Track Selection).
+  - Permitido alternar dinamicamente os tipos de veículos / parâmetros de som.
+
+## [4.3.0] - Anterior
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
 > **Status de Validação:** Motor de Áudio V6 Twin-Turbo integrado. Testado em ambiente de compilação C++ (ARM/x86_64) e UI.
 

@@ -211,6 +211,26 @@ Java_com_engineaudio_V6AudioEngine_nativeSetSpeedPredictiveEnabled(
 }
 
 /**
+ * Set Single-Track Continuous Mode (0 a 4000+ RPM sem crossfading).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetSingleTrackModeEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setSingleTrackModeEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Single-Track index to use [0=Idle, 1=Low, 2=Mid, 3=High].
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetSingleTrackIndex(
+        JNIEnv* env, jobject thiz, jint trackIndex) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setSingleTrackIndex(static_cast<int>(trackIndex));
+}
+
+/**
  * Trigger immediate limiter cut pulse (backfire / ignition cut).
  */
 JNIEXPORT void JNICALL

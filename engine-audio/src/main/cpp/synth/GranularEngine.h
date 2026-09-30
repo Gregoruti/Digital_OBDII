@@ -42,9 +42,13 @@ public:
     void setGearLockEnabled(bool enabled);
     void setGearCrossfadeEnabled(bool enabled);
     void setSpeedPredictiveEnabled(bool enabled);
+    void setSingleTrackModeEnabled(bool enabled);
+    void setSingleTrackIndex(int trackIndex);
     bool isGearLockEnabled() const { return m_isGearLockEnabled.load(std::memory_order_relaxed); }
     bool isGearCrossfadeEnabled() const { return m_isGearCrossfadeEnabled.load(std::memory_order_relaxed); }
     bool isSpeedPredictiveEnabled() const { return m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed); }
+    bool isSingleTrackModeEnabled() const { return m_isSingleTrackModeEnabled.load(std::memory_order_relaxed); }
+    int getSingleTrackIndex() const { return m_singleTrackIndex.load(std::memory_order_relaxed); }
     void triggerLimiterCut();
     void setRunning(bool running);
     bool isRunning() const { return m_isRunning.load(std::memory_order_relaxed); }
@@ -80,6 +84,8 @@ private:
     std::atomic<bool>  m_isGearLockEnabled{false};
     std::atomic<bool>  m_isGearCrossfadeEnabled{true};
     std::atomic<bool>  m_isSpeedPredictiveEnabled{false};
+    std::atomic<bool>  m_isSingleTrackModeEnabled{false};
+    std::atomic<int>   m_singleTrackIndex{TRACK_LOW};
     std::atomic<float> m_targetSpeed{0.0f};
     std::atomic<bool>  m_manualLimiterTrigger{false};
     std::atomic<bool>  m_isRunning{false};

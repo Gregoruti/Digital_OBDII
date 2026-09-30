@@ -1,3 +1,9 @@
+lib/armeabi-v7a\libc++_shared.so->Project
+lib/armeabi-v7a\libengine_audio.so->Project
+lib/armeabi-v7a\liboboe.so->Project
 lib/arm64-v8a\libc++_shared.so->Project
 lib/arm64-v8a\libengine_audio.so->Project
 lib/arm64-v8a\liboboe.so->Project
+lib/x86_64\libc++_shared.so->Project
+lib/x86_64\libengine_audio.so->Project
+lib/x86_64\liboboe.so->Project

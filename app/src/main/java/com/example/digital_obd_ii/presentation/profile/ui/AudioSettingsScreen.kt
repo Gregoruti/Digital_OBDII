@@ -51,6 +51,8 @@ fun AudioSettingsScreen(
     var isGearLockEnabled by remember { mutableStateOf(prefs.isGearLockEnabled) }
     var isGearCrossfadeEnabled by remember { mutableStateOf(prefs.isGearCrossfadeEnabled) }
     var isSpeedPredictiveEnabled by remember { mutableStateOf(prefs.isSpeedPredictiveEnabled) }
+    var isSingleTrackModeEnabled by remember { mutableStateOf(prefs.isSingleTrackModeEnabled) }
+    var singleTrackIndex by remember { mutableIntStateOf(prefs.singleTrackIndex) }
 
     var isVirtualAccelEnabled by remember { mutableStateOf(prefs.isVirtualAccelerationEnabled) }
     var virtualAccelExponent by remember { mutableFloatStateOf(prefs.virtualAccelerationExponent) }
@@ -75,6 +77,8 @@ fun AudioSettingsScreen(
         V6AudioEngine.setGearLockEnabled(prefs.isGearLockEnabled)
         V6AudioEngine.setGearCrossfadeEnabled(prefs.isGearCrossfadeEnabled)
         V6AudioEngine.setSpeedPredictiveEnabled(prefs.isSpeedPredictiveEnabled)
+        V6AudioEngine.setSingleTrackModeEnabled(prefs.isSingleTrackModeEnabled)
+        V6AudioEngine.setSingleTrackIndex(prefs.singleTrackIndex)
     }
 
     Scaffold(
@@ -1021,6 +1025,116 @@ fun AudioSettingsScreen(
                                     }
                                 )
                             }
+                        }
+                    }
+                }
+            }
+
+            // ════════════ CARD 4c: MODO FAIXA ÚNICA CONTÍNUA (0 A 4.000+ RPM) ════════════
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Modo Faixa Única Contínua",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Toca 1 única faixa de 0 a 4.000+ RPM com ZERO crossfade intermediário",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = isSingleTrackModeEnabled,
+                                onCheckedChange = { checked ->
+                                    isSingleTrackModeEnabled = checked
+                                    prefs.isSingleTrackModeEnabled = checked
+                                    V6AudioEngine.setSingleTrackModeEnabled(checked)
+                                }
+                            )
+                        }
+
+                        if (isSingleTrackModeEnabled) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                                thickness = 1.dp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "ESCOLHA A FAIXA DE OPERAÇÃO (DENTRE AS DISPONÍVEIS):",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF00E5FF)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val trackLabels = listOf(
+                                "Lenta (Idle)",
+                                "Baixa (Low)",
+                                "Média (Mid)",
+                                "Alta (High)"
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                trackLabels.forEachIndexed { idx, label ->
+                                    val isSelected = (singleTrackIndex == idx)
+                                    Surface(
+                                        onClick = {
+                                            singleTrackIndex = idx
+                                            prefs.singleTrackIndex = idx
+                                            V6AudioEngine.setSingleTrackIndex(idx)
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) Color(0xFF00E5FF) else MaterialTheme.colorScheme.surface,
+                                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
+                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val trackDescriptions = listOf(
+                                "Faixa Lenta (Idle): opera continuamente de 0 a 4.000+ RPM. Ronco característico de marcha lenta acelerada.",
+                                "Faixa Baixa (Low): opera de 0 a 4.000+ RPM sem crossfade. (Recomendado: som encorpado, linear e sem micro-peaks).",
+                                "Faixa Média (Mid): opera de 0 a 4.000+ RPM. Tom aberto de cruzeiro e aceleração média contínua.",
+                                "Faixa Alta (High): opera de 0 a 4.000+ RPM. Tom estridente de alta rotação e potência total."
+                            )
+                            Text(
+                                text = trackDescriptions.getOrElse(singleTrackIndex) { trackDescriptions[1] },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF00E5FF)
+                            )
                         }
                     }
                 }

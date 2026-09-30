@@ -139,6 +139,14 @@ void EngineAudioEngine::setSpeedPredictiveEnabled(bool enabled) {
     m_granularEngine->setSpeedPredictiveEnabled(enabled);
 }
 
+void EngineAudioEngine::setSingleTrackModeEnabled(bool enabled) {
+    m_granularEngine->setSingleTrackModeEnabled(enabled);
+}
+
+void EngineAudioEngine::setSingleTrackIndex(int trackIndex) {
+    m_granularEngine->setSingleTrackIndex(trackIndex);
+}
+
 void EngineAudioEngine::triggerLimiterCut() {
     m_revLimiter->triggerCut();
     m_granularEngine->triggerLimiterCut();

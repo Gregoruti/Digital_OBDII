@@ -60,6 +60,14 @@ class AudioSettingsPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_SPEED_PREDICTIVE_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_SPEED_PREDICTIVE_ENABLED, value).apply()
 
+    var isSingleTrackModeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SINGLE_TRACK_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_SINGLE_TRACK_ENABLED, value).apply()
+
+    var singleTrackIndex: Int
+        get() = prefs.getInt(KEY_SINGLE_TRACK_INDEX, 1) // default 1 (Track Low)
+        set(value) = prefs.edit().putInt(KEY_SINGLE_TRACK_INDEX, value).apply()
+
     var idleRpm: Float
         get() = prefs.getFloat(KEY_IDLE_RPM, 750f)
         set(value) = prefs.edit().putFloat(KEY_IDLE_RPM, value).apply()
@@ -109,5 +117,7 @@ class AudioSettingsPreferences(context: Context) {
         private const val KEY_GEAR_LOCK_ENABLED = "gear_lock_enabled"
         private const val KEY_GEAR_CROSSFADE_ENABLED = "gear_crossfade_enabled"
         private const val KEY_SPEED_PREDICTIVE_ENABLED = "speed_predictive_enabled"
+        private const val KEY_SINGLE_TRACK_ENABLED = "single_track_enabled"
+        private const val KEY_SINGLE_TRACK_INDEX = "single_track_index"
     }
 }

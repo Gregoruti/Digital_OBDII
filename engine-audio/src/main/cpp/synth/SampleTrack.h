@@ -141,10 +141,10 @@ public:
             m_currentGain = targetGain;
         }
 
-        // Limita pitch shift a [0.25x, 3.5x] para evitar artefatos extremos
+        // Limita pitch shift a [0.20x, 4.50x] para suportar ampla faixa em perfis single-track
         float speed = currentRPM / m_baseRPM;
-        if (speed < 0.25f) speed = 0.25f;
-        if (speed > 3.50f) speed = 3.50f;
+        if (speed < 0.20f) speed = 0.20f;
+        if (speed > 4.50f) speed = 4.50f;
 
         const double frameCountD = static_cast<double>(m_frameCount);
         const float* const pData = m_samples.data();

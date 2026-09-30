@@ -91,3 +91,19 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+
+// ─── Distribuição Automática de APK (Google Drive + E-mail) ────────────────
+tasks.register<Exec>("uploadApkToDrive") {
+    group = "distribution"
+    description = "Faz upload do APK gerado para o Google Drive e envia link por e-mail."
+    workingDir = rootDir
+    commandLine("python", "scripts/upload_to_drive_and_email.py")
+}
+
+tasks.register("assembleAndUpload") {
+    group = "distribution"
+    description = "Compila o APK Debug e envia automaticamente para o Google Drive e e-mail."
+    dependsOn("assembleDebug")
+    finalizedBy("uploadApkToDrive")
+}

@@ -141,6 +141,14 @@ class V6AudioEngine(
             instance?.setSpeedPredictiveEnabled(enabled)
         }
 
+        fun setSingleTrackModeEnabled(enabled: Boolean) {
+            instance?.setSingleTrackModeEnabled(enabled)
+        }
+
+        fun setSingleTrackIndex(trackIndex: Int) {
+            instance?.setSingleTrackIndex(trackIndex)
+        }
+
         fun setShiftLightActive(active: Boolean) {
             instance?.setShiftLightActive(active)
         }
@@ -239,6 +247,18 @@ class V6AudioEngine(
     /** Indica se a antecipação preditiva por velocidade está ativada (Civic Manual). */
     val isSpeedPredictiveEnabled: Boolean get() = _isSpeedPredictiveEnabled
 
+    @Volatile
+    private var _isSingleTrackModeEnabled: Boolean = false
+
+    @Volatile
+    private var _singleTrackIndex: Int = 1 // Default TRACK_LOW
+
+    /** Indica se o Modo Faixa Única Contínua (0 a 4000+ RPM sem crossfading) está ativado. */
+    val isSingleTrackModeEnabled: Boolean get() = _isSingleTrackModeEnabled
+
+    /** Índice da faixa selecionada para o Modo Faixa Única (0=Idle, 1=Low, 2=Mid, 3=High). */
+    val singleTrackIndex: Int get() = _singleTrackIndex
+
     /** Indica se o assobio do turbo e válvula de alívio (BOV) estão ativados. */
     val isTurboEnabled: Boolean get() = _isTurboEnabled
 
@@ -283,6 +303,8 @@ class V6AudioEngine(
                         _isGearLockEnabled = prefs.isGearLockEnabled
                         _isGearCrossfadeEnabled = prefs.isGearCrossfadeEnabled
                         _isSpeedPredictiveEnabled = prefs.isSpeedPredictiveEnabled
+                        _isSingleTrackModeEnabled = prefs.isSingleTrackModeEnabled
+                        _singleTrackIndex = prefs.singleTrackIndex
 
                         nativeSetShiftLightSyncEnabled(_isShiftLightSyncEnabled)
                         nativeSetPopsEnabled(_isPopsEnabled)
@@ -292,6 +314,8 @@ class V6AudioEngine(
                         nativeSetGearLockEnabled(_isGearLockEnabled)
                         nativeSetGearCrossfadeEnabled(_isGearCrossfadeEnabled)
                         nativeSetSpeedPredictiveEnabled(_isSpeedPredictiveEnabled)
+                        nativeSetSingleTrackModeEnabled(_isSingleTrackModeEnabled)
+                        nativeSetSingleTrackIndex(_singleTrackIndex)
                     } catch (e: Throwable) {
                         Log.w(TAG, "AudioSettingsPreferences inicialização parcial: ${e.message}")
                     }
@@ -578,6 +602,31 @@ class V6AudioEngine(
     }
 
     /**
+     * Ativa ou desativa o Modo Faixa Única Contínua (0 a 4.000+ RPM sem crossfading).
+     * Quando ativado, utiliza uma única faixa (definida por [setSingleTrackIndex])
+     * cobrindo toda a rotação sem qualquer crossfading intermediário.
+     */
+    fun setSingleTrackModeEnabled(enabled: Boolean) {
+        _isSingleTrackModeEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetSingleTrackModeEnabled(enabled)
+    }
+
+    /**
+     * Define o índice da faixa a ser usada no Modo Faixa Única:
+     * 0 = Idle (Lenta)
+     * 1 = Low (Baixa)
+     * 2 = Mid (Média)
+     * 3 = High (Alta)
+     */
+    fun setSingleTrackIndex(trackIndex: Int) {
+        val clamped = trackIndex.coerceIn(0, 3)
+        _singleTrackIndex = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetSingleTrackIndex(clamped)
+    }
+
+    /**
      * Compatibilidade retroativa para ajuste direto de RPM se desejado.
      */
     fun setShiftLightRpm(rpm: Float, syncWithLimiter: Boolean = true) {
@@ -681,6 +730,8 @@ class V6AudioEngine(
     private external fun nativeSetGearLockEnabled(enabled: Boolean)
     private external fun nativeSetGearCrossfadeEnabled(enabled: Boolean)
     private external fun nativeSetSpeedPredictiveEnabled(enabled: Boolean)
+    private external fun nativeSetSingleTrackModeEnabled(enabled: Boolean)
+    private external fun nativeSetSingleTrackIndex(trackIndex: Int)
     private external fun nativeTriggerLimiterCut()
     private external fun nativeIsRunning(): Boolean
     private external fun nativeSetEngineType(type: Int)

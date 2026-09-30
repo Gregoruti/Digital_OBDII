@@ -52,6 +52,8 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         setupLimiterAndShiftLightControls()
         setupTurboAndExhaustControls()
         setupGearLockControls()
+        setupSingleTrackControls()
+        setupVersionFooterControls()
         setupActionButtons()
     }
 
@@ -71,6 +73,9 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         binding.btnEngineOptionGiulia.setOnClickListener { selectEngine(com.engineaudio.EngineType.ALFA_GIULIA_QV) }
         binding.btnEngineOptionMustang.setOnClickListener { selectEngine(com.engineaudio.EngineType.FORD_MUSTANG_V8) }
         binding.btnEngineOptionMC20.setOnClickListener { selectEngine(com.engineaudio.EngineType.MASERATI_MC20_GT2) }
+        binding.btnEngineOptionRS3.setOnClickListener { selectEngine(com.engineaudio.EngineType.AUDI_RS3_I5) }
+        binding.btnEngineOptionRSR.setOnClickListener { selectEngine(com.engineaudio.EngineType.PORSCHE_911_RSR) }
+        binding.btnEngineOptionPanamera.setOnClickListener { selectEngine(com.engineaudio.EngineType.PORSCHE_PANAMERA_V8) }
     }
 
     private fun selectEngine(type: com.engineaudio.EngineType) {
@@ -92,7 +97,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         val accentColor = type.accentColorHex.toInt()
         val defaultText = 0xFFFFFFFF.toInt()
 
-        // Highlighting dos 5 botões oficiais
+        // Highlighting dos botões de motores
         binding.btnEngineOptionGTR.setBackgroundColor(if (type == com.engineaudio.EngineType.NISSAN_GTR_GT3) selectedBg else unselectedBg)
         binding.tvOptionTitleGTR.setTextColor(if (type == com.engineaudio.EngineType.NISSAN_GTR_GT3) accentColor else defaultText)
 
@@ -107,6 +112,15 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
 
         binding.btnEngineOptionMC20.setBackgroundColor(if (type == com.engineaudio.EngineType.MASERATI_MC20_GT2) selectedBg else unselectedBg)
         binding.tvOptionTitleMC20.setTextColor(if (type == com.engineaudio.EngineType.MASERATI_MC20_GT2) accentColor else defaultText)
+
+        binding.btnEngineOptionRS3.setBackgroundColor(if (type == com.engineaudio.EngineType.AUDI_RS3_I5) selectedBg else unselectedBg)
+        binding.tvOptionTitleRS3.setTextColor(if (type == com.engineaudio.EngineType.AUDI_RS3_I5) accentColor else defaultText)
+
+        binding.btnEngineOptionRSR.setBackgroundColor(if (type == com.engineaudio.EngineType.PORSCHE_911_RSR) selectedBg else unselectedBg)
+        binding.tvOptionTitleRSR.setTextColor(if (type == com.engineaudio.EngineType.PORSCHE_911_RSR) accentColor else defaultText)
+
+        binding.btnEngineOptionPanamera.setBackgroundColor(if (type == com.engineaudio.EngineType.PORSCHE_PANAMERA_V8) selectedBg else unselectedBg)
+        binding.tvOptionTitlePanamera.setTextColor(if (type == com.engineaudio.EngineType.PORSCHE_PANAMERA_V8) accentColor else defaultText)
 
         // Header and description
         binding.tvEngineBadge.text = type.badge
@@ -277,6 +291,109 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         } else {
             binding.tvSpeedPredictiveDesc.text = "Desativado: responde estritamente à marcha detectada no painel"
             binding.tvSpeedPredictiveDesc.setTextColor(0xFF7A81A4.toInt())
+        }
+    }
+
+    private fun setupSingleTrackControls() {
+        val isEnabled = engineAudio?.isSingleTrackModeEnabled ?: preferences.isSingleTrackModeEnabled
+        val currentTrack = engineAudio?.singleTrackIndex ?: preferences.singleTrackIndex
+
+        binding.switchSingleTrackMode.isChecked = isEnabled
+        binding.layoutSingleTrackSelector.visibility = if (isEnabled) View.VISIBLE else View.GONE
+
+        updateSingleTrackButtonsUI(currentTrack)
+
+        binding.switchSingleTrackMode.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isSingleTrackModeEnabled = isChecked
+            engineAudio?.setSingleTrackModeEnabled(isChecked)
+            binding.layoutSingleTrackSelector.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        binding.btnTrackIdle.setOnClickListener { selectSingleTrack(0) }
+        binding.btnTrackLow.setOnClickListener { selectSingleTrack(1) }
+        binding.btnTrackMid.setOnClickListener { selectSingleTrack(2) }
+        binding.btnTrackHigh.setOnClickListener { selectSingleTrack(3) }
+    }
+
+    private fun selectSingleTrack(trackIndex: Int) {
+        preferences.singleTrackIndex = trackIndex
+        engineAudio?.setSingleTrackIndex(trackIndex)
+        updateSingleTrackButtonsUI(trackIndex)
+    }
+
+    private fun updateSingleTrackButtonsUI(selectedIndex: Int) {
+        val selectedBg = 0xFF00E5FF.toInt()
+        val selectedTextColor = 0xFF000000.toInt()
+        val unselectedBg = 0xFF282D44.toInt()
+        val unselectedTextColor = 0xFFFFFFFF.toInt()
+
+        val buttons = listOf(
+            binding.btnTrackIdle,
+            binding.btnTrackLow,
+            binding.btnTrackMid,
+            binding.btnTrackHigh
+        )
+
+        buttons.forEachIndexed { index, btn ->
+            val isSelected = (index == selectedIndex)
+            btn.setBackgroundColor(if (isSelected) selectedBg else unselectedBg)
+            btn.setTextColor(if (isSelected) selectedTextColor else unselectedTextColor)
+        }
+
+        val descriptions = listOf(
+            "Faixa Lenta (Idle): opera continuamente de 0 a 4.000+ RPM. Ronco característico de marcha lenta acelerada.",
+            "Faixa Baixa (Low): opera de 0 a 4.000+ RPM sem crossfade. (Recomendado: som encorpado, linear e sem micro-peaks).",
+            "Faixa Média (Mid): opera de 0 a 4.000+ RPM. Tom aberto de cruzeiro e aceleração média contínua.",
+            "Faixa Alta (High): opera de 0 a 4.000+ RPM. Tom estridente de alta rotação e potência total."
+        )
+        binding.tvSingleTrackDesc.text = descriptions.getOrElse(selectedIndex) { descriptions[1] }
+    }
+
+    private fun setupVersionFooterControls() {
+        binding.tvEngineVersionName.text = "v${com.engineaudio.EngineAudioVersion.VERSION_NAME}"
+        binding.tvEngineBuildDate.text = "Build ${com.engineaudio.EngineAudioVersion.BUILD_DATE}"
+
+        // Formata o Changelog com destaque visual para os títulos de versão e a solução do RS4
+        val sb = android.text.SpannableStringBuilder()
+        com.engineaudio.EngineAudioVersion.CHANGELOG.forEach { line ->
+            val start = sb.length
+            sb.append(line).append("\n")
+            val end = sb.length
+            if (line.startsWith("v1.")) {
+                sb.setSpan(
+                    android.text.style.ForegroundColorSpan(0xFF00E5FF.toInt()),
+                    start,
+                    end,
+                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                sb.setSpan(
+                    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                    start,
+                    end,
+                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            } else if (line.contains("SOLUÇÃO DEFINITIVA")) {
+                sb.setSpan(
+                    android.text.style.ForegroundColorSpan(0xFF00E676.toInt()),
+                    start,
+                    end,
+                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                sb.setSpan(
+                    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                    start,
+                    end,
+                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        }
+        binding.tvChangelogContent.text = sb
+
+        var isChangelogVisible = true
+        binding.btnToggleChangelog.setOnClickListener {
+            isChangelogVisible = !isChangelogVisible
+            binding.layoutChangelogContainer.visibility = if (isChangelogVisible) View.VISIBLE else View.GONE
+            binding.btnToggleChangelog.text = if (isChangelogVisible) "Ocultar" else "Ver Detalhes"
         }
     }
 

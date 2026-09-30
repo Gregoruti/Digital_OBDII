@@ -40,6 +40,8 @@ public:
     void setGearLockEnabled(bool enabled);
     void setGearCrossfadeEnabled(bool enabled);
     void setSpeedPredictiveEnabled(bool enabled);
+    void setSingleTrackModeEnabled(bool enabled);
+    void setSingleTrackIndex(int trackIndex);
     void triggerLimiterCut();
     void setEngineType(int32_t typeId);
 
