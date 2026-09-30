@@ -113,6 +113,34 @@ class V6AudioEngine(
             instance?.setShiftLightSyncEnabled(enabled)
         }
 
+        fun setPopsEnabled(enabled: Boolean) {
+            instance?.setPopsEnabled(enabled)
+        }
+
+        fun setTurboEnabled(enabled: Boolean) {
+            instance?.setTurboEnabled(enabled)
+        }
+
+        fun setTurboVolume(volume: Float) {
+            instance?.setTurboVolume(volume)
+        }
+
+        fun setPureSoundMode(enabled: Boolean) {
+            instance?.setPureSoundMode(enabled)
+        }
+
+        fun setGearLockEnabled(enabled: Boolean) {
+            instance?.setGearLockEnabled(enabled)
+        }
+
+        fun setGearCrossfadeEnabled(enabled: Boolean) {
+            instance?.setGearCrossfadeEnabled(enabled)
+        }
+
+        fun setSpeedPredictiveEnabled(enabled: Boolean) {
+            instance?.setSpeedPredictiveEnabled(enabled)
+        }
+
         fun setShiftLightActive(active: Boolean) {
             instance?.setShiftLightActive(active)
         }
@@ -172,6 +200,15 @@ class V6AudioEngine(
     @Volatile
     private var _isShiftLightSyncEnabled: Boolean = true
 
+    @Volatile
+    private var _isPopsEnabled: Boolean = true
+
+    @Volatile
+    private var _isTurboEnabled: Boolean = true
+
+    @Volatile
+    private var _turboVolume: Float = 0.70f
+
     /** Current lifecycle state of the engine. */
     val state: EngineState get() = _state
 
@@ -180,6 +217,39 @@ class V6AudioEngine(
 
     /** Indica se a vinculação do corte ao Flash Light do painel está ativada. */
     val isShiftLightSyncEnabled: Boolean get() = _isShiftLightSyncEnabled
+
+    /** Indica se os estalos no escape (Pops & Bangs) estão ativados. */
+    val isPopsEnabled: Boolean get() = _isPopsEnabled
+
+    @Volatile
+    private var _isGearLockEnabled: Boolean = false
+
+    @Volatile
+    private var _isGearCrossfadeEnabled: Boolean = true
+
+    @Volatile
+    private var _isSpeedPredictiveEnabled: Boolean = false
+
+    /** Indica se a amarração da faixa por marcha está ativada. */
+    val isGearLockEnabled: Boolean get() = _isGearLockEnabled
+
+    /** Indica se o crossfade entre marchas está ativado. */
+    val isGearCrossfadeEnabled: Boolean get() = _isGearCrossfadeEnabled
+
+    /** Indica se a antecipação preditiva por velocidade está ativada (Civic Manual). */
+    val isSpeedPredictiveEnabled: Boolean get() = _isSpeedPredictiveEnabled
+
+    /** Indica se o assobio do turbo e válvula de alívio (BOV) estão ativados. */
+    val isTurboEnabled: Boolean get() = _isTurboEnabled
+
+    /** Volume da válvula de alívio e turbo [0.0, 1.0]. */
+    val turboVolume: Float get() = _turboVolume
+
+    @Volatile
+    private var _isPureSoundMode: Boolean = false
+
+    /** Indica se o Modo Puro (sem efeitos extras / randômicos) está ativado. */
+    val isPureSoundMode: Boolean get() = _isPureSoundMode
 
     @Volatile
     private var _engineType: EngineType = EngineType.V6_TWIN_TURBO
@@ -202,6 +272,30 @@ class V6AudioEngine(
                     nativeSetVolume(config.masterVolume)
                     nativeSetLimiterRPM(config.limiterRpm)
                     nativeSetEngineType(_engineType.id)
+
+                    try {
+                        val prefs = com.engineaudio.ui.AudioSettingsPreferences(context)
+                        _isShiftLightSyncEnabled = prefs.isShiftLightSyncEnabled
+                        _isPopsEnabled = prefs.isPopsEnabled
+                        _isTurboEnabled = prefs.isTurboEnabled
+                        _turboVolume = prefs.turboVolume
+                        _isPureSoundMode = prefs.isPureSoundMode
+                        _isGearLockEnabled = prefs.isGearLockEnabled
+                        _isGearCrossfadeEnabled = prefs.isGearCrossfadeEnabled
+                        _isSpeedPredictiveEnabled = prefs.isSpeedPredictiveEnabled
+
+                        nativeSetShiftLightSyncEnabled(_isShiftLightSyncEnabled)
+                        nativeSetPopsEnabled(_isPopsEnabled)
+                        nativeSetTurboEnabled(_isTurboEnabled)
+                        nativeSetTurboVolume(_turboVolume)
+                        nativeSetPureSoundMode(_isPureSoundMode)
+                        nativeSetGearLockEnabled(_isGearLockEnabled)
+                        nativeSetGearCrossfadeEnabled(_isGearCrossfadeEnabled)
+                        nativeSetSpeedPredictiveEnabled(_isSpeedPredictiveEnabled)
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "AudioSettingsPreferences inicialização parcial: ${e.message}")
+                    }
+
                     try {
                         SoundBankLoader.loadFromAssets(context, _engineType, this@V6AudioEngine)
                     } catch (e: Throwable) {
@@ -397,9 +491,90 @@ class V6AudioEngine(
      */
     fun setShiftLightSyncEnabled(enabled: Boolean) {
         _isShiftLightSyncEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetShiftLightSyncEnabled(enabled)
         if (!enabled) {
             nativeSetShiftLightActive(false)
         }
+    }
+
+    /**
+     * Ativa ou desativa os estalos no escape (Pops & Bangs).
+     * Quando desligado, silencia completamente tiros de escape, overrun burbles e cortes de redline.
+     */
+    fun setPopsEnabled(enabled: Boolean) {
+        _isPopsEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetPopsEnabled(enabled)
+    }
+
+    /**
+     * Ativa ou desativa os efeitos de Turbo e válvula de alívio (BOV / espirros).
+     * Quando desligado, o áudio de alívio e assobio é 100% suprimido.
+     */
+    fun setTurboEnabled(enabled: Boolean) {
+        _isTurboEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetTurboEnabled(enabled)
+    }
+
+    /**
+     * Ajusta o volume relativo do Turbo e da válvula de alívio (BOV / espirros).
+     */
+    fun setTurboVolume(volume: Float) {
+        val clamped = volume.coerceIn(0f, 1f)
+        _turboVolume = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetTurboVolume(clamped)
+    }
+
+    /**
+     * Ativa ou desativa o Modo Puro (Pure Engine Sound).
+     * Quando ativado, desativa estalos, tiros de escape, espirros de turbo,
+     * cortes artificiais de marcha e variações randômicas.
+     * Deixa apenas o ronco mecânico puro e contínuo do motor.
+     */
+    fun setPureSoundMode(enabled: Boolean) {
+        _isPureSoundMode = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetPureSoundMode(enabled)
+    }
+
+    /**
+     * Ativa ou desativa a Amarração de Áudio por Marcha (Modo 2 - Opção A).
+     * Quando ativado:
+     * - Marcha 0 (N) ou 1 -> Trilha Idle (idle.wav)
+     * - Marcha 2          -> Trilha Low (low_on.wav)
+     * - Marcha 3          -> Trilha Mid (mid_on.wav)
+     * - Marcha 4, 5...    -> Trilha High (high_on.wav)
+     * O RPM acelera o tom (pitch shift) normalmente com o pedal.
+     */
+    fun setGearLockEnabled(enabled: Boolean) {
+        _isGearLockEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetGearLockEnabled(enabled)
+    }
+
+    /**
+     * Ativa ou desativa o Crossfading suave na troca de marchas.
+     * Quando true: transição suave de ganho entre amostras ao trocar de marcha.
+     * Quando false: corte seco e imediato na troca de marcha (sem sobreposição).
+     */
+    fun setGearCrossfadeEnabled(enabled: Boolean) {
+        _isGearCrossfadeEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetGearCrossfadeEnabled(enabled)
+    }
+
+    /**
+     * Ativa ou desativa a Antecipação Preditiva por Velocidade (Civic Manual).
+     * Modula e harmoniza o crossfade entre as faixas com base na velocidade real do veículo (km/h),
+     * antecipando a próxima marcha antes mesmo da detecção pelo cálculo OBD-II.
+     */
+    fun setSpeedPredictiveEnabled(enabled: Boolean) {
+        _isSpeedPredictiveEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetSpeedPredictiveEnabled(enabled)
     }
 
     /**
@@ -498,6 +673,14 @@ class V6AudioEngine(
     private external fun nativeSetVolume(volume: Float)
     private external fun nativeSetLimiterRPM(rpm: Float)
     private external fun nativeSetShiftLightActive(active: Boolean)
+    private external fun nativeSetShiftLightSyncEnabled(enabled: Boolean)
+    private external fun nativeSetPopsEnabled(enabled: Boolean)
+    private external fun nativeSetTurboEnabled(enabled: Boolean)
+    private external fun nativeSetTurboVolume(volume: Float)
+    private external fun nativeSetPureSoundMode(enabled: Boolean)
+    private external fun nativeSetGearLockEnabled(enabled: Boolean)
+    private external fun nativeSetGearCrossfadeEnabled(enabled: Boolean)
+    private external fun nativeSetSpeedPredictiveEnabled(enabled: Boolean)
     private external fun nativeTriggerLimiterCut()
     private external fun nativeIsRunning(): Boolean
     private external fun nativeSetEngineType(type: Int)

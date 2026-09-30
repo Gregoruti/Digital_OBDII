@@ -14,8 +14,8 @@ android {
         applicationId = "com.example.digital_obd_ii"
         minSdk = 26      // engine-audio requer API 26+ (AAudio estável). Era 24 — ajuste mínimo necessário.
         targetSdk = 37
-        versionCode = 504
-        versionName = "4.2.0"
+        versionCode = 505
+        versionName = "4.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

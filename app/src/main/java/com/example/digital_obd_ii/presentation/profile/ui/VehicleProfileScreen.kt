@@ -1,6 +1,13 @@
 package com.example.digital_obd_ii.presentation.profile.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import com.example.digital_obd_ii.ui.theme.CivicBlueGlow
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,6 +45,7 @@ fun VehicleProfileScreen(
     onCommunicationClick: () -> Unit,
     onFuelCalibrationClick: () -> Unit,
     onAudioClick: () -> Unit,
+    onTripLogClick: () -> Unit = {},
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -73,6 +81,9 @@ fun VehicleProfileScreen(
                     }
                     IconButton(onClick = { onAudioClick() }) {
                         Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Áudio V6")
+                    }
+                    IconButton(onClick = { onTripLogClick() }) {
+                        Icon(Icons.Default.Calculate, contentDescription = "LOG Resumido da Viagem", tint = CivicBlueGlow)
                     }
                     IconButton(onClick = { viewModel.saveProfile() }) {
                         Icon(Icons.Default.Check, contentDescription = "Salvar")
@@ -123,6 +134,46 @@ fun VehicleProfileScreen(
                         checked = uiState.profile.isAutoConnectEnabled,
                         onCheckedChange = { viewModel.updateIsAutoConnectEnabled(it) }
                     )
+                }
+            }
+
+            item {
+                Card(
+                    onClick = onTripLogClick,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(CivicBlueGlow.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Speed, contentDescription = null, tint = CivicBlueGlow)
+                        }
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "LOG Resumido da Viagem",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Mín, Máx e Médio: Velocidade, RPM, MAF, Throttle, Temp, Volts e km/L.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(Icons.Default.Calculate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
 

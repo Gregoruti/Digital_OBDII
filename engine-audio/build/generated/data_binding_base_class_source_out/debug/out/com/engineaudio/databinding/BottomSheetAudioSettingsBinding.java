@@ -38,6 +38,12 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
   public final LinearLayout btnEngineOptionGiulia;
 
   @NonNull
+  public final LinearLayout btnEngineOptionMC20;
+
+  @NonNull
+  public final LinearLayout btnEngineOptionMustang;
+
+  @NonNull
   public final LinearLayout btnEngineOptionRS4;
 
   @NonNull
@@ -45,6 +51,9 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
 
   @NonNull
   public final CardView cardEngineSelection;
+
+  @NonNull
+  public final LinearLayout layoutGearCrossfade;
 
   @NonNull
   public final SeekBar seekLimiterRpm;
@@ -62,7 +71,16 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
   public final MaterialSwitch switchEngineSound;
 
   @NonNull
+  public final MaterialSwitch switchGearCrossfade;
+
+  @NonNull
+  public final MaterialSwitch switchGearLock;
+
+  @NonNull
   public final MaterialSwitch switchPops;
+
+  @NonNull
+  public final MaterialSwitch switchSpeedPredictive;
 
   @NonNull
   public final MaterialSwitch switchTurbo;
@@ -77,6 +95,9 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
   public final TextView tvEngineSelectedName;
 
   @NonNull
+  public final TextView tvGearCrossfadeDesc;
+
+  @NonNull
   public final TextView tvLimiterRpmValue;
 
   @NonNull
@@ -89,10 +110,19 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
   public final TextView tvOptionTitleGiulia;
 
   @NonNull
+  public final TextView tvOptionTitleMC20;
+
+  @NonNull
+  public final TextView tvOptionTitleMustang;
+
+  @NonNull
   public final TextView tvOptionTitleRS4;
 
   @NonNull
   public final TextView tvShiftLightRpmValue;
+
+  @NonNull
+  public final TextView tvSpeedPredictiveDesc;
 
   @NonNull
   public final TextView tvTurboVolumeValue;
@@ -100,40 +130,55 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
   private BottomSheetAudioSettingsBinding(@NonNull NestedScrollView rootView,
       @NonNull ImageButton btnClose, @NonNull MaterialButton btnDone,
       @NonNull LinearLayout btnEngineOptionGTR, @NonNull LinearLayout btnEngineOptionGiulia,
+      @NonNull LinearLayout btnEngineOptionMC20, @NonNull LinearLayout btnEngineOptionMustang,
       @NonNull LinearLayout btnEngineOptionRS4, @NonNull MaterialButton btnSyncShiftLight,
-      @NonNull CardView cardEngineSelection, @NonNull SeekBar seekLimiterRpm,
-      @NonNull SeekBar seekMasterVolume, @NonNull SeekBar seekTurboVolume,
-      @NonNull MaterialSwitch switchAutoSync, @NonNull MaterialSwitch switchEngineSound,
-      @NonNull MaterialSwitch switchPops, @NonNull MaterialSwitch switchTurbo,
+      @NonNull CardView cardEngineSelection, @NonNull LinearLayout layoutGearCrossfade,
+      @NonNull SeekBar seekLimiterRpm, @NonNull SeekBar seekMasterVolume,
+      @NonNull SeekBar seekTurboVolume, @NonNull MaterialSwitch switchAutoSync,
+      @NonNull MaterialSwitch switchEngineSound, @NonNull MaterialSwitch switchGearCrossfade,
+      @NonNull MaterialSwitch switchGearLock, @NonNull MaterialSwitch switchPops,
+      @NonNull MaterialSwitch switchSpeedPredictive, @NonNull MaterialSwitch switchTurbo,
       @NonNull TextView tvEngineBadge, @NonNull TextView tvEngineSelectedDescription,
-      @NonNull TextView tvEngineSelectedName, @NonNull TextView tvLimiterRpmValue,
-      @NonNull TextView tvMasterVolumeValue, @NonNull TextView tvOptionTitleGTR,
-      @NonNull TextView tvOptionTitleGiulia, @NonNull TextView tvOptionTitleRS4,
-      @NonNull TextView tvShiftLightRpmValue, @NonNull TextView tvTurboVolumeValue) {
+      @NonNull TextView tvEngineSelectedName, @NonNull TextView tvGearCrossfadeDesc,
+      @NonNull TextView tvLimiterRpmValue, @NonNull TextView tvMasterVolumeValue,
+      @NonNull TextView tvOptionTitleGTR, @NonNull TextView tvOptionTitleGiulia,
+      @NonNull TextView tvOptionTitleMC20, @NonNull TextView tvOptionTitleMustang,
+      @NonNull TextView tvOptionTitleRS4, @NonNull TextView tvShiftLightRpmValue,
+      @NonNull TextView tvSpeedPredictiveDesc, @NonNull TextView tvTurboVolumeValue) {
     this.rootView = rootView;
     this.btnClose = btnClose;
     this.btnDone = btnDone;
     this.btnEngineOptionGTR = btnEngineOptionGTR;
     this.btnEngineOptionGiulia = btnEngineOptionGiulia;
+    this.btnEngineOptionMC20 = btnEngineOptionMC20;
+    this.btnEngineOptionMustang = btnEngineOptionMustang;
     this.btnEngineOptionRS4 = btnEngineOptionRS4;
     this.btnSyncShiftLight = btnSyncShiftLight;
     this.cardEngineSelection = cardEngineSelection;
+    this.layoutGearCrossfade = layoutGearCrossfade;
     this.seekLimiterRpm = seekLimiterRpm;
     this.seekMasterVolume = seekMasterVolume;
     this.seekTurboVolume = seekTurboVolume;
     this.switchAutoSync = switchAutoSync;
     this.switchEngineSound = switchEngineSound;
+    this.switchGearCrossfade = switchGearCrossfade;
+    this.switchGearLock = switchGearLock;
     this.switchPops = switchPops;
+    this.switchSpeedPredictive = switchSpeedPredictive;
     this.switchTurbo = switchTurbo;
     this.tvEngineBadge = tvEngineBadge;
     this.tvEngineSelectedDescription = tvEngineSelectedDescription;
     this.tvEngineSelectedName = tvEngineSelectedName;
+    this.tvGearCrossfadeDesc = tvGearCrossfadeDesc;
     this.tvLimiterRpmValue = tvLimiterRpmValue;
     this.tvMasterVolumeValue = tvMasterVolumeValue;
     this.tvOptionTitleGTR = tvOptionTitleGTR;
     this.tvOptionTitleGiulia = tvOptionTitleGiulia;
+    this.tvOptionTitleMC20 = tvOptionTitleMC20;
+    this.tvOptionTitleMustang = tvOptionTitleMustang;
     this.tvOptionTitleRS4 = tvOptionTitleRS4;
     this.tvShiftLightRpmValue = tvShiftLightRpmValue;
+    this.tvSpeedPredictiveDesc = tvSpeedPredictiveDesc;
     this.tvTurboVolumeValue = tvTurboVolumeValue;
   }
 
@@ -188,6 +233,18 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnEngineOptionMC20;
+      LinearLayout btnEngineOptionMC20 = ViewBindings.findChildViewById(rootView, id);
+      if (btnEngineOptionMC20 == null) {
+        break missingId;
+      }
+
+      id = R.id.btnEngineOptionMustang;
+      LinearLayout btnEngineOptionMustang = ViewBindings.findChildViewById(rootView, id);
+      if (btnEngineOptionMustang == null) {
+        break missingId;
+      }
+
       id = R.id.btnEngineOptionRS4;
       LinearLayout btnEngineOptionRS4 = ViewBindings.findChildViewById(rootView, id);
       if (btnEngineOptionRS4 == null) {
@@ -203,6 +260,12 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
       id = R.id.cardEngineSelection;
       CardView cardEngineSelection = ViewBindings.findChildViewById(rootView, id);
       if (cardEngineSelection == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutGearCrossfade;
+      LinearLayout layoutGearCrossfade = ViewBindings.findChildViewById(rootView, id);
+      if (layoutGearCrossfade == null) {
         break missingId;
       }
 
@@ -236,9 +299,27 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.switchGearCrossfade;
+      MaterialSwitch switchGearCrossfade = ViewBindings.findChildViewById(rootView, id);
+      if (switchGearCrossfade == null) {
+        break missingId;
+      }
+
+      id = R.id.switchGearLock;
+      MaterialSwitch switchGearLock = ViewBindings.findChildViewById(rootView, id);
+      if (switchGearLock == null) {
+        break missingId;
+      }
+
       id = R.id.switchPops;
       MaterialSwitch switchPops = ViewBindings.findChildViewById(rootView, id);
       if (switchPops == null) {
+        break missingId;
+      }
+
+      id = R.id.switchSpeedPredictive;
+      MaterialSwitch switchSpeedPredictive = ViewBindings.findChildViewById(rootView, id);
+      if (switchSpeedPredictive == null) {
         break missingId;
       }
 
@@ -266,6 +347,12 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvGearCrossfadeDesc;
+      TextView tvGearCrossfadeDesc = ViewBindings.findChildViewById(rootView, id);
+      if (tvGearCrossfadeDesc == null) {
+        break missingId;
+      }
+
       id = R.id.tvLimiterRpmValue;
       TextView tvLimiterRpmValue = ViewBindings.findChildViewById(rootView, id);
       if (tvLimiterRpmValue == null) {
@@ -290,6 +377,18 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvOptionTitleMC20;
+      TextView tvOptionTitleMC20 = ViewBindings.findChildViewById(rootView, id);
+      if (tvOptionTitleMC20 == null) {
+        break missingId;
+      }
+
+      id = R.id.tvOptionTitleMustang;
+      TextView tvOptionTitleMustang = ViewBindings.findChildViewById(rootView, id);
+      if (tvOptionTitleMustang == null) {
+        break missingId;
+      }
+
       id = R.id.tvOptionTitleRS4;
       TextView tvOptionTitleRS4 = ViewBindings.findChildViewById(rootView, id);
       if (tvOptionTitleRS4 == null) {
@@ -302,6 +401,12 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvSpeedPredictiveDesc;
+      TextView tvSpeedPredictiveDesc = ViewBindings.findChildViewById(rootView, id);
+      if (tvSpeedPredictiveDesc == null) {
+        break missingId;
+      }
+
       id = R.id.tvTurboVolumeValue;
       TextView tvTurboVolumeValue = ViewBindings.findChildViewById(rootView, id);
       if (tvTurboVolumeValue == null) {
@@ -309,11 +414,14 @@ public final class BottomSheetAudioSettingsBinding implements ViewBinding {
       }
 
       return new BottomSheetAudioSettingsBinding((NestedScrollView) rootView, btnClose, btnDone,
-          btnEngineOptionGTR, btnEngineOptionGiulia, btnEngineOptionRS4, btnSyncShiftLight,
-          cardEngineSelection, seekLimiterRpm, seekMasterVolume, seekTurboVolume, switchAutoSync,
-          switchEngineSound, switchPops, switchTurbo, tvEngineBadge, tvEngineSelectedDescription,
-          tvEngineSelectedName, tvLimiterRpmValue, tvMasterVolumeValue, tvOptionTitleGTR,
-          tvOptionTitleGiulia, tvOptionTitleRS4, tvShiftLightRpmValue, tvTurboVolumeValue);
+          btnEngineOptionGTR, btnEngineOptionGiulia, btnEngineOptionMC20, btnEngineOptionMustang,
+          btnEngineOptionRS4, btnSyncShiftLight, cardEngineSelection, layoutGearCrossfade,
+          seekLimiterRpm, seekMasterVolume, seekTurboVolume, switchAutoSync, switchEngineSound,
+          switchGearCrossfade, switchGearLock, switchPops, switchSpeedPredictive, switchTurbo,
+          tvEngineBadge, tvEngineSelectedDescription, tvEngineSelectedName, tvGearCrossfadeDesc,
+          tvLimiterRpmValue, tvMasterVolumeValue, tvOptionTitleGTR, tvOptionTitleGiulia,
+          tvOptionTitleMC20, tvOptionTitleMustang, tvOptionTitleRS4, tvShiftLightRpmValue,
+          tvSpeedPredictiveDesc, tvTurboVolumeValue);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

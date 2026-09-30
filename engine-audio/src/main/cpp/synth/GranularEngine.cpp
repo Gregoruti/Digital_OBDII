@@ -28,8 +28,7 @@ void GranularEngine::setGear(int gear) {
 }
 
 void GranularEngine::setSpeed(float speedKmh) {
-    // Pode ser usado futuramente para ruído de vento / rolagem
-    (void)speedKmh;
+    m_targetSpeed.store(std::max(0.0f, speedKmh), std::memory_order_relaxed);
 }
 
 void GranularEngine::setLimiterRPM(float limiterRpm) {
@@ -38,6 +37,65 @@ void GranularEngine::setLimiterRPM(float limiterRpm) {
 
 void GranularEngine::setShiftLightActive(bool active) {
     m_isShiftLightActive.store(active, std::memory_order_relaxed);
+}
+
+void GranularEngine::setShiftLightSyncEnabled(bool enabled) {
+    m_isShiftLightSyncEnabled.store(enabled, std::memory_order_relaxed);
+    if (!enabled) {
+        m_shiftCutCooldownFrames = 0;
+        m_limiterCutFramesRemaining = 0;
+    }
+}
+
+void GranularEngine::setPopsEnabled(bool enabled) {
+    m_isPopsEnabled.store(enabled, std::memory_order_relaxed);
+    if (!enabled) {
+        for (auto& pop : m_pops) {
+            pop.stop();
+        }
+        m_overrunPopsRemaining = 0;
+    }
+}
+
+void GranularEngine::setTurboEnabled(bool enabled) {
+    m_isTurboEnabled.store(enabled, std::memory_order_relaxed);
+    if (!enabled) {
+        m_bov.stop();
+    }
+}
+
+void GranularEngine::setTurboVolume(float volume) {
+    m_turboVolume.store(std::clamp(volume, 0.0f, 1.0f), std::memory_order_relaxed);
+}
+
+void GranularEngine::setPureSoundMode(bool enabled) {
+    m_isPureSoundMode.store(enabled, std::memory_order_relaxed);
+    if (enabled) {
+        for (auto& pop : m_pops) {
+            pop.stop();
+        }
+        m_bov.stop();
+        m_overrunPopsRemaining = 0;
+        m_limiterCutFramesRemaining = 0;
+        m_limiterCooldownFrames = 0;
+        m_shiftCutCooldownFrames = 0;
+        m_combustionGain = 1.0f;
+    }
+}
+
+void GranularEngine::setGearLockEnabled(bool enabled) {
+    m_isGearLockEnabled.store(enabled, std::memory_order_relaxed);
+    LOGI("GranularEngine: Gear Lock Mode set to %d", enabled ? 1 : 0);
+}
+
+void GranularEngine::setGearCrossfadeEnabled(bool enabled) {
+    m_isGearCrossfadeEnabled.store(enabled, std::memory_order_relaxed);
+    LOGI("GranularEngine: Gear Crossfade set to %d", enabled ? 1 : 0);
+}
+
+void GranularEngine::setSpeedPredictiveEnabled(bool enabled) {
+    m_isSpeedPredictiveEnabled.store(enabled, std::memory_order_relaxed);
+    LOGI("GranularEngine: Speed Predictive Mode set to %d", enabled ? 1 : 0);
 }
 
 void GranularEngine::triggerLimiterCut() {
@@ -91,9 +149,11 @@ void GranularEngine::clearSamples() {
 }
 
 void GranularEngine::triggerPop(float volume) {
+    // Se o Modo Puro estiver ativado ou o usuário desativou Pops/Bangs, NENHUM som toca
+    if (m_isPureSoundMode.load(std::memory_order_relaxed)) return;
+    if (!m_isPopsEnabled.load(std::memory_order_relaxed)) return;
     if (m_pops.empty()) return;
 
-    // Escolhe um pop diferente do anterior para evitar sensação de repetição
     size_t index = 0;
     if (m_pops.size() > 1) {
         do {
@@ -103,7 +163,6 @@ void GranularEngine::triggerPop(float volume) {
     }
     m_lastPopIdx = static_cast<int>(index);
 
-    // Variação orgânica de pitch (0.92x a 1.10x) e pan estéreo (-0.25 a +0.25)
     std::uniform_real_distribution<float> pitchDist(0.92f, 1.10f);
     std::uniform_real_distribution<float> panDist(-0.25f, 0.25f);
     float pitch = pitchDist(m_rng);
@@ -113,10 +172,16 @@ void GranularEngine::triggerPop(float volume) {
 }
 
 void GranularEngine::triggerBOV(float volume) {
-    if (m_bov.isLoaded()) {
-        std::uniform_real_distribution<float> pitchDist(0.95f, 1.05f);
-        m_bov.trigger(volume, pitchDist(m_rng), 0.0f);
-    }
+    // Se o Modo Puro estiver ativado ou o usuário desativou Turbo/Espirros, NENHUM som toca
+    if (m_isPureSoundMode.load(std::memory_order_relaxed)) return;
+    if (!m_isTurboEnabled.load(std::memory_order_relaxed)) return;
+    if (!m_bov.isLoaded()) return;
+
+    float gain = volume * m_turboVolume.load(std::memory_order_relaxed);
+    if (gain <= 0.001f) return;
+
+    std::uniform_real_distribution<float> pitchDist(0.95f, 1.05f);
+    m_bov.trigger(gain, pitchDist(m_rng), 0.0f);
 }
 
 void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* outWeights) {
@@ -124,27 +189,60 @@ void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* out
         outWeights[i] = 0.0f;
     }
 
+    float loadScale = 0.88f + 0.12f * throttle;
+
+    // ── MODO 2: FAIXA SELECIONADA POR MARCHA / PREDIÇÃO POR VELOCIDADE ──
+    if (m_isGearLockEnabled.load(std::memory_order_relaxed) || m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed)) {
+        if (m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed)) {
+            // ── VARIANTE PREDITIVA POR VELOCIDADE (CIVIC LXL 1.8 MANUAL) ──
+            // Modula o crossfade antecipando e harmonizando com a velocidade do veículo (km/h)
+            calculateSpeedPredictiveWeights(rpm, throttle, m_currentSpeed, m_currentGear, outWeights);
+        } else {
+            // ── OPÇÃO A PURA: TRAVADO ESTRITAMENTE NA MARCHA DO DASHBOARD ──
+            int targetTrack = TRACK_IDLE;
+            if (m_currentGear <= 1) {
+                targetTrack = TRACK_IDLE;   // Neutro (0) ou 1ª Marcha -> Preso no Idle (idle.wav)
+            } else if (m_currentGear == 2) {
+                targetTrack = TRACK_LOW;    // 2ª Marcha -> Preso no Low (low_on.wav)
+            } else if (m_currentGear == 3) {
+                targetTrack = TRACK_MID;    // 3ª Marcha -> Preso no Mid (mid_on.wav)
+            } else {
+                targetTrack = TRACK_HIGH;   // 4ª, 5ª ou superior -> Preso no High (high_on.wav)
+            }
+            outWeights[targetTrack] = 1.0f * loadScale;
+        }
+
+        // Desaceleração / freio-motor opcional se não for Modo Puro
+        if (!m_isPureSoundMode.load(std::memory_order_relaxed) && m_isPopsEnabled.load(std::memory_order_relaxed)) {
+            if (throttle < 0.10f && rpm > 1500.0f && m_tracks[TRACK_DECEL].isLoaded()) {
+                float decelMix = (1.0f - (throttle / 0.10f)) * std::clamp((rpm - 1400.0f) / 1200.0f, 0.0f, 1.0f);
+                outWeights[TRACK_DECEL] = decelMix * 0.60f;
+                for (int i = 0; i < TRACK_DECEL; ++i) {
+                    outWeights[i] *= (1.0f - decelMix * 0.40f);
+                }
+            }
+        }
+        return;
+    }
+
     float rIdle = m_tracks[TRACK_IDLE].getBaseRPM();
     float rLow  = m_tracks[TRACK_LOW].getBaseRPM();
     float rMid  = m_tracks[TRACK_MID].getBaseRPM();
     float rHigh = m_tracks[TRACK_HIGH].getBaseRPM();
 
-    // Faixas de transição estreitas (narrow crossfade) para evitar comb-filtering / flanging
-    // Transição 1: Idle -> Low
+    // Faixas de transição estritas (tight crossfade) para evitar comb-filtering / flanging / efeito phaser
     float mid1 = (rIdle + rLow) * 0.5f;
-    float w1   = std::min(450.0f, (rLow - rIdle) * 0.45f);
+    float w1   = std::min(180.0f, (rLow - rIdle) * 0.25f);
     float t1_low  = mid1 - (w1 * 0.5f);
     float t1_high = mid1 + (w1 * 0.5f);
 
-    // Transição 2: Low -> Mid
     float mid2 = (rLow + rMid) * 0.5f;
-    float w2   = std::min(550.0f, (rMid - rLow) * 0.45f);
+    float w2   = std::min(220.0f, (rMid - rLow) * 0.25f);
     float t2_low  = mid2 - (w2 * 0.5f);
     float t2_high = mid2 + (w2 * 0.5f);
 
-    // Transição 3: Mid -> High
     float mid3 = (rMid + rHigh) * 0.5f;
-    float w3   = std::min(600.0f, (rHigh - rMid) * 0.45f);
+    float w3   = std::min(260.0f, (rHigh - rMid) * 0.25f);
     float t3_low  = mid3 - (w3 * 0.5f);
     float t3_high = mid3 + (w3 * 0.5f);
 
@@ -170,20 +268,95 @@ void GranularEngine::calculateTrackWeights(float rpm, float throttle, float* out
         outWeights[TRACK_HIGH] = 1.0f;
     }
 
-    // Modulação de carga pelo acelerador (Throttle)
-    // Carga alta aumenta a presença e corpo das tracks de aceleração
-    float loadScale = 0.45f + 0.55f * throttle;
+    // Modulação homogênea de carga pelo acelerador: elimina qualquer oscilação ou degrau de volume entre lenta e giro
+    outWeights[TRACK_IDLE] *= loadScale;
     outWeights[TRACK_LOW]  *= loadScale;
     outWeights[TRACK_MID]  *= loadScale;
     outWeights[TRACK_HIGH] *= loadScale;
 
-    // Desaceleração / Freio motor (sem acelerador em giro alto)
-    if (throttle < 0.10f && rpm > 1500.0f && m_tracks[TRACK_DECEL].isLoaded()) {
-        float decelMix = (1.0f - (throttle / 0.10f)) * std::clamp((rpm - 1400.0f) / 1200.0f, 0.0f, 1.0f);
-        outWeights[TRACK_DECEL] = decelMix * 0.90f;
-        outWeights[TRACK_LOW]   *= (1.0f - decelMix * 0.75f);
-        outWeights[TRACK_MID]   *= (1.0f - decelMix * 0.75f);
-        outWeights[TRACK_HIGH]  *= (1.0f - decelMix * 0.75f);
+    // Desaceleração: se Modo Puro estiver ATIVADO ou Pops/Bangs DESATIVADO, NÃO mixa TRACK_DECEL
+    if (!m_isPureSoundMode.load(std::memory_order_relaxed) && m_isPopsEnabled.load(std::memory_order_relaxed)) {
+        if (throttle < 0.10f && rpm > 1500.0f && m_tracks[TRACK_DECEL].isLoaded()) {
+            float decelMix = (1.0f - (throttle / 0.10f)) * std::clamp((rpm - 1400.0f) / 1200.0f, 0.0f, 1.0f);
+            outWeights[TRACK_DECEL] = decelMix * 0.60f;
+            outWeights[TRACK_LOW]   *= (1.0f - decelMix * 0.40f);
+            outWeights[TRACK_MID]   *= (1.0f - decelMix * 0.40f);
+            outWeights[TRACK_HIGH]  *= (1.0f - decelMix * 0.40f);
+        }
+    }
+}
+
+void GranularEngine::calculateSpeedPredictiveWeights(float rpm, float throttle, float speedKmh, int gear, float* outWeights) {
+    (void)rpm;
+    for (int i = 0; i < TRACK_COUNT; ++i) {
+        outWeights[i] = 0.0f;
+    }
+
+    float loadScale = 0.88f + 0.12f * throttle;
+
+    // Se o carro estiver parado ou neutro com velocidade mínima: 100% Lenta (IDLE)
+    if (speedKmh <= 2.5f || (gear == 0 && speedKmh < 6.0f)) {
+        outWeights[TRACK_IDLE] = 1.0f * loadScale;
+        return;
+    }
+
+    // Faixas de velocidade calibradas para o Honda Civic 1.8 Manual (Ratios: 115, 70, 45, 35, 28):
+    // 1ª: 0 - 24 km/h (zona de antecipação 1ª -> 2ª: 14 a 24 km/h)
+    // 2ª: 20 - 44 km/h (zona de antecipação 2ª -> 3ª: 32 a 44 km/h)
+    // 3ª: 40 - 68 km/h (zona de antecipação 3ª -> 4ª: 54 a 68 km/h)
+    // 4ª/5ª: > 68 km/h (High pleno)
+
+    const float s1_low  = 14.0f;
+    const float s1_high = 24.0f;
+    const float s2_low  = 32.0f;
+    const float s2_high = 44.0f;
+    const float s3_low  = 54.0f;
+    const float s3_high = 68.0f;
+
+    if (speedKmh <= s1_low) {
+        outWeights[TRACK_IDLE] = 1.0f;
+    } else if (speedKmh < s1_high) {
+        float f = (speedKmh - s1_low) / (s1_high - s1_low);
+        outWeights[TRACK_IDLE] = std::cos(f * 1.5707963f);
+        outWeights[TRACK_LOW]  = std::sin(f * 1.5707963f);
+    } else if (speedKmh <= s2_low) {
+        outWeights[TRACK_LOW] = 1.0f;
+    } else if (speedKmh < s2_high) {
+        float f = (speedKmh - s2_low) / (s2_high - s2_low);
+        outWeights[TRACK_LOW] = std::cos(f * 1.5707963f);
+        outWeights[TRACK_MID] = std::sin(f * 1.5707963f);
+    } else if (speedKmh <= s3_low) {
+        outWeights[TRACK_MID] = 1.0f;
+    } else if (speedKmh < s3_high) {
+        float f = (speedKmh - s3_low) / (s3_high - s3_low);
+        outWeights[TRACK_MID]  = std::cos(f * 1.5707963f);
+        outWeights[TRACK_HIGH] = std::sin(f * 1.5707963f);
+    } else {
+        outWeights[TRACK_HIGH] = 1.0f;
+    }
+
+    // Se o painel já confirmou marcha alta ou baixa em velocidade correspondente,
+    // harmoniza com a indicação visual do painel
+    if (gear >= 4 && speedKmh > 45.0f) {
+        outWeights[TRACK_HIGH] = std::max(outWeights[TRACK_HIGH], 0.85f);
+        outWeights[TRACK_MID]  = std::min(outWeights[TRACK_MID],  0.15f);
+        outWeights[TRACK_LOW]  = 0.0f;
+        outWeights[TRACK_IDLE] = 0.0f;
+    } else if (gear == 1 && speedKmh < 18.0f) {
+        outWeights[TRACK_IDLE] = std::max(outWeights[TRACK_IDLE], 0.85f);
+        outWeights[TRACK_LOW]  = std::min(outWeights[TRACK_LOW],  0.15f);
+    }
+
+    // Normalização equal-power para manter energia RMS constante sem saltos
+    float sumSq = 0.0f;
+    for (int i = 0; i < TRACK_DECEL; ++i) {
+        sumSq += outWeights[i] * outWeights[i];
+    }
+    if (sumSq > 0.0001f) {
+        float norm = 1.0f / std::sqrt(sumSq);
+        for (int i = 0; i < TRACK_DECEL; ++i) {
+            outWeights[i] *= norm * loadScale;
+        }
     }
 }
 
@@ -196,26 +369,33 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     // Suavização contínua de parâmetros
     float targetRpm = m_targetRpm.load(std::memory_order_relaxed);
     float targetThrottle = m_targetThrottle.load(std::memory_order_relaxed);
+    float targetSpeed = m_targetSpeed.load(std::memory_order_relaxed);
     float limiterRpm = m_limiterRpm.load(std::memory_order_relaxed);
 
     m_currentRpm += (targetRpm - m_currentRpm) * 0.12f;
     m_currentThrottle += (targetThrottle - m_currentThrottle) * 0.15f;
+    m_currentSpeed += (targetSpeed - m_currentSpeed) * 0.15f;
 
-    // ─── 1. Shift Cut / Shift Light (Detecção de borda da luz de shift ou troca de marcha) ───
-    bool isShiftLight = m_isShiftLightActive.load(std::memory_order_relaxed);
+    bool pureMode = m_isPureSoundMode.load(std::memory_order_relaxed);
+    bool syncEnabled = !pureMode && m_isShiftLightSyncEnabled.load(std::memory_order_relaxed);
+    bool popsEnabled = !pureMode && m_isPopsEnabled.load(std::memory_order_relaxed);
+    bool turboEnabled = !pureMode && m_isTurboEnabled.load(std::memory_order_relaxed);
+
+    // ─── 1. Shift Cut / Shift Light (Detecção estrita vinculada à opção do usuário) ───
+    bool isShiftLight = m_isShiftLightActive.load(std::memory_order_relaxed) && syncEnabled;
     bool manualTrigger = m_manualLimiterTrigger.exchange(false, std::memory_order_relaxed);
     bool shiftLightRisingEdge = (!m_wasShiftLightActive && isShiftLight);
     m_wasShiftLightActive = isShiftLight;
 
-    bool gearShifted = (m_currentGear != m_prevGear);
-
-    if ((shiftLightRisingEdge || gearShifted || manualTrigger) && m_currentRpm > 2400.0f) {
+    // IMPORTANTE: NÃO corta áudio em simples troca de marcha se a sincronização com Shift Light estiver desativada!
+    if (syncEnabled && (shiftLightRisingEdge || manualTrigger) && m_currentRpm > 2400.0f) {
         if (m_shiftCutCooldownFrames <= 0) {
-            // Shift Cut de competição: corte limpo de 70ms + 1 único estampido estéreo
             m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * 0.070f);
             m_shiftCutCooldownFrames = static_cast<int32_t>(44100 * 0.350f);
-            triggerPop(1.0f);
-            if (m_currentRpm > 3200.0f) {
+            if (popsEnabled) {
+                triggerPop(1.0f);
+            }
+            if (turboEnabled && m_currentRpm > 3200.0f) {
                 triggerBOV(0.85f);
             }
         }
@@ -228,10 +408,13 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     bool isAtLimiter = (m_currentRpm >= limiterRpm);
     if (isAtLimiter) {
         if (m_limiterCutFramesRemaining <= 0 && m_limiterCooldownFrames <= 0) {
-            // Cadência realista de ~4.4 batidas por segundo (~225ms por ciclo completo)
-            m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * 0.065f);
-            m_limiterCooldownFrames = static_cast<int32_t>(44100 * 0.160f);
-            triggerPop(1.0f);
+            if (popsEnabled || syncEnabled) {
+                m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * 0.065f);
+                m_limiterCooldownFrames = static_cast<int32_t>(44100 * 0.160f);
+                if (popsEnabled) {
+                    triggerPop(1.0f);
+                }
+            }
         }
     }
 
@@ -245,41 +428,41 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
         m_limiterCooldownFrames -= numFrames;
     }
 
-    // Envelope de ducking / supressão do áudio contínuo do motor
-    // Elimina a sobreposição do som contínuo de RPM com os cortes do limitador
+    // Ganho de combustão contínua
     float targetCombustionGain = 1.0f;
     if (isLimiterCutActive || (m_shiftCutCooldownFrames > static_cast<int32_t>(44100 * 0.280f))) {
-        // Durante o corte estrito de ignição: combustão totalmente muda
         targetCombustionGain = 0.0f;
-    } else if (isLimiterCycleActive || isAtLimiter) {
-        // No limitador, a rotação contínua NÃO toca a 100%. Fica atenuada em ~20%
-        // como um rugido abafado de fundo, permitindo que o estouro do corte seja dominante
-        targetCombustionGain = 0.20f;
+    } else if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
+        targetCombustionGain = 0.35f;
     }
 
-    // Suavização do ganho de combustão (anti-click)
     m_combustionGain += (targetCombustionGain - m_combustionGain) * 0.30f;
 
     // ─── 3. Overrun Pops & Burbles (Tirada de pé rápida em alto giro) ───
     bool throttleDrop = (m_prevThrottle > 0.35f) && (m_currentThrottle < 0.10f) && (m_currentRpm > 2800.0f);
     if (throttleDrop) {
-        triggerBOV(0.95f);
-
-        // Agenda uma rajada orgânica de 2 a 4 estalos com decay de volume progressivo
-        if (m_currentRpm > 5200.0f) {
-            m_overrunPopsRemaining = 3 + (m_rng() % 2); // 3 a 4 pops
-        } else if (m_currentRpm > 3600.0f) {
-            m_overrunPopsRemaining = 2 + (m_rng() % 2); // 2 a 3 pops
-        } else {
-            m_overrunPopsRemaining = 1 + (m_rng() % 2); // 1 a 2 pops
+        if (turboEnabled) {
+            triggerBOV(0.95f);
         }
 
-        std::uniform_real_distribution<float> delayDist(0.09f, 0.14f);
-        m_popCooldownFrames = static_cast<int32_t>(44100 * delayDist(m_rng));
+        if (popsEnabled) {
+            if (m_currentRpm > 5200.0f) {
+                m_overrunPopsRemaining = 3 + (m_rng() % 2);
+            } else if (m_currentRpm > 3600.0f) {
+                m_overrunPopsRemaining = 2 + (m_rng() % 2);
+            } else {
+                m_overrunPopsRemaining = 1 + (m_rng() % 2);
+            }
+
+            std::uniform_real_distribution<float> delayDist(0.09f, 0.14f);
+            m_popCooldownFrames = static_cast<int32_t>(44100 * delayDist(m_rng));
+        } else {
+            m_overrunPopsRemaining = 0;
+        }
     }
 
-    // Processa os estalos agendados da rajada de desaceleração
-    if (m_overrunPopsRemaining > 0 && m_currentThrottle < 0.12f && m_currentRpm > 2200.0f) {
+    // Processa os estalos agendados da rajada de desaceleração APENAS se pops ativados
+    if (popsEnabled && m_overrunPopsRemaining > 0 && m_currentThrottle < 0.12f && m_currentRpm > 2200.0f) {
         if (m_popCooldownFrames <= 0) {
             float vol = 0.35f + 0.20f * static_cast<float>(m_overrunPopsRemaining);
             triggerPop(std::min(1.0f, vol));
@@ -290,7 +473,7 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
                 m_popCooldownFrames = static_cast<int32_t>(44100 * nextDelayDist(m_rng));
             }
         }
-    } else if (m_currentThrottle >= 0.12f || m_currentRpm <= 2200.0f) {
+    } else if (!popsEnabled || m_currentThrottle >= 0.12f || m_currentRpm <= 2200.0f) {
         m_overrunPopsRemaining = 0;
     }
 
@@ -304,36 +487,50 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     // Zera o buffer estéreo
     std::fill(buffer, buffer + (numFrames * 2), 0.0f);
 
-    // Durante o corte/bounce do limitador, simula a oscilação / tropeço físico do virabrequim (RPM drop)
     float renderRpm = m_currentRpm;
-    if (isLimiterCycleActive || isAtLimiter) {
+    if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
         renderRpm = std::max(800.0f, m_currentRpm - 240.0f);
     }
 
-    // Renderiza faixas contínuas com ganho atenuado/ducked
+    // Renderiza faixas contínuas com ganho de combustão
     if (m_combustionGain > 0.01f) {
         float weights[TRACK_COUNT];
         calculateTrackWeights(renderRpm, m_currentThrottle, weights);
 
+        bool smoothGain = true;
+        if (m_isGearLockEnabled.load(std::memory_order_relaxed) &&
+            !m_isGearCrossfadeEnabled.load(std::memory_order_relaxed)) {
+            smoothGain = false;
+        }
+
         for (int i = 0; i < TRACK_COUNT; ++i) {
             float trackGain = weights[i] * m_combustionGain;
-            m_tracks[i].renderMix(buffer, numFrames, renderRpm, trackGain);
+            m_tracks[i].renderMix(buffer, numFrames, renderRpm, trackGain, smoothGain);
         }
     }
 
-    // Renderiza disparos one-shot (Pops / Crackles)
-    for (auto& pop : m_pops) {
-        pop.renderMix(buffer, numFrames);
+    // Renderiza disparos one-shot APENAS se pops ativados
+    if (popsEnabled) {
+        for (auto& pop : m_pops) {
+            pop.renderMix(buffer, numFrames);
+        }
     }
 
-    // Renderiza Blow-Off Valve
-    m_bov.renderMix(buffer, numFrames);
+    // Renderiza Blow-Off Valve APENAS se turbo ativado
+    if (turboEnabled) {
+        m_bov.renderMix(buffer, numFrames);
+    }
 
-    // Saturação analógica suave (elimina qualquer clipping digital e encorpa o grave)
+    // Limiter transparente sem distorção harmônica não-linear (preserva 100% da pureza acústica)
     const int32_t totalSamples = numFrames * 2;
     for (int32_t s = 0; s < totalSamples; ++s) {
-        float x = buffer[s] * 0.90f;
-        buffer[s] = std::tanh(x);
+        float x = buffer[s];
+        if (x > 0.98f) {
+            x = 0.98f + std::tanh(x - 0.98f) * 0.02f;
+        } else if (x < -0.98f) {
+            x = -0.98f + std::tanh(x + 0.98f) * 0.02f;
+        }
+        buffer[s] = x;
     }
 }
 

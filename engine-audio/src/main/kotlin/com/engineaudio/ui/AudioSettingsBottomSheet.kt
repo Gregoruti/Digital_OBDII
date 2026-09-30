@@ -51,6 +51,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         setupMasterControls()
         setupLimiterAndShiftLightControls()
         setupTurboAndExhaustControls()
+        setupGearLockControls()
         setupActionButtons()
     }
 
@@ -68,6 +69,8 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         binding.btnEngineOptionGTR.setOnClickListener { selectEngine(com.engineaudio.EngineType.NISSAN_GTR_GT3) }
         binding.btnEngineOptionRS4.setOnClickListener { selectEngine(com.engineaudio.EngineType.AUDI_RS4_V8) }
         binding.btnEngineOptionGiulia.setOnClickListener { selectEngine(com.engineaudio.EngineType.ALFA_GIULIA_QV) }
+        binding.btnEngineOptionMustang.setOnClickListener { selectEngine(com.engineaudio.EngineType.FORD_MUSTANG_V8) }
+        binding.btnEngineOptionMC20.setOnClickListener { selectEngine(com.engineaudio.EngineType.MASERATI_MC20_GT2) }
     }
 
     private fun selectEngine(type: com.engineaudio.EngineType) {
@@ -89,7 +92,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         val accentColor = type.accentColorHex.toInt()
         val defaultText = 0xFFFFFFFF.toInt()
 
-        // Highlighting dos 3 botões oficiais
+        // Highlighting dos 5 botões oficiais
         binding.btnEngineOptionGTR.setBackgroundColor(if (type == com.engineaudio.EngineType.NISSAN_GTR_GT3) selectedBg else unselectedBg)
         binding.tvOptionTitleGTR.setTextColor(if (type == com.engineaudio.EngineType.NISSAN_GTR_GT3) accentColor else defaultText)
 
@@ -98,6 +101,12 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
 
         binding.btnEngineOptionGiulia.setBackgroundColor(if (type == com.engineaudio.EngineType.ALFA_GIULIA_QV) selectedBg else unselectedBg)
         binding.tvOptionTitleGiulia.setTextColor(if (type == com.engineaudio.EngineType.ALFA_GIULIA_QV) accentColor else defaultText)
+
+        binding.btnEngineOptionMustang.setBackgroundColor(if (type == com.engineaudio.EngineType.FORD_MUSTANG_V8) selectedBg else unselectedBg)
+        binding.tvOptionTitleMustang.setTextColor(if (type == com.engineaudio.EngineType.FORD_MUSTANG_V8) accentColor else defaultText)
+
+        binding.btnEngineOptionMC20.setBackgroundColor(if (type == com.engineaudio.EngineType.MASERATI_MC20_GT2) selectedBg else unselectedBg)
+        binding.tvOptionTitleMC20.setTextColor(if (type == com.engineaudio.EngineType.MASERATI_MC20_GT2) accentColor else defaultText)
 
         // Header and description
         binding.tvEngineBadge.text = type.badge
@@ -197,6 +206,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         binding.switchTurbo.isChecked = preferences.isTurboEnabled
         binding.switchTurbo.setOnCheckedChangeListener { _, isChecked ->
             preferences.isTurboEnabled = isChecked
+            engineAudio?.setTurboEnabled(isChecked)
         }
 
         val initialTurbo = (preferences.turboVolume * 100).toInt()
@@ -207,7 +217,9 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
             override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
                 binding.tvTurboVolumeValue.text = "$progress%"
                 if (fromUser) {
-                    preferences.turboVolume = progress / 100f
+                    val vol = progress / 100f
+                    preferences.turboVolume = vol
+                    engineAudio?.setTurboVolume(vol)
                 }
             }
             override fun onStartTrackingTouch(sb: SeekBar) {}
@@ -217,6 +229,54 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         binding.switchPops.isChecked = preferences.isPopsEnabled
         binding.switchPops.setOnCheckedChangeListener { _, isChecked ->
             preferences.isPopsEnabled = isChecked
+            engineAudio?.setPopsEnabled(isChecked)
+        }
+    }
+
+    private fun setupGearLockControls() {
+        binding.switchGearLock.isChecked = preferences.isGearLockEnabled
+        binding.layoutGearCrossfade.visibility = if (preferences.isGearLockEnabled) View.VISIBLE else View.GONE
+        binding.switchGearCrossfade.isChecked = preferences.isGearCrossfadeEnabled
+        binding.switchSpeedPredictive.isChecked = preferences.isSpeedPredictiveEnabled
+        updateGearCrossfadeDesc(preferences.isGearCrossfadeEnabled)
+        updateSpeedPredictiveDesc(preferences.isSpeedPredictiveEnabled)
+
+        binding.switchGearLock.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isGearLockEnabled = isChecked
+            engineAudio?.setGearLockEnabled(isChecked)
+            binding.layoutGearCrossfade.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        binding.switchGearCrossfade.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isGearCrossfadeEnabled = isChecked
+            engineAudio?.setGearCrossfadeEnabled(isChecked)
+            updateGearCrossfadeDesc(isChecked)
+        }
+
+        binding.switchSpeedPredictive.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isSpeedPredictiveEnabled = isChecked
+            engineAudio?.setSpeedPredictiveEnabled(isChecked)
+            updateSpeedPredictiveDesc(isChecked)
+        }
+    }
+
+    private fun updateGearCrossfadeDesc(enabled: Boolean) {
+        if (enabled) {
+            binding.tvGearCrossfadeDesc.text = "Transição suave de ganho ao trocar de marcha"
+            binding.tvGearCrossfadeDesc.setTextColor(0xFF00E5FF.toInt())
+        } else {
+            binding.tvGearCrossfadeDesc.text = "Corte seco e imediato (sem sobreposição)"
+            binding.tvGearCrossfadeDesc.setTextColor(0xFFFF5252.toInt())
+        }
+    }
+
+    private fun updateSpeedPredictiveDesc(enabled: Boolean) {
+        if (enabled) {
+            binding.tvSpeedPredictiveDesc.text = "Ativado: harmoniza e antecipa o crossfade por km/h (Civic Manual)"
+            binding.tvSpeedPredictiveDesc.setTextColor(0xFF00E5FF.toInt())
+        } else {
+            binding.tvSpeedPredictiveDesc.text = "Desativado: responde estritamente à marcha detectada no painel"
+            binding.tvSpeedPredictiveDesc.setTextColor(0xFF7A81A4.toInt())
         }
     }
 

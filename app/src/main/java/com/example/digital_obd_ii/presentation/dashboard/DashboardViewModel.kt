@@ -21,9 +21,11 @@ import com.example.digital_obd_ii.domain.usecase.CalculateFuelConsumptionUseCase
 import com.example.digital_obd_ii.domain.usecase.UpdateTripSummaryUseCase
 import com.example.digital_obd_ii.domain.usecase.CalculateIdealGearUseCase
 import com.example.digital_obd_ii.domain.usecase.PredictiveRpmUseCase
+import com.example.digital_obd_ii.domain.usecase.ExponentialRpmFilterUseCase
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
+import com.example.digital_obd_ii.domain.logger.TripLogManager
 import com.example.digital_obd_ii.data.database.dao.TripDao
 import com.example.digital_obd_ii.data.database.entities.TripEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,8 +47,10 @@ class DashboardViewModel @Inject constructor(
     private val calculateFuel: CalculateFuelConsumptionUseCase,
     private val calculateGear: CalculateIdealGearUseCase,
     private val predictiveRpm: PredictiveRpmUseCase,
+    private val exponentialRpmFilter: ExponentialRpmFilterUseCase,
     private val profileRepository: ProfileRepository,
-    private val tripDao: TripDao
+    private val tripDao: TripDao,
+    private val tripLogManager: TripLogManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -125,6 +129,14 @@ class DashboardViewModel @Inject constructor(
                             val deltaSec = (now - lastTimestamp) / 1000.0
                             
                             lastTimestamp = now
+
+                            // NOVO: LOG Resumido da Viagem (Auditoria OBD-II desacoplada do som)
+                            try {
+                                tripLogManager.recordSnapshot(snapshot, deltaSec)
+                            } catch (e: Throwable) {
+                                // Silent fallback
+                            }
+
                             val lph = if (snapshot.instantConsumptionKmL > 0) snapshot.speedKmh / snapshot.instantConsumptionKmL else 0.0
                             val updatedTrip = updateTrip.update(_uiState.value.trip, snapshot.speedKmh, lph, deltaSec)
                             
@@ -133,15 +145,19 @@ class DashboardViewModel @Inject constructor(
                             val realRpm = snapshot.rpm
                             val predictedRpm = predictiveRpm.predict(realRpm, snapshot.maf, snapshot.throttlePosition)
                             val gearRec = calculateGear(realRpm, snapshot.speedKmh, snapshot.throttlePosition, currentProfile)
+                            val displayedGear = gearRec.idealGear
 
-                            updateBlinkState(predictedRpm, snapshot.speedKmh, gearRec.idealGear, currentProfile)
+                            updateBlinkState(predictedRpm, snapshot.speedKmh, displayedGear, currentProfile)
+                            // 1. DESACOPLAMENTO ACÚSTICO: Filtro Exponencial de RPM (Power Curve)
+                            // Transforma a faixa urbana do Civic (700-3000 RPM) na escala completa do simulador (700-8000 RPM)
+                            val acousticRpm = exponentialRpmFilter.filter(predictedRpm.toFloat())
 
-                            // Telemetria acústica V6 em tempo real
+                            // Telemetria acústica V6 em tempo real (Lê a marcha exibida no Dashboard e aplica RPM acústico)
                             try {
                                 V6AudioEngine.updateTelemetry(
-                                    rpm = predictedRpm.toFloat(),
+                                    rpm = acousticRpm,
                                     throttle = (snapshot.throttlePosition.toFloat() / 100f).coerceIn(0f, 1f),
-                                    gear = gearRec.idealGear.coerceAtLeast(1),
+                                    gear = displayedGear,
                                     speed = snapshot.speedKmh.toFloat(),
                                     isShiftLightActive = _isBlinking.value
                                 )
@@ -151,7 +167,7 @@ class DashboardViewModel @Inject constructor(
 
                             _uiState.update { state ->
                                 state.copy(
-                                    snapshot = snapshot.copy(rpm = predictedRpm),
+                                    snapshot = snapshot.copy(rpm = predictedRpm, idealGear = displayedGear),
                                     trip = updatedTrip,
                                     connectionState = ConnectionState.Connected,
                                     gearAction = gearRec.action

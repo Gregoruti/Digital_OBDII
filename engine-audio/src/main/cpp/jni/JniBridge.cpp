@@ -131,6 +131,86 @@ Java_com_engineaudio_V6AudioEngine_nativeSetShiftLightActive(
 }
 
 /**
+ * Set Shift Light Sync enabled.
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetShiftLightSyncEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setShiftLightSyncEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Pops & Bangs enabled.
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetPopsEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setPopsEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Turbo & Blow-Off Valve (espirros) enabled.
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetTurboEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setTurboEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Turbo & Blow-Off Valve volume [0.0, 1.0].
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetTurboVolume(
+        JNIEnv* env, jobject thiz, jfloat volume) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setTurboVolume(static_cast<float>(volume));
+}
+
+/**
+ * Set Pure Sound Mode (bypasses all extra / random effects).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetPureSoundMode(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setPureSoundMode(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Gear-Locked Track Mode (Opção A: amostra presa na marcha, repitch normal pelo RPM).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetGearLockEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setGearLockEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Gear Crossfade enabled (suave vs corte seco).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetGearCrossfadeEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setGearCrossfadeEnabled(static_cast<bool>(enabled));
+}
+
+/**
+ * Set Speed Predictive Crossfade enabled (Civic Manual: antecipação e harmonização por velocidade).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetSpeedPredictiveEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setSpeedPredictiveEnabled(static_cast<bool>(enabled));
+}
+
+/**
  * Trigger immediate limiter cut pulse (backfire / ignition cut).
  */
 JNIEXPORT void JNICALL

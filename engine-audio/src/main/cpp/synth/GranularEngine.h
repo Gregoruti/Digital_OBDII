@@ -34,6 +34,17 @@ public:
     void setSpeed(float speedKmh);
     void setLimiterRPM(float limiterRpm);
     void setShiftLightActive(bool active);
+    void setShiftLightSyncEnabled(bool enabled);
+    void setPopsEnabled(bool enabled);
+    void setTurboEnabled(bool enabled);
+    void setTurboVolume(float volume);
+    void setPureSoundMode(bool enabled);
+    void setGearLockEnabled(bool enabled);
+    void setGearCrossfadeEnabled(bool enabled);
+    void setSpeedPredictiveEnabled(bool enabled);
+    bool isGearLockEnabled() const { return m_isGearLockEnabled.load(std::memory_order_relaxed); }
+    bool isGearCrossfadeEnabled() const { return m_isGearCrossfadeEnabled.load(std::memory_order_relaxed); }
+    bool isSpeedPredictiveEnabled() const { return m_isSpeedPredictiveEnabled.load(std::memory_order_relaxed); }
     void triggerLimiterCut();
     void setRunning(bool running);
     bool isRunning() const { return m_isRunning.load(std::memory_order_relaxed); }
@@ -61,12 +72,22 @@ private:
     std::atomic<float> m_targetThrottle{0.0f};
     std::atomic<float> m_limiterRpm{6500.0f};
     std::atomic<bool>  m_isShiftLightActive{false};
+    std::atomic<bool>  m_isShiftLightSyncEnabled{true};
+    std::atomic<bool>  m_isPopsEnabled{true};
+    std::atomic<bool>  m_isTurboEnabled{true};
+    std::atomic<float> m_turboVolume{0.70f};
+    std::atomic<bool>  m_isPureSoundMode{false};
+    std::atomic<bool>  m_isGearLockEnabled{false};
+    std::atomic<bool>  m_isGearCrossfadeEnabled{true};
+    std::atomic<bool>  m_isSpeedPredictiveEnabled{false};
+    std::atomic<float> m_targetSpeed{0.0f};
     std::atomic<bool>  m_manualLimiterTrigger{false};
     std::atomic<bool>  m_isRunning{false};
 
     float m_currentRpm{800.0f};
     float m_currentThrottle{0.0f};
     float m_prevThrottle{0.0f};
+    float m_currentSpeed{0.0f};
     int   m_currentGear{1};
     int   m_prevGear{1};
 
@@ -90,6 +111,7 @@ private:
     std::mt19937 m_rng{1337};
 
     void calculateTrackWeights(float rpm, float throttle, float* outWeights);
+    void calculateSpeedPredictiveWeights(float rpm, float throttle, float speedKmh, int gear, float* outWeights);
 };
 
 } // namespace engineaudio

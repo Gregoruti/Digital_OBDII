@@ -79,7 +79,7 @@ void EngineAudioEngine::updateTelemetry(
     bool gearChanged  = (gear != prevGear);
 
     if (throttleDrop || gearChanged) {
-        if (m_engineSynth->hasTurbo() && rpm > 2200.0f) {
+        if (m_isTurboEnabled.load(std::memory_order_relaxed) && m_engineSynth->hasTurbo() && rpm > 2200.0f) {
             m_turboEffect->triggerBOV();
         }
     }
@@ -101,6 +101,42 @@ void EngineAudioEngine::setLimiterRPM(float rpm) {
 void EngineAudioEngine::setShiftLightActive(bool active) {
     m_revLimiter->setShiftLightActive(active);
     m_granularEngine->setShiftLightActive(active);
+}
+
+void EngineAudioEngine::setShiftLightSyncEnabled(bool enabled) {
+    m_isShiftLightSyncEnabled.store(enabled, std::memory_order_relaxed);
+    m_granularEngine->setShiftLightSyncEnabled(enabled);
+}
+
+void EngineAudioEngine::setPopsEnabled(bool enabled) {
+    m_isPopsEnabled.store(enabled, std::memory_order_relaxed);
+    m_granularEngine->setPopsEnabled(enabled);
+}
+
+void EngineAudioEngine::setTurboEnabled(bool enabled) {
+    m_isTurboEnabled.store(enabled, std::memory_order_relaxed);
+    m_granularEngine->setTurboEnabled(enabled);
+}
+
+void EngineAudioEngine::setTurboVolume(float volume) {
+    m_turboVolume.store(volume, std::memory_order_relaxed);
+    m_granularEngine->setTurboVolume(volume);
+}
+
+void EngineAudioEngine::setPureSoundMode(bool enabled) {
+    m_granularEngine->setPureSoundMode(enabled);
+}
+
+void EngineAudioEngine::setGearLockEnabled(bool enabled) {
+    m_granularEngine->setGearLockEnabled(enabled);
+}
+
+void EngineAudioEngine::setGearCrossfadeEnabled(bool enabled) {
+    m_granularEngine->setGearCrossfadeEnabled(enabled);
+}
+
+void EngineAudioEngine::setSpeedPredictiveEnabled(bool enabled) {
+    m_granularEngine->setSpeedPredictiveEnabled(enabled);
 }
 
 void EngineAudioEngine::triggerLimiterCut() {
@@ -137,11 +173,13 @@ void EngineAudioEngine::audioCallback(float* buffer, int32_t numFrames) {
         // Fallback to pure physical DSP synthesis
         m_engineSynth->process(buffer, numFrames);
 
-        if (m_engineSynth->hasTurbo()) {
-            m_turboEffect->process(buffer, numFrames, m_engineSynth->getTurboGain());
+        if (m_engineSynth->hasTurbo() && m_isTurboEnabled.load(std::memory_order_relaxed)) {
+            m_turboEffect->process(buffer, numFrames, m_engineSynth->getTurboGain() * m_turboVolume.load(std::memory_order_relaxed));
         }
 
-        m_revLimiter->process(buffer, numFrames);
+        if (m_isShiftLightSyncEnabled.load(std::memory_order_relaxed) || m_isPopsEnabled.load(std::memory_order_relaxed)) {
+            m_revLimiter->process(buffer, numFrames);
+        }
     }
 
     // Apply master volume

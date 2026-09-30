@@ -69,6 +69,57 @@ enum class EngineType(
         badge = "QUADRIFOGLIO",
         soundDescription = "Gravação oficial: arquitetura italiana 90° V6 bi-turbo desenvolvida pela Ferrari, rasgado metálico encorpado e backfires reais no escape.",
         baseRpms = floatArrayOf(850f, 2500f, 4800f, 7000f, 3200f)
+    ),
+
+    FORD_MUSTANG_V8(
+        id = 3,
+        folderName = "mustang_v8",
+        displayName = "Ford Mustang GT V8",
+        subtitle = "5.0L Coyote Crossplane V8",
+        cylinderCount = 8,
+        idleRpm = 800f,
+        limiterRpm = 6800f,
+        maxRpm = 7200f,
+        primaryColorHex = 0xFFFFB300,
+        accentColorHex = 0xFFFFC107,
+        hasTurbo = false,
+        badge = "COYOTE V8",
+        soundDescription = "Gravação oficial de pista: o clássico ronco encorpado do V8 americano 5.0L Coyote com virabrequim crossplane, médios musculosos e limitador rústico a 6.800 RPM.",
+        baseRpms = floatArrayOf(800f, 3000f, 4500f, 6600f, 3400f)
+    ),
+
+    MASERATI_MC20_GT2(
+        id = 4,
+        folderName = "mc20_gt2",
+        displayName = "Maserati MC20 GT2",
+        subtitle = "3.0L Nettuno Twin-Turbo V6",
+        cylinderCount = 6,
+        idleRpm = 900f,
+        limiterRpm = 7500f,
+        maxRpm = 8000f,
+        primaryColorHex = 0xFF1E88E5,
+        accentColorHex = 0xFF42A5F5,
+        hasTurbo = true,
+        badge = "NETTUNO GT2",
+        soundDescription = "Gravação oficial de competição: motor 3.0L Nettuno 90° V6 Twin-Turbo com pré-câmara de combustão, sopro agressivo de turbinas, válvula de alívio e estalos secos na redução.",
+        baseRpms = floatArrayOf(900f, 2500f, 4800f, 7200f, 3200f)
+    ),
+
+    AUDI_RS3_I5(
+        id = 5,
+        folderName = "audi_rs3",
+        displayName = "Audi RS3 Performance",
+        subtitle = "2.5L TFSI Turbo Inline-5",
+        cylinderCount = 5,
+        idleRpm = 800f,
+        limiterRpm = 7200f,
+        maxRpm = 7600f,
+        primaryColorHex = 0xFF00E676,
+        accentColorHex = 0xFF69F0AE,
+        hasTurbo = true,
+        badge = "RS3 2.5 TFSI",
+        soundDescription = "Gravação oficial de pista: o inconfundível som rasgado de 5 cilindros em linha 2.5L TFSI (ordem de ignição 1-2-4-5-3), espirro metálico de turbina e estalos secos DSG nas trocas de marcha.",
+        baseRpms = floatArrayOf(800f, 2000f, 3500f, 6500f, 3200f)
     );
 
     companion object {

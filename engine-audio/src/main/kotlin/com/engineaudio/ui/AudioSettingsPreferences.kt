@@ -44,6 +44,22 @@ class AudioSettingsPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_POPS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_POPS_ENABLED, value).apply()
 
+    var isPureSoundMode: Boolean
+        get() = prefs.getBoolean(KEY_PURE_SOUND_MODE, false)
+        set(value) = prefs.edit().putBoolean(KEY_PURE_SOUND_MODE, value).apply()
+
+    var isGearLockEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GEAR_LOCK_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_GEAR_LOCK_ENABLED, value).apply()
+
+    var isGearCrossfadeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GEAR_CROSSFADE_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_GEAR_CROSSFADE_ENABLED, value).apply()
+
+    var isSpeedPredictiveEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SPEED_PREDICTIVE_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_SPEED_PREDICTIVE_ENABLED, value).apply()
+
     var idleRpm: Float
         get() = prefs.getFloat(KEY_IDLE_RPM, 750f)
         set(value) = prefs.edit().putFloat(KEY_IDLE_RPM, value).apply()
@@ -51,6 +67,26 @@ class AudioSettingsPreferences(context: Context) {
     var selectedEngineType: EngineType
         get() = EngineType.fromId(prefs.getInt(KEY_ENGINE_TYPE, EngineType.V6_TWIN_TURBO.id))
         set(value) = prefs.edit().putInt(KEY_ENGINE_TYPE, value.id).apply()
+
+    var isVirtualAccelerationEnabled: Boolean
+        get() = prefs.getBoolean(KEY_VIRTUAL_ACCEL_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_VIRTUAL_ACCEL_ENABLED, value).apply()
+
+    var virtualAccelerationExponent: Float
+        get() = prefs.getFloat(KEY_VIRTUAL_ACCEL_EXPONENT, 1.8f)
+        set(value) = prefs.edit().putFloat(KEY_VIRTUAL_ACCEL_EXPONENT, value).apply()
+
+    var virtualRpmInMin: Float
+        get() = prefs.getFloat(KEY_VIRTUAL_RPM_IN_MIN, 700f)
+        set(value) = prefs.edit().putFloat(KEY_VIRTUAL_RPM_IN_MIN, value).apply()
+
+    var virtualRpmInMax: Float
+        get() = prefs.getFloat(KEY_VIRTUAL_RPM_IN_MAX, 3000f)
+        set(value) = prefs.edit().putFloat(KEY_VIRTUAL_RPM_IN_MAX, value).apply()
+
+    var virtualRpmOutMax: Float
+        get() = prefs.getFloat(KEY_VIRTUAL_RPM_OUT_MAX, 8000f)
+        set(value) = prefs.edit().putFloat(KEY_VIRTUAL_RPM_OUT_MAX, value).apply()
 
     companion object {
         private const val PREFS_NAME = "v6_engine_audio_settings"
@@ -64,5 +100,14 @@ class AudioSettingsPreferences(context: Context) {
         private const val KEY_POPS_ENABLED = "pops_enabled"
         private const val KEY_IDLE_RPM = "idle_rpm"
         private const val KEY_ENGINE_TYPE = "engine_type"
+        private const val KEY_VIRTUAL_ACCEL_ENABLED = "virtual_accel_enabled"
+        private const val KEY_VIRTUAL_ACCEL_EXPONENT = "virtual_accel_exponent"
+        private const val KEY_VIRTUAL_RPM_IN_MIN = "virtual_rpm_in_min"
+        private const val KEY_VIRTUAL_RPM_IN_MAX = "virtual_rpm_in_max"
+        private const val KEY_VIRTUAL_RPM_OUT_MAX = "virtual_rpm_out_max"
+        private const val KEY_PURE_SOUND_MODE = "pure_sound_mode"
+        private const val KEY_GEAR_LOCK_ENABLED = "gear_lock_enabled"
+        private const val KEY_GEAR_CROSSFADE_ENABLED = "gear_crossfade_enabled"
+        private const val KEY_SPEED_PREDICTIVE_ENABLED = "speed_predictive_enabled"
     }
 }

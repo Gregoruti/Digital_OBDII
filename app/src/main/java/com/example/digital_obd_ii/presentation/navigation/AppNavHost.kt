@@ -18,6 +18,7 @@ import com.example.digital_obd_ii.presentation.profile.ui.AudioSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VehicleProfileScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VisualSettingsScreen
+import com.example.digital_obd_ii.presentation.triplog.ui.TripLogScreen
 
 sealed class Screen(val route: String) {
     object DeviceList : Screen("device_list")
@@ -32,6 +33,7 @@ sealed class Screen(val route: String) {
     object AudioSettings : Screen("audio_settings")
     object Communication : Screen("communication")
     object FuelCalibration : Screen("fuel_calibration")
+    object TripLog : Screen("trip_log")
 }
 
 @Composable
@@ -81,7 +83,8 @@ fun AppNavHost(
                 onPerformanceClick = { navController.navigate(Screen.Performance.route) },
                 onCommunicationClick = { navController.navigate(Screen.Communication.route) },
                 onFuelCalibrationClick = { navController.navigate(Screen.FuelCalibration.route) },
-                onAudioClick = { navController.navigate(Screen.AudioSettings.route) }
+                onAudioClick = { navController.navigate(Screen.AudioSettings.route) },
+                onTripLogClick = { navController.navigate(Screen.TripLog.route) }
             )
         }
         composable(Screen.Communication.route) {
@@ -101,6 +104,9 @@ fun AppNavHost(
         }
         composable(Screen.AudioSettings.route) {
             AudioSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.TripLog.route) {
+            TripLogScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(onSettingsClick = { navController.navigate(Screen.Profile.route) })

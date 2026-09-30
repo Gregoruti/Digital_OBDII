@@ -1,6 +1,28 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.1.2] - Atual (Aguardando Validação no Veículo Real)
+## [4.3.0] - Atual (Equipe Antigravity)
+> **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
+> **Status de Validação:** Motor de Áudio V6 Twin-Turbo integrado. Testado em ambiente de compilação C++ (ARM/x86_64) e UI.
+
+### Adicionado e Otimizado
+- **Engine Sound (Motor V6 Twin-Turbo)**: 
+  - Integração oficial do novo módulo nativo `:engine-audio` construído inteiramente em C++ moderno e acoplado com a biblioteca de baixa latência Google Oboe.
+  - Síntese de áudio procedural (não depende de samples) de altíssima performance para simular V6 Twin-Turbo, limitador de giro (RevLimiter), válvula de alívio (TurboEffect) e ruído de combustão.
+  - Implementado o ponteamento `JniBridge.cpp` para tráfego seguro de variáveis OBD (RPM, Velocidade, Throttle e Marcha) usando variáveis atômicas (`std::atomic`).
+- **Otimização Nativa**:
+  - Resolução completa de compatibilidade exigida pela nova política da Google Play Store para **16KB Page Size** (Android 15). Nenhuma restrição de macro `PAGE_SIZE` ou mapeamento fixo de memória (4096) é utilizada no processamento de áudio.
+  - Alterações de build no `CMakeLists.txt` aplicando as melhores práticas de DSP (Digital Signal Processing): `-O3`, `-ffast-math`, `-fno-math-errno` e `-funroll-loops`. 
+  - Correção nas alocações de `const` (em substituição de `constexpr`) na compilação do NDK para os processadores Android.
+- **Interface e Navegação**:
+  - Nova tela preliminar `AudioSettingsScreen` acoplada ao painel de customização `VehicleProfileScreen` via ícone dedicado (`Icons.AutoMirrored.Filled.VolumeUp`).
+- **Governança (Guidelines)**:
+  - Adição das seções oficiais de desenvolvimento C++ e NDK no arquivo de regras (`GUIDELINES.md`), incluindo advertências severas contra alocações de memória, I/O ou Locks em threads de áudio.
+
+## [4.2.0] - Anterior
+### Adicionado
+- **Preparo C++ / NDK**: Configuração básica do projeto para a transição multi-módulo com `engine-audio`, incorporando as diretivas `prefab` para leitura da biblioteca `Google Oboe` dentro dos arquivos Gradle e version catalogs.
+
+## [4.1.2] - Anterior
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
 > **Status de Validação:** Atualização visual implementada. Testado em compilação e aguardando testes de campo.
 
