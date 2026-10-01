@@ -74,7 +74,16 @@ Para evitar sobrescritas e conflitos arquiteturais, este projeto divide responsa
 
 ## 1. Filosofia do Projeto
 
-### 1.1 Abordagem MVP (Minimum Viable Product)
+### 1.1 O Estado da Arte no CHANGELOG.md (Machine-to-Machine)
+O arquivo `CHANGELOG.md` deste projeto opera sob um paradigma *Machine-to-Machine* (M2M). Ele não se limita a listar o que foi feito ("o quê"), mas também o Contexto Técnico ("o porquê"). Isso garante que, em cenários de colaboração Multi-IA (como Android Studio 🤝 Antigravity), o agente seguinte entenda a linha de raciocínio da alteração sem perder contexto.
+
+**Formato Obrigatório de Changelog:**
+- `## [Versão] - Status`
+- `> **Autor:** <IA ou Dev Responsável>`
+- `> **Motivação Arquitetural:** <Descrever o porquê a decisão técnica foi tomada>`
+- Lista de alterações (`Adicionado`, `Otimizado`, `Corrigido`, `Removido`).
+
+### 1.2 Abordagem MVP (Minimum Viable Product)
 - Desenvolvimento incremental por MVPs numerados (MVP-01, MVP-02, ...).
 - Cada MVP é completo e funcional (compila, roda, tem valor de ponta a ponta).
 - Validação rigorosa (build + testes + anti-regressão) antes de avançar.
