@@ -10,7 +10,7 @@
   },
   "cxxBuildFolder": "D:\\Softwares\\Digital_OBDII\\engine-audio\\.cxx\\Release\\5i4i1h4e\\arm64-v8a",
   "soFolder": "D:\\Softwares\\Digital_OBDII\\engine-audio\\build\\intermediates\\cxx\\Release\\5i4i1h4e\\obj\\arm64-v8a",
-  "soRepublishFolder": "D:\\Softwares\\Digital_OBDII\\engine-audio\\build\\intermediates\\cmake\\release\\obj\\arm64-v8a",
+  "soRepublishFolder": "D:\\Softwares\\Digital_OBDII\\engine-audio\\build\\intermediates\\cmake\\debug\\obj\\arm64-v8a",
   "abiPlatformVersion": 26,
   "cmake": {
     "effectiveConfiguration": {
@@ -29,8 +29,8 @@
     "cppFlagsList": [
       "-std\u003dc++17"
     ],
-    "variantName": "release",
-    "isDebuggableEnabled": false,
+    "variantName": "debug",
+    "isDebuggableEnabled": true,
     "validAbiList": [
       "armeabi-v7a",
       "arm64-v8a",
