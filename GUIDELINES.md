@@ -2,13 +2,31 @@
 GUIDELINES.md, pronto para ser salvo na raiz da pasta docs/ (ou raiz do repositório) do seu novo projeto Android/Kotlin.
 
 markdown
-# GUIDELINES — Digital OBD-II (Android/Kotlin/C++)creionão s
+# GUIDELINES — Digital OBD-II (Android/Kotlin/C++)
 
 > Diretrizes de Desenvolvimento do Projeto (Colaboração Antigravity & AI Agents)
 > Última atualização: 2024 (Atualização Gemini 3.1 Preview, NDK & Engine Sound) | Mantenedor: Equipe Antigravity
 > Stack: Kotlin + Jetpack Compose + Clean Architecture + Hilt + Room + NDK/C++ (Oboe)
 
 ---
+
+## 0.0 Colaboração Multi-IA (Android Studio 🤝 Antigravity)
+
+Para evitar sobrescritas e conflitos arquiteturais, este projeto divide responsabilidades entre as IAs:
+
+- **Jurisdição do Android Studio (Gemini):**
+  - Alterações em `build.gradle.kts` e configurações do Gradle/KSP.
+  - Compilação profunda do NDK/C++ (CMakeLists.txt).
+  - Testes de UI/Compose e execução no emulador.
+  - Commits finais e execução de scripts de terminal (`.bat`).
+
+- **Jurisdição do Antigravity:**
+  - Geração massiva de lógicas de negócio (UseCases, Repositories).
+  - Algoritmos complexos de C++ para o DSP do Motor de Áudio.
+  - Refatorações em massa e criação de testes unitários.
+
+- **Protocolo de Handshake (Obrigatório):**
+  Ao finalizar uma sessão no Antigravity e voltar para o Android Studio (ou vice-versa), a IA que finalizou o trabalho DEVE resumir o que fez no `CHANGELOG.md` e atualizar o arquivo `.artifacts/task.artifact.md` com os próximos passos. A IA que assume o trabalho DEVE ler esses dois arquivos antes de agir.
 
 ## 0. Governança de IA (Pair Programming com Agentes)
 
