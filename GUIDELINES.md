@@ -53,10 +53,9 @@ Para evitar sobrescritas e conflitos arquiteturais, este projeto divide responsa
 ### 0.4 Arquivos Críticos para Leitura Inicial (ordem obrigatória)
 1. `docs/GUIDELINES.md` (este arquivo)
 2. `docs/CHANGELOG.md`
-3. `docs/SPECIFICATION_FOR_APP.md`
-4. O Índice de Arquitetura: `docs/architecture/INDEX.md` (Escolha apenas o subarquivo necessário a partir deste índice).
-5. Documento de status vigente (ex.: `docs/REVISAO_STATUS_ATUAL_[DATA].md`)
-6. `app/build.gradle.kts` (versões e dependências atuais)
+3. O Índice de Arquitetura: `docs/architecture/INDEX.md` (Escolha apenas o subarquivo necessário a partir deste índice).
+4. Documento de status vigente (ex.: `docs/REVISAO_STATUS_ATUAL_[DATA].md`)
+5. `app/build.gradle.kts` (versões e dependências atuais)
 
 ### 0.5 Boas Práticas de Prompt Engineering para o Projeto
 - Fornecer ao agente: **objetivo**, **camada afetada** (presentation/domain/data/native), **critérios de aceite** e **arquivos relevantes**.

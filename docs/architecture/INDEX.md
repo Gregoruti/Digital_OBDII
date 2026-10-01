@@ -23,3 +23,8 @@ Para otimizar o consumo de janela de contexto (Context Window) de agentes de IA 
 4. **[Banco de Dados e Persistência Local (Room/DataStore)](room_database.md)**
    - Entities, DAOs e Repositórios.
    - Persistência de preferências de UI via DataStore.
+
+5. **[Especificação de Produto e Domínio (Product Spec)](product_specification.md)**
+   - Definição do produto (Visão Geral, Problema, Escopo).
+   - Casos de Uso detalhados (Consumo, Marcha Ideal).
+   - Dicionário de PIDs suportados e Handshake ELM327.
