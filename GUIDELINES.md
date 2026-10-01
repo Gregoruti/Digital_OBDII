@@ -15,15 +15,16 @@ markdown
 Para evitar sobrescritas e conflitos arquiteturais, este projeto divide responsabilidades entre as IAs:
 
 - **Jurisdição do Android Studio (Gemini):**
-  - Alterações em `build.gradle.kts` e configurações do Gradle/KSP.
-  - Compilação profunda do NDK/C++ (CMakeLists.txt).
-  - Testes de UI/Compose e execução no emulador.
-  - Commits finais e execução de scripts de terminal (`.bat`).
+  - Responsável pela **compilação** com dispositivo conectado e validações estritas (builds NDK, Gradle).
+  - Testes de UI/Compose, execução do app no emulador ou ambiente físico.
+  - Monitoramento técnico avançado via **Logcat** e **Android Profiler**.
+  - Execução de scripts de terminal (`.bat`) e commits/pushes finais de versões funcionais.
 
 - **Jurisdição do Antigravity:**
-  - Geração massiva de lógicas de negócio (UseCases, Repositories).
-  - Algoritmos complexos de C++ para o DSP do Motor de Áudio.
-  - Refatorações em massa e criação de testes unitários.
+  - Operação "Agentica" e Orquestrador Principal.
+  - Responsável por **criar, iterar e editar código C++, JNI, Kotlin**, bem como **scripts de processamento de áudio (`.py`)**.
+  - Responsável primário pela geração de documentações, refatorações em massa, e testes unitários.
+  - Geração massiva de lógicas de negócio e algoritmos complexos do DSP (Engine Sound).
 
 - **Protocolo de Handshake (Obrigatório):**
   Ao finalizar uma sessão no Antigravity e voltar para o Android Studio (ou vice-versa), a IA que finalizou o trabalho DEVE resumir o que fez no `CHANGELOG.md` e atualizar o arquivo `.artifacts/task.artifact.md` com os próximos passos. A IA que assume o trabalho DEVE ler esses dois arquivos antes de agir.
