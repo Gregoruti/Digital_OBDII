@@ -16,6 +16,7 @@ import java.util.UUID
 
 /**
  * Gerencia a conexão física via Bluetooth Classic (SPP).
+ * v4.5.0 - Timeout de conexão de 4s, fallback Reflection Canal 1 e streaming de logs.
  * v3.3.0 - Consolidado com Turbo Polling e Buffer estável.
  * v2.1.0 - Thread-safe, com limpeza de buffer e timeout.
  */
@@ -42,17 +43,55 @@ class BluetoothConnectionManager(
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun connect(device: BluetoothDevice): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun connect(device: BluetoothDevice): Result<Unit> = connect(device, null)
+
+    @SuppressLint("MissingPermission")
+    suspend fun connect(device: BluetoothDevice, onStepLog: ((String) -> Unit)? = null): Result<Unit> = withContext(Dispatchers.IO) {
         mutex.withLock {
             runCatching {
-                adapter?.cancelDiscovery()
+                onStepLog?.invoke("Cancelando busca de dispositivos (discovery)...")
+                adapter.cancelDiscovery()
                 disconnectInternal()
-                socket = device.createRfcommSocketToServiceRecord(SPP_UUID).also { it.connect() }
-                input = socket?.inputStream
-                output = socket?.outputStream
+
+                onStepLog?.invoke("Tentando conectar via canal SPP padrão (UUID)...")
+                var s = withTimeoutOrNull(4000L) {
+                    try {
+                        val sock = device.createRfcommSocketToServiceRecord(SPP_UUID)
+                        sock.connect()
+                        sock
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                // Fallback para RFCOMM Canal 1 via Reflection se o UUID falhar ou der timeout
+                if (s == null || !s.isConnected) {
+                    onStepLog?.invoke("UUID padrão sem resposta. Tentando fallback RFCOMM Canal 1...")
+                    delay(300L)
+                    s = withTimeoutOrNull(4000L) {
+                        try {
+                            val method = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                            val sock = method.invoke(device, 1) as BluetoothSocket
+                            sock.connect()
+                            sock
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                }
+
+                if (s == null || !s.isConnected) {
+                    throw Exception("Timeout/Falha ao abrir canal Bluetooth RFCOMM com o dongle. Verifique se ele está ligado na tomada OBD-II.")
+                }
+
+                socket = s
+                input = s.inputStream
+                output = s.outputStream
                 consecutiveErrors = 0
+                onStepLog?.invoke("Canal Bluetooth RFCOMM conectado com sucesso.")
                 Unit
             }.onFailure { e ->
+                disconnectInternal()
                 if (e is SecurityException) {
                     throw Exception("Permissão de Bluetooth não concedida. Por favor, autorize o acesso ao Bluetooth no aplicativo.")
                 }

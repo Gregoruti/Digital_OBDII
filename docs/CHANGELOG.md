@@ -1,6 +1,17 @@
 # CHANGELOG - Digital OBD-II
 
-## [4.4.0] - Atual (Equipe Antigravity)
+## [4.5.0] - Atual (Equipe Antigravity)
+> **Assistente / Modelo de IA:** Claude 3.5 Sonnet (Antigravity)
+> **Status de Validação:** Refatorações de estabilidade Bluetooth, OBD e Ícones aplicados.
+
+### Corrigido e Otimizado
+- **Reestruturação Bluetooth e OBD (Handshake e Lifecycle)**:
+  - Adicionado suporte nativo a re-inicialização do ELM327 na arquitetura em `ObdRepositoryImpl`.
+  - Revisão robusta das lógicas de conexão na camada de UI e ViewModel em `ConnectionStatusScreen` para suportar transições de falha e tentativa fluida.
+- **Novas Entidades para Customização (Custom Icons)**:
+  - Criação da tela de configuração `CustomIconsScreen` com persistência via `CustomIconsRepositoryImpl` e `CustomIconConfig`. O usuário agora tem suporte ampliado de customização do painel no App.
+
+## [4.4.0] - Anterior (Equipe Antigravity)
 > **Assistente / Modelo de IA:** Gemini 3.1 Preview (Android Studio)  
 > **Status de Validação:** Novos sons de motor e seletor de áudio no painel de configurações.
 

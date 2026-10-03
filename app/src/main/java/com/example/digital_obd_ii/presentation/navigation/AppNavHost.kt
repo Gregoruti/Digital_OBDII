@@ -18,6 +18,7 @@ import com.example.digital_obd_ii.presentation.profile.ui.AudioSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.PerformanceSettingsScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VehicleProfileScreen
 import com.example.digital_obd_ii.presentation.profile.ui.VisualSettingsScreen
+import com.example.digital_obd_ii.presentation.profile.ui.CustomIconsScreen
 import com.example.digital_obd_ii.presentation.triplog.ui.TripLogScreen
 
 sealed class Screen(val route: String) {
@@ -27,6 +28,7 @@ sealed class Screen(val route: String) {
     }
     object Profile : Screen("profile")
     object VisualSettings : Screen("visual_settings")
+    object CustomIcons : Screen("custom_icons")
     object Terminal : Screen("terminal")
     object Dashboard : Screen("dashboard")
     object Performance : Screen("performance")
@@ -94,7 +96,13 @@ fun AppNavHost(
             FuelCalibrationScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.VisualSettings.route) {
-            VisualSettingsScreen(onBack = { navController.popBackStack() })
+            VisualSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onIconsClick = { navController.navigate(Screen.CustomIcons.route) }
+            )
+        }
+        composable(Screen.CustomIcons.route) {
+            CustomIconsScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Terminal.route) {
             ObdTerminalScreen(onBack = { navController.popBackStack() })

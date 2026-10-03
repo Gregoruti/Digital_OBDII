@@ -11,6 +11,7 @@ interface ObdRepository {
     suspend fun connect(device: BluetoothDevice): Result<Unit>
     fun observeVehicleData(): Flow<VehicleSnapshot>
     val diagnosticFlow: SharedFlow<ObdLogEntry>
+    val connectionLogFlow: SharedFlow<String>
     val isPollingActive: StateFlow<Boolean>
     fun setPollingState(active: Boolean)
     suspend fun reinitializeAdapter(): Result<Unit>

@@ -46,6 +46,9 @@ class ObdRepositoryImpl @Inject constructor(
     private val profileRepository: com.example.digital_obd_ii.domain.repository.ProfileRepository
 ) : ObdRepository {
 
+    private val _connectionLogFlow = MutableSharedFlow<String>(replay = 50, extraBufferCapacity = 50)
+    override val connectionLogFlow: SharedFlow<String> = _connectionLogFlow.asSharedFlow()
+
     override val diagnosticFlow: SharedFlow<ObdLogEntry> = pollingEngine.diagnosticFlow
     override val isPollingActive: StateFlow<Boolean> = pollingEngine.isPollingActive
 
@@ -53,19 +56,30 @@ class ObdRepositoryImpl @Inject constructor(
         pollingEngine.setPollingState(active)
     }
 
-    override suspend fun connect(device: BluetoothDevice): Result<Unit> {
-        val result = transport.connect(device)
+        override suspend fun connect(device: BluetoothDevice): Result<Unit> {
+        _connectionLogFlow.emit("[RADIO] Cancelando discovery e preparando rádio Bluetooth...")
+        val result = transport.connect(device) { stepLog ->
+            _connectionLogFlow.tryEmit("[SOCKET] $stepLog")
+        }
         if (result.isSuccess) {
-            // WARM-UP FIX (v3.7.2): O adaptador Bluetooth SPP precisa de um tempo 
-            // após criar o socket antes de receber o primeiro caractere serial, senão perde o "AT Z".
+            _connectionLogFlow.emit("[SOCKET] Conexão física estabelecida. Aguardando warm-up de 1.5s...")
             delay(1500)
             
             val currentProfile = profileRepository.getProfileSync()
-            // Inicialização Robusta v3.4.0 (Dinâmica)
-            val initResult = reinitializeAdapter(currentProfile)
-            if (initResult.isFailure) return Result.failure(initResult.exceptionOrNull() ?: Exception("Init failed"))
+            _connectionLogFlow.emit("[HANDSHAKE] Iniciando sequência de boot (${currentProfile.obdProtocol.label})...")
+            
+            val initResult = reinitializeAdapterWithLogging(currentProfile)
+            if (initResult.isFailure) {
+                val err = initResult.exceptionOrNull()?.message ?: "Handshake falhou"
+                _connectionLogFlow.emit("[ERRO] $err")
+                return Result.failure(Exception(err))
+            }
             
             profileRepository.saveProfile(currentProfile.copy(lastConnectedDeviceAddress = device.address))
+            _connectionLogFlow.emit("[PRONTO] Adaptador OBD-II inicializado e pronto para telemetria.")
+        } else {
+            val err = result.exceptionOrNull()?.message ?: "Falha de conexão Bluetooth"
+            _connectionLogFlow.emit("[ERRO] $err")
         }
         return result
     }
@@ -117,21 +131,27 @@ class ObdRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun reinitializeAdapter(): Result<Unit> {
+        override suspend fun reinitializeAdapter(): Result<Unit> {
         val profile = profileRepository.getProfileSync()
-        return reinitializeAdapter(profile)
+        return reinitializeAdapterWithLogging(profile)
     }
 
-    private suspend fun reinitializeAdapter(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
+    private suspend fun reinitializeAdapterWithLogging(profile: com.example.digital_obd_ii.domain.model.VehicleProfile): Result<Unit> {
         return try {
             pollingEngine.clearPenaltyBox()
             var handshakeSuccess = true
 
+            // Leitura preliminar de voltagem para diagnóstico
+            val voltageRes = transport.send("ATRV", timeoutMs = 1500L)
+            _connectionLogFlow.emit("[VOLTAGEM] Tensão da Bateria (ATRV): $voltageRes")
+
             Elm327Init.getDynamicBootSequence(profile).forEach { step ->
+                val startTime = System.currentTimeMillis()
                 val response = transport.send(step.command, timeoutMs = step.timeoutMs, interCommandDelayMs = profile.interCommandDelayMs.toLong())
+                val latency = System.currentTimeMillis() - startTime
+                _connectionLogFlow.emit("[CMD] TX: ${step.command} -> RX: $response (${latency}ms)")
+
                 step.expectedResponse?.let { expected ->
-                    // v3.7.1: Relaxar validação na inicialização. Em clones v2.1, AT Z as vezes só retorna sujeira, 
-                    // mas o chip reinicia. Usar contains em vez de checagem exata, ou ignorar se tiver lixo.
                     val cleanRes = response.uppercase().replace(Regex("[^A-Z0-9]"), "")
                     val cleanExpected = expected.uppercase().replace(Regex("[^A-Z0-9]"), "")
                     
@@ -139,6 +159,9 @@ class ObdRepositoryImpl @Inject constructor(
                         Log.w("OBD_INIT", "Comando ${step.command} falhou: Esperava $expected, recebeu $response")
                         if (step.command == "0100") {
                             handshakeSuccess = false
+                            if (response.contains("BUS INIT: ...ERROR") || response.contains("UNABLE TO CONNECT")) {
+                                _connectionLogFlow.emit("[AVISO] Barramento sem resposta da ECU. A ignição do veículo está ligada?")
+                            }
                         }
                     }
                 }
@@ -147,18 +170,25 @@ class ObdRepositoryImpl @Inject constructor(
             // Fallback de Protocolo v3.9.6: Se o handshake '0100' falhou com protocolo forçado,
             // tenta 'AT SP 0' (AUTO) para que o ELM327 negocie o protocolo CAN (11-bit ou 29-bit) sozinho.
             if (!handshakeSuccess && profile.obdProtocol != ObdProtocol.AUTO) {
+                _connectionLogFlow.emit("[FALLBACK] Handshake falhou no protocolo ${profile.obdProtocol.label}. Tentando fallback AUTO (AT SP 0)...")
                 Log.w("OBD_INIT", "Handshake falhou no protocolo ${profile.obdProtocol.label}. Tentando fallback AUTO (AT SP 0)...")
                 transport.send("AT SP 0", timeoutMs = 1000L)
                 delay(200)
                 val fallbackRes = transport.send("0100", timeoutMs = 8000L)
                 val cleanFallback = fallbackRes.uppercase().replace(Regex("[^A-Z0-9]"), "")
                 if (cleanFallback.contains("4100")) {
+                    _connectionLogFlow.emit("[SUCESSO] Fallback para Protocolo AUTO bem sucedido!")
                     Log.i("OBD_INIT", "Fallback para Protocolo AUTO bem sucedido!")
                     profileRepository.saveProfile(profile.copy(obdProtocol = ObdProtocol.AUTO))
+                    handshakeSuccess = true
                 }
             }
 
-            Result.success(Unit)
+            if (!handshakeSuccess) {
+                Result.failure(Exception("ECU do veículo não respondeu (0100). Verifique se a ignição está ligada."))
+            } else {
+                Result.success(Unit)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

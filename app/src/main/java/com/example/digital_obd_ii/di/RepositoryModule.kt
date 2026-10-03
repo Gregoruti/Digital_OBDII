@@ -1,7 +1,9 @@
 package com.example.digital_obd_ii.di
 
+import com.example.digital_obd_ii.data.repository.CustomIconsRepositoryImpl
 import com.example.digital_obd_ii.data.repository.ObdRepositoryImpl
 import com.example.digital_obd_ii.data.repository.ProfileRepositoryImpl
+import com.example.digital_obd_ii.domain.repository.CustomIconsRepository
 import com.example.digital_obd_ii.domain.repository.ObdRepository
 import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindProfileRepository(
         profileRepositoryImpl: ProfileRepositoryImpl
     ): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCustomIconsRepository(
+        customIconsRepositoryImpl: CustomIconsRepositoryImpl
+    ): CustomIconsRepository
 }

@@ -62,6 +62,7 @@ import java.io.ByteArrayOutputStream
 @Composable
 fun VisualSettingsScreen(
     onBack: () -> Unit,
+    onIconsClick: () -> Unit = {},
     viewModel: VehicleProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()

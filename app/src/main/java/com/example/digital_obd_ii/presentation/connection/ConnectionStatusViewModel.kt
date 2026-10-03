@@ -27,15 +27,21 @@ data class ConnectionStatusUiState(
     val isSuccess: Boolean = false,
     val isFailed: Boolean = false,
     val errorMessage: String? = null,
-    val shouldNavigateToDashboard: Boolean = false
+    val shouldNavigateToDashboard: Boolean = false,
+    // Diagnósticos Avançados v4.5.0
+    val batteryVoltage: String? = null,
+    val connectionStepIndex: Int = 0, // 0 = Rádio, 1 = Socket, 2 = ELM327, 3 = CAN Bus, 4 = Pronto
+    val debugLogs: List<String> = emptyList(),
+    val actionableHint: String? = null
 )
 
 /**
- * VIEWMODEL: ConnectionStatusViewModel (v3.9.0)
+ * VIEWMODEL: ConnectionStatusViewModel (v4.5.0)
  * 
  * OBJETIVO:
  * Gerenciar a tela de Status da Conexão com ciclo de até 3 tentativas (1/3, 2/3, 3/3),
- * validação do Handshake OBD-II e transição automatizada de 500ms para o Painel.
+ * validação do Handshake OBD-II, streaming de logs de diagnóstico em tempo real e
+ * transição automatizada para o Painel.
  */
 @HiltViewModel
 class ConnectionStatusViewModel @Inject constructor(
@@ -48,10 +54,52 @@ class ConnectionStatusViewModel @Inject constructor(
     val uiState: StateFlow<ConnectionStatusUiState> = _uiState.asStateFlow()
 
     private var connectionJob: Job? = null
+    private var logCollectorJob: Job? = null
 
     @SuppressLint("MissingPermission")
     fun startConnectionProcess(deviceAddress: String) {
         if (connectionJob?.isActive == true) return
+
+        // Inicia coletor contínuo de logs em tempo real
+        logCollectorJob?.cancel()
+        logCollectorJob = viewModelScope.launch {
+            obdRepository.connectionLogFlow.collect { logLine ->
+                _uiState.update { current ->
+                    val updatedLogs = (current.debugLogs + logLine).takeLast(40)
+                    var step = current.connectionStepIndex
+                    var voltage = current.batteryVoltage
+                    var hint = current.actionableHint
+
+                    when {
+                        logLine.contains("[RADIO]") -> step = 0
+                        logLine.contains("[SOCKET]") -> step = 1
+                        logLine.contains("[HANDSHAKE]") || logLine.contains("[VOLTAGEM]") -> {
+                            step = 2
+                            if (logLine.contains("[VOLTAGEM]")) {
+                                val match = Regex("(\\d+\\.\\d+)").find(logLine)
+                                if (match != null) voltage = "${match.value}V"
+                            }
+                        }
+                        logLine.contains("0100") -> step = 3
+                        logLine.contains("[PRONTO]") -> step = 4
+                    }
+
+                    if (logLine.contains("[AVISO]") || logLine.contains("ignição")) {
+                        hint = "Chave de ignição desligada? Verifique se o painel do carro está ligado."
+                    } else if (logLine.contains("Timeout/Falha ao abrir canal Bluetooth")) {
+                        hint = "O adaptador não respondeu. Certifique-se de que está bem encaixado na tomada OBD-II."
+                    }
+
+                    current.copy(
+                        debugLogs = updatedLogs,
+                        connectionStepIndex = step,
+                        batteryVoltage = voltage,
+                        actionableHint = hint,
+                        detailMessage = logLine
+                    )
+                }
+            }
+        }
 
         connectionJob = viewModelScope.launch {
             val pairedDevices = connectionManager.getPairedDevices()
@@ -66,7 +114,9 @@ class ConnectionStatusViewModel @Inject constructor(
                     isSuccess = false,
                     isFailed = false,
                     errorMessage = null,
-                    shouldNavigateToDashboard = false
+                    shouldNavigateToDashboard = false,
+                    connectionStepIndex = 0,
+                    debugLogs = listOf("Iniciando conexão com $name ($deviceAddress)...")
                 )
             }
 
@@ -76,7 +126,8 @@ class ConnectionStatusViewModel @Inject constructor(
                         isConnecting = false,
                         isFailed = true,
                         statusPhase = "Falha na Conexão",
-                        errorMessage = "Dispositivo ($deviceAddress) não localizado entre os pareados."
+                        errorMessage = "Dispositivo ($deviceAddress) não localizado entre os pareados.",
+                        actionableHint = "Vá nas configurações Bluetooth do Android e emparelhe o dongle OBD-II primeiro."
                     )
                 }
                 return@launch
@@ -101,8 +152,10 @@ class ConnectionStatusViewModel @Inject constructor(
                         it.copy(
                             isConnecting = false,
                             isSuccess = true,
+                            connectionStepIndex = 4,
                             statusPhase = "Conectado!",
-                            detailMessage = "Handshake concluído com sucesso. Abrindo Painel..."
+                            detailMessage = "Handshake concluído com sucesso. Abrindo Painel...",
+                            actionableHint = null
                         )
                     }
 
@@ -141,5 +194,11 @@ class ConnectionStatusViewModel @Inject constructor(
             connectionJob = null
             startConnectionProcess(currentAddress)
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        logCollectorJob?.cancel()
+        connectionJob?.cancel()
     }
 }
