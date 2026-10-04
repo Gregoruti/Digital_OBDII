@@ -1,5 +1,47 @@
 # CHANGELOG - Digital OBD-II
 
+## [4.6.3] - 2026-10-03 (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)  
+> **Status de Validação:** Validado com Android Studio Analyzer (`0 erros`).  
+> **Motivação Arquitetural:** Configuração do estado padrão do som da simulação como DESLIGADO (Off by Default) na inicialização do app.
+
+### Ajustado e Otimizado
+- **Som Desligado por Padrão**:
+  - `DashboardViewModel.kt`: Durante a inicialização (`init`), o motor de áudio é explicitamente mantido parado (`V6AudioEngine.stop()`) e `isAudioRunning` inicia como `false`.
+  - O loop de telemetria OBD-II (`startVehicleDataCollection`) agora condiciona a chamada de `V6AudioEngine.updateTelemetry(...)` ao estado `_isAudioRunning.value == true`, economizando ciclos de CPU/NDK enquanto o usuário não ativar o som.
+  - `AudioSettingsPreferences.kt`: Ajustado o valor padrão de `KEY_ENGINE_ENABLED` de `true` para `false`.
+  - No painel, o indicador no canto superior esquerdo inicia discretamente em modo atenuado, ficando pronto para ser ativado a qualquer momento com um toque no canto superior esquerdo.
+
+## [4.6.2] - 2026-10-03 (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)  
+> **Status de Validação:** Validado com Android Studio Analyzer (`0 erros`).  
+> **Motivação Arquitetural:** Simetria de controles por toque no Dashboard — Canto superior esquerdo como botão de alternância do som da simulação acústica do motor.
+
+### Adicionado e Otimizado
+- **Botão de Som no Canto Superior Esquerdo (`DashboardScreen.kt`)**:
+  - Área de toque de 80dp no canto superior esquerdo (alinhado a `TopStart`) que liga/desliga o som da simulação acústica do motor (`V6AudioEngine.start` / `stop`), espelhando perfeitamente a área do canto superior direito (`TopEnd`) que abre as configurações.
+  - Indicador de estado em tempo real: ícone de volume dinâmico em ciano neon (`#00E5FF`) quando o som está ligado e atenuado (`alpha = 0.35`) quando está desligado.
+- **Gerenciamento no ViewModel (`DashboardViewModel.kt`)**:
+  - Injeção de `ApplicationContext` para inicialização segura do motor de áudio.
+  - Exposição do fluxo reativo `isAudioRunning: StateFlow<Boolean>`.
+  - Tratamento unificado de liga/desliga de som para o toque na tela e para qualquer ícone customizado atribuído à função `IconFunction.TOGGLE_AUDIO`.
+
+## [4.6.1] - 2026-10-03 (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)  
+> **Status de Validação:** Validado com Android Studio Analyzer (`0 erros`).  
+> **Motivação Arquitetural:** Ativação da primeira funcionalidade conectada ao subsistema de Ícones Personalizados no painel e renderização de camada overlay dinâmica no Dashboard.
+
+### Adicionado e Conectado
+- **Primeira Funcionalidade Conectada ao Painel (Slot Médio 0 -> Zerar Trip A)**:
+  - Inicialização padrão do slot `medium_0` em `CustomIconsRepositoryImpl` com ação `IconFunction.RESET_TRIP_A` e coordenadas `X=477, Y=540` (centralizado abaixo do mostrador de Trip).
+  - Acionamento direto via toque no painel: zera imediatamente os dados da viagem atual (`TripSummary`), refletindo em tempo real nos displays digitais de tempo, distância e consumo acumulados.
+- **Camada de Renderização Overlay no Dashboard (`DashboardScreen.kt`)**:
+  - Injeção de `CustomIconsRepository` em `DashboardViewModel` e exposição de fluxo reativo `customIcons`.
+  - Renderização automática para ícones com imagem PNG/JPG (`AsyncImage`) e para ícones configurados sem imagem (estilo HUD com borda neon e ícones vetoriais de sistema).
+  - Suporte completo a ações de toque (`RESET_TRIP_A`, `TOGGLE_AUDIO`, `TOGGLE_SHIFT_LIGHT`, `RECONNECT_OBD`, `OPEN_SETTINGS`) e mostradores dinâmicos de telemetria (`DISPLAY_THROTTLE`, `DISPLAY_COOLANT_TEMP`, `DISPLAY_BATTERY_VOLTS`, `DISPLAY_RPM`, etc.).
+- **Navegação em `VisualSettingsScreen.kt`**:
+  - Inserção de card proeminente e ação na TopAppBar para acesso direto à sub-página de gerenciamento de ícones.
+
 ## [4.5.0] - Atual (Equipe Antigravity)
 > **Assistente / Modelo de IA:** Claude 3.5 Sonnet (Antigravity)
 > **Status de Validação:** Refatorações de estabilidade Bluetooth, OBD e Ícones aplicados.

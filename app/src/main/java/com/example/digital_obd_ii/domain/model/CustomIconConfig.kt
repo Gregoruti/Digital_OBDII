@@ -1,4 +1,4 @@
-package com.example.digital_obd_ii.domain.model
+﻿package com.example.digital_obd_ii.domain.model
 
 /**
  * MODELO DE DADOS: CustomIconConfig (v4.6.0)
@@ -19,9 +19,9 @@ enum class IconResolutionCategory(
     val widthPx: Int,
     val heightPx: Int
 ) {
-    SMALL("Pequeno", "Texto / Legenda", 200, 20),
-    MEDIUM("Médio", "Ícones Normais", 70, 60),
-    LARGE("Grande", "Dígito Grande", 85, 110)
+    SMALL("Pequeno (P)", "24x24 px", 24, 24),
+    MEDIUM("Médio (M)", "40x40 px", 40, 40),
+    LARGE("Grande (G)", "64x64 px", 64, 64)
 }
 
 enum class IconFunction(val label: String, val group: String) {

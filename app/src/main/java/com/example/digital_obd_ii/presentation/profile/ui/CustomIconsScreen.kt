@@ -3,17 +3,20 @@ package com.example.digital_obd_ii.presentation.profile.ui
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
@@ -26,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +39,22 @@ import com.example.digital_obd_ii.domain.model.IconFunction
 import com.example.digital_obd_ii.domain.model.IconResolutionCategory
 import com.example.digital_obd_ii.presentation.components.CivicColors
 import com.example.digital_obd_ii.presentation.profile.CustomIconsViewModel
+
+data class BuiltInIconPreset(
+    val id: String,
+    val name: String,
+    val filename: String
+)
+
+val BUILTIN_ICONS = listOf(
+    BuiltInIconPreset("alto_falante", "Alto-falante", "alto_falante.png"),
+    BuiltInIconPreset("alto_falante_bloqueado", "Alto-falante Bloqueado", "alto_falante_bloqueado.png"),
+    BuiltInIconPreset("bluetooth", "Bluetooth", "bluetooth.png"),
+    BuiltInIconPreset("bluetooth_bloqueado", "Bluetooth Bloqueado", "bluetooth_bloqueado.png"),
+    BuiltInIconPreset("engrenagem", "Engrenagem", "engrenagem.png"),
+    BuiltInIconPreset("comunicacao", "Comunicação", "comunicacao.png"),
+    BuiltInIconPreset("comunicacao_interrompida", "Comunicação Interrompida", "comunicacao_interrompida.png")
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +143,7 @@ fun CustomIconsScreen(
                             color = Color.White
                         )
                         Text(
-                            text = "Resolução: ${uiState.selectedCategory.widthPx}x${uiState.selectedCategory.heightPx} px • Formatos: PNG ou JPG • 10 Slots",
+                            text = "Resolução: ${uiState.selectedCategory.widthPx}x${uiState.selectedCategory.heightPx} px   Formatos: PNG transparente   10 Slots",
                             fontSize = 11.sp,
                             color = Color.LightGray
                         )
@@ -186,11 +206,18 @@ fun IconSlotCard(
     onClearSlot: () -> Unit
 ) {
     var isExpandedDropdown by remember { mutableStateOf(false) }
+    var showPresetDialog by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { onImageSelected(it.toString()) }
+    }
+
+    val sizeCode = when (item.category) {
+        IconResolutionCategory.SMALL -> "p"
+        IconResolutionCategory.MEDIUM -> "m"
+        IconResolutionCategory.LARGE -> "g"
     }
 
     Card(
@@ -245,24 +272,24 @@ fun IconSlotCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(width = 90.dp, height = 55.dp)
+                        .size(width = 80.dp, height = 60.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Black.copy(alpha = 0.5f))
+                        .background(Color.Black.copy(alpha = 0.6f))
                         .border(1.dp, Color(0xFF3A4454), RoundedCornerShape(8.dp))
-                        .clickable { imagePickerLauncher.launch("image/*") },
+                        .clickable { showPresetDialog = true },
                     contentAlignment = Alignment.Center
                 ) {
                     if (item.imageUri != null) {
                         AsyncImage(
                             model = item.imageUri,
                             contentDescription = "Ícone Slot #${item.slotIndex + 1}",
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().padding(4.dp),
                             contentScale = ContentScale.Fit
                         )
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Default.Add, contentDescription = null, tint = CivicColors.BlueGlow, modifier = Modifier.size(20.dp))
-                            Text("PNG/JPG", fontSize = 9.sp, color = Color.Gray)
+                            Text("Ícone", fontSize = 9.sp, color = Color.Gray)
                         }
                     }
                 }
@@ -270,19 +297,35 @@ fun IconSlotCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Button(
-                        onClick = { imagePickerLauncher.launch("image/*") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2838)),
-                        modifier = Modifier.fillMaxWidth().height(36.dp),
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(if (item.imageUri != null) "Trocar Imagem" else "Selecionar Imagem", fontSize = 12.sp)
+                        Button(
+                            onClick = { showPresetDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B324D)),
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp)
+                        ) {
+                            Icon(Icons.Default.Collections, contentDescription = null, modifier = Modifier.size(14.dp), tint = CivicColors.BlueGlow)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Ícones App", fontSize = 11.sp, color = Color.White)
+                        }
+                        OutlinedButton(
+                            onClick = { imagePickerLauncher.launch("image/*") },
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp)
+                        ) {
+                            Text("Galeria", fontSize = 11.sp)
+                        }
                     }
                     Text(
-                        text = "Alvo: ${item.category.widthPx}x${item.category.heightPx} px",
+                        text = "Dimensão: ${item.category.widthPx}x${item.category.heightPx} px",
                         fontSize = 11.sp,
                         color = Color.Gray,
-                        modifier = Modifier.padding(top = 2.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -400,6 +443,87 @@ fun IconSlotCard(
                 }
             }
         }
+    }
+
+    // Modal de Seleção de Ícone da Biblioteca
+    if (showPresetDialog) {
+        AlertDialog(
+            onDismissRequest = { showPresetDialog = false },
+            title = {
+                Text(
+                    text = "Biblioteca de Ícones (${item.category.label})",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Toque em um ícone para aplicar diretamente ao Slot #${item.slotIndex + 1}:",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp)
+                    ) {
+                        items(BUILTIN_ICONS) { preset ->
+                            val assetUri = "file:///android_asset/icons/$sizeCode/${preset.filename}"
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onImageSelected(assetUri)
+                                        showPresetDialog = false
+                                    },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF141923)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2C384A))
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(6.dp))
+                                            .padding(4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        AsyncImage(
+                                            model = assetUri,
+                                            contentDescription = preset.name,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = preset.name,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPresetDialog = false }) {
+                    Text("Fechar")
+                }
+            }
+        )
     }
 }
 

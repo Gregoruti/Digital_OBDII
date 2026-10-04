@@ -29,7 +29,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
@@ -154,6 +157,9 @@ fun VisualSettingsScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onIconsClick) {
+                        Icon(Icons.Default.Image, contentDescription = "Ícones", tint = CivicColors.BlueGlow)
+                    }
                     IconButton(onClick = { showResetDialog = true }) {
                         Icon(Icons.Default.Refresh, "Restaurar")
                     }
@@ -203,6 +209,49 @@ fun VisualSettingsScreen(
                 modifier = Modifier.weight(1f).fillMaxHeight().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onIconsClick() },
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF161E2E)),
+                        border = BorderStroke(1.dp, CivicColors.BlueGlow),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = null,
+                                tint = CivicColors.BlueGlow,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Ícones e Legendas",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Sub-página: 30 slots (P/M/G), coordenadas X/Y e ações",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Abrir",
+                                tint = CivicColors.BlueGlow
+                            )
+                        }
+                    }
+                }
                 item {
                     Text("📱 MODO DE DISPOSITIVO", color = CivicColors.BlueGlow, style = MaterialTheme.typography.titleMedium)
                     Text("Define a escala base e o layout salvo:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)

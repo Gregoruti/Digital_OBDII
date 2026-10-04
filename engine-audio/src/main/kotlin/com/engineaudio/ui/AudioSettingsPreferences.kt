@@ -13,7 +13,7 @@ class AudioSettingsPreferences(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     var isEngineSoundEnabled: Boolean
-        get() = prefs.getBoolean(KEY_ENGINE_ENABLED, true)
+        get() = prefs.getBoolean(KEY_ENGINE_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_ENGINE_ENABLED, value).apply()
 
     var masterVolume: Float

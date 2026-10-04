@@ -26,8 +26,17 @@ import com.example.digital_obd_ii.domain.repository.ProfileRepository
 import com.example.digital_obd_ii.domain.model.VehicleProfile
 import com.example.digital_obd_ii.domain.model.ShiftLightTargetMode
 import com.example.digital_obd_ii.domain.logger.TripLogManager
+import com.example.digital_obd_ii.domain.repository.CustomIconsRepository
+import com.example.digital_obd_ii.domain.model.CustomIconItem
+import com.example.digital_obd_ii.domain.model.IconFunction
+import com.example.digital_obd_ii.domain.model.TripSummary
+import com.engineaudio.V6AudioEngine
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import com.example.digital_obd_ii.data.database.dao.TripDao
 import com.example.digital_obd_ii.data.database.entities.TripEntity
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,13 +44,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.engineaudio.V6AudioEngine
 
 /**
  * ViewModel que orquestra os dados em tempo real para o Dashboard.
  */
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val obdRepository: ObdRepository,
     private val updateTrip: UpdateTripSummaryUseCase,
     private val calculateFuel: CalculateFuelConsumptionUseCase,
@@ -50,7 +59,8 @@ class DashboardViewModel @Inject constructor(
     private val exponentialRpmFilter: ExponentialRpmFilterUseCase,
     private val profileRepository: ProfileRepository,
     private val tripDao: TripDao,
-    private val tripLogManager: TripLogManager
+    private val tripLogManager: TripLogManager,
+    private val customIconsRepository: CustomIconsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -65,8 +75,74 @@ class DashboardViewModel @Inject constructor(
     private val _isBlinking = MutableStateFlow(false)
     val isBlinking: StateFlow<Boolean> = _isBlinking.asStateFlow()
 
+    // ESTADO DO MOTOR DE ÁUDIO (v4.6.2)
+    private val _isAudioRunning = MutableStateFlow(false)
+    val isAudioRunning: StateFlow<Boolean> = _isAudioRunning.asStateFlow()
+
+    // FLUXO DE ÍCONES E LEGENDAS PERSONALIZADOS (v4.6.1)
+    val customIcons: StateFlow<List<CustomIconItem>> = customIconsRepository.getIconsFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun onCustomIconClick(icon: CustomIconItem, onSettingsClick: () -> Unit) {
+        Log.d("CUSTOM_ICON", "Ícone acionado: ${icon.id} (${icon.label}) - Função: ${icon.function}")
+        when (icon.function) {
+            IconFunction.RESET_TRIP_A -> {
+                resetTrip()
+            }
+            IconFunction.TOGGLE_AUDIO -> {
+                toggleAudio()
+            }
+            IconFunction.TOGGLE_SHIFT_LIGHT -> {
+                toggleShiftLight()
+            }
+            IconFunction.OPEN_SETTINGS -> {
+                onSettingsClick()
+            }
+            IconFunction.RECONNECT_OBD -> {
+                val address = _uiState.value.profile.lastConnectedDeviceAddress
+                if (!address.isNullOrEmpty()) {
+                    autoConnect(address)
+                }
+            }
+            else -> {}
+        }
+    }
+
+    fun resetTrip() {
+        Log.i("CUSTOM_ICON", "Resetando odômetro de viagem (Trip A) via Custom Icon")
+        _uiState.update { it.copy(trip = TripSummary(startTime = System.currentTimeMillis())) }
+    }
+
+    fun toggleShiftLight() {
+        val current = _uiState.value.profile
+        val updated = current.copy(isShiftLightMode = !current.isShiftLightMode)
+        viewModelScope.launch {
+            profileRepository.saveProfile(updated)
+        }
+    }
+
+    fun toggleAudio() {
+        try {
+            val engine = V6AudioEngine.getInstance(context)
+            if (engine.state == com.engineaudio.EngineState.RUNNING) {
+                V6AudioEngine.stop()
+                _isAudioRunning.value = false
+                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor DESLIGADA")
+            } else {
+                V6AudioEngine.start(context)
+                _isAudioRunning.value = true
+                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor LIGADA")
+            }
+        } catch (e: Throwable) {
+            Log.e("DASHBOARD_AUDIO", "Erro ao alternar áudio do motor", e)
+        }
+    }
+
     init {
-        Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Iniciando coletores e Watchdog.")
+        Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Som padrão: DESLIGADO.")
+        // Som padrão: DESLIGADO (v4.6.3)
+        V6AudioEngine.stop()
+        _isAudioRunning.value = false
         startCollecting()
         startWatchdog()
     }
@@ -152,17 +228,19 @@ class DashboardViewModel @Inject constructor(
                             // Transforma a faixa urbana do Civic (700-3000 RPM) na escala completa do simulador (700-8000 RPM)
                             val acousticRpm = exponentialRpmFilter.filter(predictedRpm.toFloat())
 
-                            // Telemetria acústica V6 em tempo real (Lê a marcha exibida no Dashboard e aplica RPM acústico)
-                            try {
-                                V6AudioEngine.updateTelemetry(
-                                    rpm = acousticRpm,
-                                    throttle = (snapshot.throttlePosition.toFloat() / 100f).coerceIn(0f, 1f),
-                                    gear = displayedGear,
-                                    speed = snapshot.speedKmh.toFloat(),
-                                    isShiftLightActive = _isBlinking.value
-                                )
-                            } catch (e: Throwable) {
-                                // Silent fallback se o motor de áudio estiver inativo
+                            // Telemetria acústica V6 em tempo real (apenas se o som estiver explicitamente LIGADO)
+                            if (_isAudioRunning.value) {
+                                try {
+                                    V6AudioEngine.updateTelemetry(
+                                        rpm = acousticRpm,
+                                        throttle = (snapshot.throttlePosition.toFloat() / 100f).coerceIn(0f, 1f),
+                                        gear = displayedGear,
+                                        speed = snapshot.speedKmh.toFloat(),
+                                        isShiftLightActive = _isBlinking.value
+                                    )
+                                } catch (e: Throwable) {
+                                    // Silent fallback se o motor de áudio estiver inativo
+                                }
                             }
 
                             _uiState.update { state ->
@@ -235,6 +313,8 @@ class DashboardViewModel @Inject constructor(
 
     override fun onCleared() {
         saveCurrentTrip()
+        V6AudioEngine.stop()
+        _isAudioRunning.value = false
     }
 
     private fun saveCurrentTrip() {

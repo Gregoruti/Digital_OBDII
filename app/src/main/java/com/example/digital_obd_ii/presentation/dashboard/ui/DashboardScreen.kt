@@ -41,6 +41,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.ElectricBolt
+import coil.compose.AsyncImage
+import com.example.digital_obd_ii.domain.model.CustomIconItem
+import com.example.digital_obd_ii.domain.model.IconFunction
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.digital_obd_ii.presentation.components.*
 import com.example.digital_obd_ii.presentation.dashboard.DashboardViewModel
@@ -62,6 +70,8 @@ fun DashboardScreen(
     val currentTime = remember { mutableStateOf("") }
     val context = LocalContext.current
     val isBlinking by viewModel.isBlinking.collectAsState()
+    val customIcons by viewModel.customIcons.collectAsState()
+    val isAudioRunning by viewModel.isAudioRunning.collectAsState()
 
     // Animações de alta velocidade (v3.9.7) para resposta imediata de RPM e Velocidade
     val animatedRpm by animateIntAsState(
@@ -146,13 +156,31 @@ fun DashboardScreen(
                 .align(Alignment.TopCenter)
         )
 
-        // 2. Versão (Canto Superior Esquerdo)
-        VersionBadge(
-            color = CivicColors.GrayBezel.copy(alpha = 0.3f),
+        // 2. BOTÃO DE ÁUDIO / SIMULAÇÃO DE SOM (Canto Superior Esquerdo - v4.6.2)
+        // Toque no canto superior esquerdo liga/desliga o som da simulação acústica do motor
+        Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(16.dp * screenScale.avgScale)
-        )
+                .size(80.dp * screenScale.avgScale)
+                .clickable { viewModel.toggleAudio() }
+                .padding(16.dp * screenScale.avgScale),
+            contentAlignment = Alignment.TopStart
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = if (isAudioRunning) "Som Ligado" else "Som Desligado",
+                    tint = if (isAudioRunning) Color(0xFF00E5FF) else CivicColors.GrayBezel.copy(alpha = 0.35f),
+                    modifier = Modifier.size(16.dp * screenScale.avgScale)
+                )
+                VersionBadge(
+                    color = if (isAudioRunning) Color(0xFF00E5FF).copy(alpha = 0.7f) else CivicColors.GrayBezel.copy(alpha = 0.3f)
+                )
+            }
+        }
 
         // 3. BOTÃO DE CONFIGURAÇÕES INVISÍVEL (v1.8.6)
         // Sobreposto ao ícone de engrenagem do background no canto superior direito
@@ -212,6 +240,205 @@ fun DashboardScreen(
                         padLength = pad,
                         isGhostEnabled = uiState.profile.isGhostEnabled
                     )
+                }
+            }
+        }
+
+        // 5. ÍCONES E LEGENDAS PERSONALIZADOS (v4.6.1)
+        // Suporta imagens PNG/JPG e fallback moderno de alta tecnologia para botões/telemetria antes do upload
+        customIcons.forEach { icon ->
+            val isConfigured = icon.imageUri != null || icon.isClickable || icon.function != IconFunction.NONE
+            if (isConfigured) {
+                val iconWidth = icon.category.widthPx.toFloat().toScaledX(screenScale.scaleX)
+                val iconHeight = icon.category.heightPx.toFloat().toScaledY(screenScale.scaleY)
+
+                Box(
+                    modifier = Modifier
+                        .offset(
+                            x = icon.posX.toScaledX(screenScale.scaleX),
+                            y = icon.posY.toScaledY(screenScale.scaleY)
+                        )
+                        .size(width = iconWidth, height = iconHeight)
+                        .then(
+                            if (icon.isClickable) {
+                                Modifier.clickable { viewModel.onCustomIconClick(icon, onSettingsClick) }
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (icon.imageUri != null) {
+                        // Imagem personalizada fornecida pelo usuário
+                        AsyncImage(
+                            model = icon.imageUri,
+                            contentDescription = icon.label.ifEmpty { icon.id },
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        // Feedback visual funcional (botão ou mostrador) enquanto a imagem não foi carregada
+                        val isAction = icon.function.group == "Ação" || icon.isClickable
+                        val borderColor = if (isAction) CivicColors.BlueGlow else Color(0xFF00E5FF)
+                        val bgColor = Color(0xDD0D1622)
+
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = RoundedCornerShape(4.dp),
+                            color = bgColor,
+                            border = BorderStroke(1.dp, borderColor.copy(alpha = 0.85f))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                when (icon.function) {
+                                    IconFunction.RESET_TRIP_A -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = null,
+                                                tint = CivicColors.BlueGlow,
+                                                modifier = Modifier.size(14.dp * screenScale.avgScale)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "ZERAR TRIP",
+                                                color = CivicColors.White,
+                                                fontSize = 10.sp * screenScale.avgScale,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    IconFunction.TOGGLE_AUDIO -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                                contentDescription = null,
+                                                tint = CivicColors.BlueGlow,
+                                                modifier = Modifier.size(14.dp * screenScale.avgScale)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "ÁUDIO V6",
+                                                color = CivicColors.White,
+                                                fontSize = 10.sp * screenScale.avgScale,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    IconFunction.TOGGLE_SHIFT_LIGHT -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ElectricBolt,
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFD600),
+                                                modifier = Modifier.size(14.dp * screenScale.avgScale)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "SHIFT LIGHT",
+                                                color = CivicColors.White,
+                                                fontSize = 9.sp * screenScale.avgScale,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    IconFunction.DISPLAY_THROTTLE -> {
+                                        Text(
+                                            text = "TPS: ${uiState.snapshot.throttlePosition.toInt()}%",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_COOLANT_TEMP -> {
+                                        Text(
+                                            text = "TEMP: ${uiState.snapshot.coolantTempC}°C",
+                                            color = if (uiState.snapshot.coolantTempC > 104) CivicColors.RedMain else Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_BATTERY_VOLTS -> {
+                                        Text(
+                                            text = String.format(Locale.US, "BAT: %.1fV", uiState.snapshot.ecuVoltage),
+                                            color = if (uiState.snapshot.ecuVoltage < 12.0) CivicColors.RedMain else Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_RPM -> {
+                                        Text(
+                                            text = "RPM: $animatedRpm",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_SPEED -> {
+                                        Text(
+                                            text = "SPD: $animatedSpeed km/h",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_GEAR -> {
+                                        Text(
+                                            text = "GEAR: ${if (uiState.snapshot.idealGear == 0) "N" else uiState.snapshot.idealGear.toString()}",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 11.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_TRIP_DIST -> {
+                                        Text(
+                                            text = String.format(Locale.US, "DIST: %.1f km", uiState.trip.distanceKm),
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 10.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_TRIP_TIME -> {
+                                        Text(
+                                            text = "TIME: ${formatTime(uiState.trip.elapsedMillis)}",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 10.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    IconFunction.DISPLAY_FUEL_KML -> {
+                                        Text(
+                                            text = String.format(Locale.US, "KML: %.1f", uiState.trip.avgConsumptionKmL),
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 10.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    else -> {
+                                        Text(
+                                            text = icon.label.ifEmpty { icon.id.uppercase() },
+                                            color = CivicColors.White,
+                                            fontSize = 10.sp * screenScale.avgScale,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

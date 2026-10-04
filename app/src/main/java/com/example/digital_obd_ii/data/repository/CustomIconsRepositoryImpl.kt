@@ -33,7 +33,19 @@ class CustomIconsRepositoryImpl @Inject constructor(
             val list = mutableListOf<CustomIconItem>()
             IconResolutionCategory.values().forEach { cat ->
                 for (i in 0 until 10) {
-                    list.add(
+                    val defaultItem = if (cat == IconResolutionCategory.MEDIUM && i == 0) {
+                        // Primeira funcionalidade conectada: Botão Zerar Trip A logo abaixo do bloco de Trip no painel
+                        CustomIconItem(
+                            id = "${cat.name.lowercase()}_$i",
+                            category = cat,
+                            slotIndex = i,
+                            posX = 477f,
+                            posY = 540f,
+                            isClickable = true,
+                            function = IconFunction.RESET_TRIP_A,
+                            label = "ZERAR TRIP"
+                        )
+                    } else {
                         CustomIconItem(
                             id = "${cat.name.lowercase()}_$i",
                             category = cat,
@@ -41,7 +53,8 @@ class CustomIconsRepositoryImpl @Inject constructor(
                             posX = 50f + (i * 20f),
                             posY = 100f + (cat.ordinal * 120f)
                         )
-                    )
+                    }
+                    list.add(defaultItem)
                 }
             }
             return list
@@ -144,7 +157,13 @@ class CustomIconsRepositoryImpl @Inject constructor(
             // Garante que todos os 30 slots existam caso falte algum
             val defaults = createDefaultSlots()
             val finalMap = defaults.associateBy { it.id }.toMutableMap()
-            list.forEach { finalMap[it.id] = it }
+            list.forEach { item ->
+                if (item.id == "medium_0" && item.imageUri.isNullOrEmpty() && item.function == IconFunction.NONE && !item.isClickable) {
+                    finalMap[item.id] = defaults.first { it.id == "medium_0" }
+                } else {
+                    finalMap[item.id] = item
+                }
+            }
             finalMap.values.toList()
         } catch (_: Exception) {
             createDefaultSlots()
