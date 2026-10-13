@@ -24,6 +24,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -298,6 +300,39 @@ fun VisualSettingsScreen(
                 item {
                     HorizontalDivider()
                     Text("Ajustes da Barra", style = MaterialTheme.typography.titleMedium)
+
+                    Text("Estilo da Barra de RPM", style = MaterialTheme.typography.labelLarge, color = CivicColors.BlueGlow)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = uiState.profile.rpmBarStyle == 1,
+                            onClick = { viewModel.updateRpmBarStyle(1) },
+                            label = { Text("Formato 1 (Linha Fina)") },
+                            leadingIcon = if (uiState.profile.rpmBarStyle == 1) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            } else null
+                        )
+                        FilterChip(
+                            selected = uiState.profile.rpmBarStyle == 2,
+                            onClick = { viewModel.updateRpmBarStyle(2) },
+                            label = { Text("Formato 2 (Analógico)") },
+                            leadingIcon = if (uiState.profile.rpmBarStyle == 2) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            } else null
+                        )
+                        FilterChip(
+                            selected = uiState.profile.rpmBarStyle == 3,
+                            onClick = { viewModel.updateRpmBarStyle(3) },
+                            label = { Text("Formato 1.5 (Híbrido)") },
+                            leadingIcon = if (uiState.profile.rpmBarStyle == 3) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            } else null
+                        )
+                    }
+
+                    ControlSlider("Espessura da Barra (Thickness)", uiState.profile.rpmBarThickness, 10f, 80f) { viewModel.updateRpmBarThickness(it) }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Modo Shift Light", modifier = Modifier.weight(1f))
                         Switch(checked = uiState.profile.isShiftLightMode, onCheckedChange = { viewModel.updateIsShiftLightMode(it) })
@@ -452,6 +487,8 @@ fun VisualSettingsScreen(
                         curvature = uiState.profile.rpmBarCurvature,
                         barWidth = uiState.profile.rpmBarWidth * previewScale.avgScale,
                         barHeight = uiState.profile.rpmBarHeight * previewScale.avgScale,
+                        rpmBarStyle = uiState.profile.rpmBarStyle,
+                        rpmBarThickness = uiState.profile.rpmBarThickness * previewScale.avgScale,
                         isBlinking = isSimBlinking,
                         blinkIntervalMs = uiState.profile.shiftLightBlinkMs,
                         colorConfig = RpmColorConfig(

@@ -4,14 +4,20 @@ package com.engineaudio
  * Controle de versão e documentação de build para a Engine de Áudio.
  */
 object EngineAudioVersion {
-    const val VERSION_NAME = "1.09"
-    const val VERSION_CODE = 109
-    const val BUILD_DATE = "30/09/2026"
+    const val VERSION_NAME = "1.10"
+    const val VERSION_CODE = 110
+    const val BUILD_DATE = "12/10/2026"
 
     /**
      * Changelog documentado das alterações realizadas
      */
     val CHANGELOG = listOf(
+        "v1.10 (12/10/2026):",
+        "• NOVO PAINEL DE ACÚSTICA DE CABINE, SOM ABAFADO & TIMBRE (AUDI RS4 & UNIVERSAL):",
+        "  - Switch Ativar Som Abafado de Cabine (Cockpit): simula o isolamento acústico interno ouvindo motor e escape de dentro do habitáculo.",
+        "  - Slider Nível de Abafamento / Isolamento (0% a 100%): modula filtros Biquad Low-Pass dinâmicos (350 Hz a 1.400 Hz) e ressonância de cabine a 82 Hz (+3.5 dB).",
+        "  - Slider Balanço de Timbre Grave ⟷ Agudo: reforço de sub-graves (-100% Grave V8) até presença metálica (+100% Agudo).",
+        "  - Seletor de Variantes Acústicas de Carros Poçantes: Original (RS4 1:1), Muscle V8 (Grave Rumble), Supercar (Agudo Rasp) e Sedã Luxo Executivo (Ultra-Abafado).",
         "v1.09 (30/09/2026):",
         "• FEATURE OFICIAL: MODO FAIXA ÚNICA CONTÍNUA (0 A 4.000+ RPM) UNIVERSAL:",
         "  - Botão seletor dinâmico em Configurações de Áudio permitindo fixar qualquer veículo em 1 única faixa de áudio contínua (Lenta, Baixa, Média ou Alta).",

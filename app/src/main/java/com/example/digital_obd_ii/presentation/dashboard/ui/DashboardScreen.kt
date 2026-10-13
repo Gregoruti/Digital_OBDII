@@ -33,6 +33,10 @@ import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -44,13 +48,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ElectricBolt
 import coil.compose.AsyncImage
 import com.example.digital_obd_ii.domain.model.CustomIconItem
 import com.example.digital_obd_ii.domain.model.IconFunction
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.digital_obd_ii.presentation.components.*
+import com.example.digital_obd_ii.presentation.dashboard.ConnectionState
 import com.example.digital_obd_ii.presentation.dashboard.DashboardViewModel
 import com.example.digital_obd_ii.ui.theme.*
 import java.io.File
@@ -84,6 +88,20 @@ fun DashboardScreen(
         animationSpec = tween(durationMillis = 60, easing = LinearEasing),
         label = "DigitalSpeedAnimation"
     )
+
+    // Sincroniza estado de áudio e configurações sempre que retornar da tela de configurações
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.syncAudioState()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.startCollecting()
@@ -140,6 +158,8 @@ fun DashboardScreen(
             curvature = uiState.profile.rpmBarCurvature,
             barWidth = uiState.profile.rpmBarWidth * screenScale.avgScale,
             barHeight = uiState.profile.rpmBarHeight * screenScale.avgScale,
+            rpmBarStyle = uiState.profile.rpmBarStyle,
+            rpmBarThickness = uiState.profile.rpmBarThickness * screenScale.avgScale,
             isBlinking = isBlinking,
             blinkIntervalMs = uiState.profile.shiftLightBlinkMs,
             colorConfig = RpmColorConfig(
@@ -156,40 +176,15 @@ fun DashboardScreen(
                 .align(Alignment.TopCenter)
         )
 
-        // 2. BOTÃO DE ÁUDIO / SIMULAÇÃO DE SOM (Canto Superior Esquerdo - v4.6.2)
-        // Toque no canto superior esquerdo liga/desliga o som da simulação acústica do motor
-        Box(
+        // 2. Versão (Canto Superior Esquerdo)
+        VersionBadge(
+            color = CivicColors.GrayBezel.copy(alpha = 0.3f),
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(80.dp * screenScale.avgScale)
-                .clickable { viewModel.toggleAudio() }
-                .padding(16.dp * screenScale.avgScale),
-            contentAlignment = Alignment.TopStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                    contentDescription = if (isAudioRunning) "Som Ligado" else "Som Desligado",
-                    tint = if (isAudioRunning) Color(0xFF00E5FF) else CivicColors.GrayBezel.copy(alpha = 0.35f),
-                    modifier = Modifier.size(16.dp * screenScale.avgScale)
-                )
-                VersionBadge(
-                    color = if (isAudioRunning) Color(0xFF00E5FF).copy(alpha = 0.7f) else CivicColors.GrayBezel.copy(alpha = 0.3f)
-                )
-            }
-        }
-
-        // 3. BOTÃO DE CONFIGURAÇÕES INVISÍVEL (v1.8.6)
-        // Sobreposto ao ícone de engrenagem do background no canto superior direito
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(80.dp * screenScale.avgScale)
-                .clickable { onSettingsClick() }
+                .padding(16.dp * screenScale.avgScale)
         )
+
+        // 3. Botão de configurações hardcoded removido (v4.6.5) - Navegação agora é controlada pelo Slot 1 customizável
 
         // 4. Elementos Dinâmicos Normalizados
         uiState.profile.elements.forEach { (key, config) ->
@@ -244,13 +239,23 @@ fun DashboardScreen(
             }
         }
 
-        // 5. ÍCONES E LEGENDAS PERSONALIZADOS (v4.6.1)
-        // Suporta imagens PNG/JPG e fallback moderno de alta tecnologia para botões/telemetria antes do upload
+        // 5. ÍCONES E LEGENDAS PERSONALIZADOS (v4.6.4)
+        // Suporta troca de estado dinâmica (Liga/Desliga - ON/OFF), imagens PNG transparentes e fallback HUD
         customIcons.forEach { icon ->
-            val isConfigured = icon.imageUri != null || icon.isClickable || icon.function != IconFunction.NONE
+            val isConfigured = icon.imageUri != null || icon.imageUriOff != null || icon.isClickable || icon.function != IconFunction.NONE
             if (isConfigured) {
                 val iconWidth = icon.category.widthPx.toFloat().toScaledX(screenScale.scaleX)
                 val iconHeight = icon.category.heightPx.toFloat().toScaledY(screenScale.scaleY)
+
+                // Determina o estado ativo de acordo com a função do ícone
+                val isStateActive = when (icon.function) {
+                    IconFunction.TOGGLE_AUDIO -> isAudioRunning
+                    IconFunction.RECONNECT_OBD -> uiState.connectionState is ConnectionState.Connected
+                    IconFunction.TOGGLE_SHIFT_LIGHT -> uiState.profile.isShiftLightMode
+                    else -> true
+                }
+
+                val imageToDisplay = icon.resolveImageUri(isStateActive)
 
                 Box(
                     modifier = Modifier
@@ -268,10 +273,10 @@ fun DashboardScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (icon.imageUri != null) {
-                        // Imagem personalizada fornecida pelo usuário
+                    if (imageToDisplay != null) {
+                        // Imagem dinâmica baseada no estado atual (ON ou OFF)
                         AsyncImage(
-                            model = icon.imageUri,
+                            model = imageToDisplay,
                             contentDescription = icon.label.ifEmpty { icon.id },
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Fit
@@ -316,24 +321,17 @@ fun DashboardScreen(
                                         }
                                     }
                                     IconFunction.TOGGLE_AUDIO -> {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                                contentDescription = null,
-                                                tint = CivicColors.BlueGlow,
-                                                modifier = Modifier.size(14.dp * screenScale.avgScale)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                text = "ÁUDIO V6",
-                                                color = CivicColors.White,
-                                                fontSize = 10.sp * screenScale.avgScale,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                                        val fallbackUri = if (isAudioRunning) {
+                                            "file:///android_asset/icons/m/alto_falante.png"
+                                        } else {
+                                            "file:///android_asset/icons/m/alto_falante_bloqueado.png"
                                         }
+                                        AsyncImage(
+                                            model = fallbackUri,
+                                            contentDescription = if (isAudioRunning) "Som Ligado" else "Som Desligado",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Fit
+                                        )
                                     }
                                     IconFunction.TOGGLE_SHIFT_LIGHT -> {
                                         Row(

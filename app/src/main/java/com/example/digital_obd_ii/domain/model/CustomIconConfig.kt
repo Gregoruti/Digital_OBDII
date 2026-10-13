@@ -1,16 +1,17 @@
 ﻿package com.example.digital_obd_ii.domain.model
 
 /**
- * MODELO DE DADOS: CustomIconConfig (v4.6.0)
+ * MODELO DE DADOS: CustomIconConfig (v4.6.4)
  * 
  * OBJETIVO:
  * Configuração de ícones customizados no painel do veículo em 3 resoluções específicas:
- * - Pequeno: 200x20 pixels (Texto / Legenda)
- * - Médio: 70x60 pixels (Ícones normais)
- * - Grande: 85x110 pixels (Dígito Grande)
+ * - Pequeno (P): 24x24 pixels
+ * - Médio (M): 40x40 pixels
+ * - Grande (G): 64x64 pixels
  * 
- * Suporta 10 slots para cada resolução, com coordenadas X e Y, estado clicável
- * e amarração com ações ou displays de telemetria.
+ * Suporta 10 slots para cada resolução, com coordenadas X e Y, estado clicável,
+ * amarração com ações ou displays de telemetria, e suporte nativo a estados alternados
+ * (Liga / Desliga - Toggle) com troca automática de ícones de acordo com o estado do sistema.
  */
 
 enum class IconResolutionCategory(
@@ -27,7 +28,7 @@ enum class IconResolutionCategory(
 enum class IconFunction(val label: String, val group: String) {
     NONE("Nenhuma (Estático)", "Geral"),
     
-    // Ações ao Clicar (Botão Ativado)
+    // Ações ao Clicar (Botão Ativado / Toggle)
     TOGGLE_AUDIO("Ligar/Desligar Áudio do Motor", "Ação"),
     RESET_TRIP_A("Zerar Odômetro Trip A", "Ação"),
     TOGGLE_SHIFT_LIGHT("Alternar Modo Shift Light", "Ação"),
@@ -51,10 +52,50 @@ data class CustomIconItem(
     val id: String,
     val category: IconResolutionCategory,
     val slotIndex: Int, // 0..9 (10 slots por categoria)
-    val imageUri: String? = null,
+    val imageUri: String? = null,        // Imagem quando ATIVO/LIGADO (ON) ou estático
+    val imageUriOff: String? = null,     // Imagem quando DESLIGADO/INATIVO (OFF)
     val posX: Float = 100f,
     val posY: Float = 100f,
     val isClickable: Boolean = false,
     val function: IconFunction = IconFunction.NONE,
     val label: String = ""
-)
+) {
+    /**
+     * Retorna a URI da imagem a ser exibida de acordo com o estado atual (ativo/ligado ou desligado).
+     * Se imageUri ou imageUriOff não foram customizados pelo usuário, recorre aos ícones padrão do app.
+     */
+    fun resolveImageUri(isActive: Boolean): String? {
+        val sizeCode = when (category) {
+            IconResolutionCategory.SMALL -> "p"
+            IconResolutionCategory.MEDIUM -> "m"
+            IconResolutionCategory.LARGE -> "g"
+        }
+        return if (isActive) {
+            imageUri ?: getDefaultOnImage(sizeCode)
+        } else {
+            imageUriOff ?: getDefaultOffImage(sizeCode)
+        }
+    }
+
+    private fun getDefaultOnImage(sizeCode: String): String? = when (function) {
+        IconFunction.TOGGLE_AUDIO -> "file:///android_asset/icons/$sizeCode/alto_falante.png"
+        IconFunction.RECONNECT_OBD -> "file:///android_asset/icons/$sizeCode/bluetooth.png"
+        IconFunction.OPEN_SETTINGS -> "file:///android_asset/icons/$sizeCode/engrenagem.png"
+        else -> imageUri
+    }
+
+    private fun getDefaultOffImage(sizeCode: String): String? = when (function) {
+        IconFunction.TOGGLE_AUDIO -> "file:///android_asset/icons/$sizeCode/alto_falante_bloqueado.png"
+        IconFunction.RECONNECT_OBD -> "file:///android_asset/icons/$sizeCode/bluetooth_bloqueado.png"
+        IconFunction.OPEN_SETTINGS -> "file:///android_asset/icons/$sizeCode/engrenagem.png"
+        else -> imageUriOff ?: imageUri
+    }
+
+    /**
+     * Informa se este ícone possui comportamento bi-estável (Toggle / Liga e Desliga).
+     */
+    val isToggleFunction: Boolean
+        get() = function == IconFunction.TOGGLE_AUDIO || 
+                function == IconFunction.RECONNECT_OBD || 
+                function == IconFunction.TOGGLE_SHIFT_LIGHT
+}

@@ -47,13 +47,18 @@ data class BuiltInIconPreset(
 )
 
 val BUILTIN_ICONS = listOf(
-    BuiltInIconPreset("alto_falante", "Alto-falante", "alto_falante.png"),
-    BuiltInIconPreset("alto_falante_bloqueado", "Alto-falante Bloqueado", "alto_falante_bloqueado.png"),
-    BuiltInIconPreset("bluetooth", "Bluetooth", "bluetooth.png"),
-    BuiltInIconPreset("bluetooth_bloqueado", "Bluetooth Bloqueado", "bluetooth_bloqueado.png"),
-    BuiltInIconPreset("engrenagem", "Engrenagem", "engrenagem.png"),
-    BuiltInIconPreset("comunicacao", "Comunicação", "comunicacao.png"),
-    BuiltInIconPreset("comunicacao_interrompida", "Comunicação Interrompida", "comunicacao_interrompida.png")
+    BuiltInIconPreset("velocimetro", "Velocímetro", "velocimetro.png"),
+    BuiltInIconPreset("temperatura", "Temperatura", "temperatura.png"),
+    BuiltInIconPreset("combustivel", "Combustível", "combustivel.png"),
+    BuiltInIconPreset("relogio", "Relógio", "relogio.png"),
+    BuiltInIconPreset("distancia", "Distância", "distancia.png"),
+    BuiltInIconPreset("alto_falante", "Alto-falante (Ligado)", "alto_falante.png"),
+    BuiltInIconPreset("alto_falante_bloqueado", "Alto-falante (Mudo/OFF)", "alto_falante_bloqueado.png"),
+    BuiltInIconPreset("bluetooth", "Bluetooth (Conectado)", "bluetooth.png"),
+    BuiltInIconPreset("bluetooth_bloqueado", "Bluetooth (Desconectado)", "bluetooth_bloqueado.png"),
+    BuiltInIconPreset("engrenagem", "Engrenagem (Ajustes)", "engrenagem.png"),
+    BuiltInIconPreset("comunicacao", "Comunicação (OK)", "comunicacao.png"),
+    BuiltInIconPreset("comunicacao_interrompida", "Comunicação (Interrompida)", "comunicacao_interrompida.png")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,6 +168,7 @@ fun CustomIconsScreen(
                     IconSlotCard(
                         item = iconItem,
                         onImageSelected = { uri -> viewModel.updateIconImage(iconItem.id, uri) },
+                        onImageOffSelected = { uri -> viewModel.updateIconImageOff(iconItem.id, uri) },
                         onPositionChanged = { x, y -> viewModel.updatePosition(iconItem.id, x, y) },
                         onClickableChanged = { isClickable -> viewModel.updateClickable(iconItem.id, isClickable) },
                         onFunctionChanged = { func -> viewModel.updateFunction(iconItem.id, func) },
@@ -200,6 +206,7 @@ fun CustomIconsScreen(
 fun IconSlotCard(
     item: CustomIconItem,
     onImageSelected: (String) -> Unit,
+    onImageOffSelected: (String) -> Unit,
     onPositionChanged: (Float, Float) -> Unit,
     onClickableChanged: (Boolean) -> Unit,
     onFunctionChanged: (IconFunction) -> Unit,
@@ -207,11 +214,18 @@ fun IconSlotCard(
 ) {
     var isExpandedDropdown by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
+    var isTargetingOffState by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { onImageSelected(it.toString()) }
+        uri?.let {
+            if (isTargetingOffState) {
+                onImageOffSelected(it.toString())
+            } else {
+                onImageSelected(it.toString())
+            }
+        }
     }
 
     val sizeCode = when (item.category) {
@@ -219,6 +233,8 @@ fun IconSlotCard(
         IconResolutionCategory.MEDIUM -> "m"
         IconResolutionCategory.LARGE -> "g"
     }
+
+    val isConfigured = item.imageUri != null || item.imageUriOff != null || item.function != IconFunction.NONE
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -236,7 +252,7 @@ fun IconSlotCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Slot #${item.slotIndex + 1}",
+                        text = "Slot #${item.slotIndex + 1} (${item.id})",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color.White
@@ -244,19 +260,19 @@ fun IconSlotCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = if (item.imageUri != null) Color(0xFF1E3A1E) else Color(0xFF2C323D)
+                        color = if (isConfigured) Color(0xFF1E3A1E) else Color(0xFF2C323D)
                     ) {
                         Text(
-                            text = if (item.imageUri != null) "Ativo" else "Vazio",
+                            text = if (isConfigured) "Ativo" else "Vazio",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (item.imageUri != null) Color(0xFF4CAF50) else Color.Gray,
+                            color = if (isConfigured) Color(0xFF4CAF50) else Color.Gray,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                 }
 
-                if (item.imageUri != null || item.function != IconFunction.NONE) {
+                if (isConfigured) {
                     IconButton(onClick = onClearSlot, modifier = Modifier.size(28.dp)) {
                         Icon(Icons.Default.Delete, contentDescription = "Limpar Slot", tint = Color(0xFFE57373), modifier = Modifier.size(18.dp))
                     }
@@ -265,68 +281,225 @@ fun IconSlotCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Área de Visualização e Seleção da Imagem
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 80.dp, height = 60.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .border(1.dp, Color(0xFF3A4454), RoundedCornerShape(8.dp))
-                        .clickable { showPresetDialog = true },
-                    contentAlignment = Alignment.Center
+            // Seção de Imagens: Suporte a Toggle (Liga/Desliga) ou Imagem Única
+            if (item.isToggleFunction) {
+                Text(
+                    text = "Ícones por Estado (Alternância Automática):",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = CivicColors.BlueGlow
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Estado 1: DESLIGADO / INATIVO (OFF)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (item.imageUri != null) {
-                        AsyncImage(
-                            model = item.imageUri,
-                            contentDescription = "Ícone Slot #${item.slotIndex + 1}",
-                            modifier = Modifier.fillMaxSize().padding(4.dp),
-                            contentScale = ContentScale.Fit
+                    Box(
+                        modifier = Modifier
+                            .size(width = 64.dp, height = 50.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .border(1.dp, Color(0xFFE57373).copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                            .clickable {
+                                isTargetingOffState = true
+                                showPresetDialog = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val offUri = item.resolveImageUri(isActive = false)
+                        if (offUri != null) {
+                            AsyncImage(
+                                model = offUri,
+                                contentDescription = "Ícone OFF",
+                                modifier = Modifier.fillMaxSize().padding(3.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Text("OFF", fontSize = 10.sp, color = Color.Gray)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "1. Estado Desligado (Padrão Inicial)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFE57373)
                         )
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = CivicColors.BlueGlow, modifier = Modifier.size(20.dp))
-                            Text("Ícone", fontSize = 9.sp, color = Color.Gray)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 2.dp)) {
+                            Button(
+                                onClick = {
+                                    isTargetingOffState = true
+                                    showPresetDialog = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B324D)),
+                                modifier = Modifier.height(30.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Text("Ícone Padrão", fontSize = 10.sp, color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    isTargetingOffState = true
+                                    imagePickerLauncher.launch("image/*")
+                                },
+                                modifier = Modifier.height(30.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Text("Galeria", fontSize = 10.sp)
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Estado 2: LIGADO / ATIVO (ON)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 64.dp, height = 50.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .border(1.dp, CivicColors.BlueGlow.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                            .clickable {
+                                isTargetingOffState = false
+                                showPresetDialog = true
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Button(
-                            onClick = { showPresetDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B324D)),
-                            modifier = Modifier.weight(1f).height(36.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 4.dp)
-                        ) {
-                            Icon(Icons.Default.Collections, contentDescription = null, modifier = Modifier.size(14.dp), tint = CivicColors.BlueGlow)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Ícones App", fontSize = 11.sp, color = Color.White)
-                        }
-                        OutlinedButton(
-                            onClick = { imagePickerLauncher.launch("image/*") },
-                            modifier = Modifier.weight(1f).height(36.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 4.dp)
-                        ) {
-                            Text("Galeria", fontSize = 11.sp)
+                        val onUri = item.resolveImageUri(isActive = true)
+                        if (onUri != null) {
+                            AsyncImage(
+                                model = onUri,
+                                contentDescription = "Ícone ON",
+                                modifier = Modifier.fillMaxSize().padding(3.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Text("ON", fontSize = 10.sp, color = Color.Gray)
                         }
                     }
-                    Text(
-                        text = "Dimensão: ${item.category.widthPx}x${item.category.heightPx} px",
-                        fontSize = 11.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "2. Estado Ligado (Após Clicar)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = CivicColors.BlueGlow
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 2.dp)) {
+                            Button(
+                                onClick = {
+                                    isTargetingOffState = false
+                                    showPresetDialog = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B324D)),
+                                modifier = Modifier.height(30.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Text("Ícone Padrão", fontSize = 10.sp, color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    isTargetingOffState = false
+                                    imagePickerLauncher.launch("image/*")
+                                },
+                                modifier = Modifier.height(30.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Text("Galeria", fontSize = 10.sp)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Modo Normal (Imagem Única / Display)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 80.dp, height = 60.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .border(1.dp, Color(0xFF3A4454), RoundedCornerShape(8.dp))
+                            .clickable {
+                                isTargetingOffState = false
+                                showPresetDialog = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val currentUri = item.resolveImageUri(isActive = true)
+                        if (currentUri != null) {
+                            AsyncImage(
+                                model = currentUri,
+                                contentDescription = "Ícone Slot #${item.slotIndex + 1}",
+                                modifier = Modifier.fillMaxSize().padding(4.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = CivicColors.BlueGlow, modifier = Modifier.size(20.dp))
+                                Text("Ícone", fontSize = 9.sp, color = Color.Gray)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    isTargetingOffState = false
+                                    showPresetDialog = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B324D)),
+                                modifier = Modifier.weight(1f).height(36.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp)
+                            ) {
+                                Icon(Icons.Default.Collections, contentDescription = null, modifier = Modifier.size(14.dp), tint = CivicColors.BlueGlow)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Ícones App", fontSize = 11.sp, color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    isTargetingOffState = false
+                                    imagePickerLauncher.launch("image/*")
+                                },
+                                modifier = Modifier.weight(1f).height(36.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp)
+                            ) {
+                                Text("Galeria", fontSize = 11.sp)
+                            }
+                        }
+                        Text(
+                            text = "Dimensão: ${item.category.widthPx}x${item.category.heightPx} px",
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
 
@@ -447,12 +620,24 @@ fun IconSlotCard(
 
     // Modal de Seleção de Ícone da Biblioteca
     if (showPresetDialog) {
+        val targetStateTitle = if (item.isToggleFunction) {
+            if (isTargetingOffState) " [Estado: DESLIGADO (OFF)]" else " [Estado: LIGADO (ON)]"
+        } else ""
+
+        var selectedTheme by remember { mutableStateOf("colorido") }
+        val themes = listOf(
+            "colorido" to "Colorido",
+            "branco" to "Branco",
+            "azul" to "Azul",
+            "vermelho" to "Vermelho"
+        )
+
         AlertDialog(
             onDismissRequest = { showPresetDialog = false },
             title = {
                 Text(
-                    text = "Biblioteca de Ícones (${item.category.label})",
-                    fontSize = 16.sp,
+                    text = "Biblioteca de Ícones (${item.category.label})$targetStateTitle",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -460,11 +645,42 @@ fun IconSlotCard(
             text = {
                 Column {
                     Text(
-                        text = "Toque em um ícone para aplicar diretamente ao Slot #${item.slotIndex + 1}:",
+                        text = "Selecione o tema de cor e o ícone para o Slot #${item.slotIndex + 1}:",
                         fontSize = 12.sp,
                         color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+
+                    // Seletor de Tema
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        themes.forEach { (themeKey, themeLabel) ->
+                            val isSelected = selectedTheme == themeKey
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (isSelected) CivicColors.BlueGlow.copy(alpha = 0.25f) else Color(0xFF1E2633),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    if (isSelected) CivicColors.BlueGlow else Color(0xFF334155)
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { selectedTheme = themeKey }
+                            ) {
+                                Text(
+                                    text = themeLabel,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) CivicColors.BlueGlow else Color.LightGray,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -472,12 +688,16 @@ fun IconSlotCard(
                         modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp)
                     ) {
                         items(BUILTIN_ICONS) { preset ->
-                            val assetUri = "file:///android_asset/icons/$sizeCode/${preset.filename}"
+                            val assetUri = "file:///android_asset/icons/$selectedTheme/$sizeCode/${preset.filename}"
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        onImageSelected(assetUri)
+                                        if (isTargetingOffState) {
+                                            onImageOffSelected(assetUri)
+                                        } else {
+                                            onImageSelected(assetUri)
+                                        }
                                         showPresetDialog = false
                                     },
                                 shape = RoundedCornerShape(8.dp),

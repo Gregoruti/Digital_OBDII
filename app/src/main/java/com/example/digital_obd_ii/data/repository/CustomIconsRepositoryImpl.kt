@@ -1,4 +1,4 @@
-package com.example.digital_obd_ii.data.repository
+﻿package com.example.digital_obd_ii.data.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -33,26 +33,47 @@ class CustomIconsRepositoryImpl @Inject constructor(
             val list = mutableListOf<CustomIconItem>()
             IconResolutionCategory.values().forEach { cat ->
                 for (i in 0 until 10) {
-                    val defaultItem = if (cat == IconResolutionCategory.MEDIUM && i == 0) {
-                        // Primeira funcionalidade conectada: Botão Zerar Trip A logo abaixo do bloco de Trip no painel
-                        CustomIconItem(
-                            id = "${cat.name.lowercase()}_$i",
-                            category = cat,
-                            slotIndex = i,
-                            posX = 477f,
-                            posY = 540f,
-                            isClickable = true,
-                            function = IconFunction.RESET_TRIP_A,
-                            label = "ZERAR TRIP"
-                        )
-                    } else {
-                        CustomIconItem(
-                            id = "${cat.name.lowercase()}_$i",
-                            category = cat,
-                            slotIndex = i,
-                            posX = 50f + (i * 20f),
-                            posY = 100f + (cat.ordinal * 120f)
-                        )
+                    val defaultItem = when {
+                        cat == IconResolutionCategory.MEDIUM && i == 0 -> {
+                            // Slot 1: Ir para Configurações (Engrenagem Média - 40x40 px)
+                            CustomIconItem(
+                                id = "${cat.name.lowercase()}_$i",
+                                category = cat,
+                                slotIndex = i,
+                                posX = 980f,
+                                posY = 0f,
+                                isClickable = true,
+                                function = IconFunction.OPEN_SETTINGS,
+                                imageUri = "file:///android_asset/icons/m/engrenagem.png",
+                                imageUriOff = null,
+                                label = ""
+                            )
+                        }
+                        cat == IconResolutionCategory.MEDIUM && i == 1 -> {
+                            // Slot 2: Liga/Desliga Som do Motor (40x40 px)
+                            // Padrão Inicial: Desligado (Off) -> mostra alto_falante_bloqueado.png
+                            CustomIconItem(
+                                id = "${cat.name.lowercase()}_$i",
+                                category = cat,
+                                slotIndex = i,
+                                posX = 20f,
+                                posY = 0f,
+                                isClickable = true,
+                                function = IconFunction.TOGGLE_AUDIO,
+                                imageUri = "file:///android_asset/icons/m/alto_falante.png",
+                                imageUriOff = "file:///android_asset/icons/m/alto_falante_bloqueado.png",
+                                label = ""
+                            )
+                        }
+                        else -> {
+                            CustomIconItem(
+                                id = "${cat.name.lowercase()}_$i",
+                                category = cat,
+                                slotIndex = i,
+                                posX = 50f + (i * 20f),
+                                posY = 100f + (cat.ordinal * 120f)
+                            )
+                        }
                     }
                     list.add(defaultItem)
                 }
@@ -116,6 +137,7 @@ class CustomIconsRepositoryImpl @Inject constructor(
                 put("category", item.category.name)
                 put("slotIndex", item.slotIndex)
                 put("imageUri", item.imageUri ?: "")
+                put("imageUriOff", item.imageUriOff ?: "")
                 put("posX", item.posX.toDouble())
                 put("posY", item.posY.toDouble())
                 put("isClickable", item.isClickable)
@@ -138,6 +160,7 @@ class CustomIconsRepositoryImpl @Inject constructor(
                 val funcName = obj.optString("function", IconFunction.NONE.name)
                 val function = runCatching { IconFunction.valueOf(funcName) }.getOrDefault(IconFunction.NONE)
                 val uri = obj.optString("imageUri", "").ifEmpty { null }
+                val uriOff = obj.optString("imageUriOff", "").ifEmpty { null }
 
                 list.add(
                     CustomIconItem(
@@ -145,6 +168,7 @@ class CustomIconsRepositoryImpl @Inject constructor(
                         category = category,
                         slotIndex = obj.getInt("slotIndex"),
                         imageUri = uri,
+                        imageUriOff = uriOff,
                         posX = obj.optDouble("posX", 100.0).toFloat(),
                         posY = obj.optDouble("posY", 100.0).toFloat(),
                         isClickable = obj.optBoolean("isClickable", false),
@@ -160,6 +184,8 @@ class CustomIconsRepositoryImpl @Inject constructor(
             list.forEach { item ->
                 if (item.id == "medium_0" && item.imageUri.isNullOrEmpty() && item.function == IconFunction.NONE && !item.isClickable) {
                     finalMap[item.id] = defaults.first { it.id == "medium_0" }
+                } else if (item.id == "medium_1" && item.imageUri.isNullOrEmpty() && item.function == IconFunction.NONE && !item.isClickable) {
+                    finalMap[item.id] = defaults.first { it.id == "medium_1" }
                 } else {
                     finalMap[item.id] = item
                 }

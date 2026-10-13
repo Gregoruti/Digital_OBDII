@@ -1167,7 +1167,242 @@
         </androidx.cardview.widget.CardView>
 
         <!-- ═════════════════════════════════════════════════════════════════ -->
-        <!-- CARD 6: VERSÕES E CONTROLE DE ATUALIZAÇÃO                         -->
+        <!-- CARD 6: ACÚSTICA DE CABINE & TIMBRE (SOM ABAFADO & VARIANTES)     -->
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardCabinAcoustics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1F2335"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Header + Switch Ativar Som de Cabine -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎧 Simulação de Cabine (Opção Extra)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Padrão desligado (Som Real). Ative para simular abafamento do cockpit e timbre."
+                            android:textColor="#7A81A4"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchCabinFilter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false" />
+                </LinearLayout>
+
+                <!-- Painel de Controles da Cabine e Timbre (Oculto por padrão no Som Real) -->
+                <LinearLayout
+                    android:id="@+id/layoutCabinControls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="12dp">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#2E334D"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- 1. Slider: Nível de Abafamento / Isolamento da Cabine -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Nível de Abafamento / Isolamento"
+                            android:textColor="#C5CAE9"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvCabinMuffleValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="70% (Equilibrado)"
+                            android:textColor="#00E5FF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/seekCabinMuffle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:progress="70"
+                        android:progressTint="#00E5FF"
+                        android:thumbTint="#00E5FF"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- 2. Slider: Balanço de Timbre (Grave ⟷ Agudo) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Timbre: Grave ⟷ Agudo"
+                            android:textColor="#C5CAE9"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvToneBalanceValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Neutro (Original)"
+                            android:textColor="#FFD600"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/seekToneBalance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="#FFD600"
+                        android:thumbTint="#FFD600"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- 3. Seletor de Variantes de Carros Poçantes -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="VARIANTE ACÚSTICA DO MOTOR:"
+                        android:textColor="#00E5FF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="4">
+
+                        <!-- Variante 0: Natural RS4 1:1 -->
+                        <TextView
+                            android:id="@+id/btnVariantNatural"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Original\n(RS4 1:1)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Variante 1: Muscle V8 (Grave) -->
+                        <TextView
+                            android:id="@+id/btnVariantMuscle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Muscle\n(Grave)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Variante 2: Supercar (Agudo) -->
+                        <TextView
+                            android:id="@+id/btnVariantSupercar"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Supercar\n(Agudo)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <!-- Variante 3: Executivo (Abafado) -->
+                        <TextView
+                            android:id="@+id/btnVariantExecutive"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:paddingVertical="10dp"
+                            android:paddingHorizontal="4dp"
+                            android:background="#282D44"
+                            android:text="Sedã Luxo\n(Abafado)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvVariantDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Audi RS4 4.2L FSI V8 natural (reprodução 1:1 sem coloração acústica adicional)."
+                        android:textColor="#00E5FF"
+                        android:textSize="11sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ═════════════════════════════════════════════════════════════════ -->
+        <!-- CARD 7: VERSÕES E CONTROLE DE ATUALIZAÇÃO                         -->
         <!-- ═════════════════════════════════════════════════════════════════ -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

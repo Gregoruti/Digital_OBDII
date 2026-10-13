@@ -1,4 +1,4 @@
-package com.example.digital_obd_ii.presentation.profile
+﻿package com.example.digital_obd_ii.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -52,6 +52,10 @@ class CustomIconsViewModel @Inject constructor(
         updateIconItem(slotId) { it.copy(imageUri = imageUri) }
     }
 
+    fun updateIconImageOff(slotId: String, imageUriOff: String?) {
+        updateIconItem(slotId) { it.copy(imageUriOff = imageUriOff) }
+    }
+
     fun updatePosition(slotId: String, posX: Float, posY: Float) {
         updateIconItem(slotId) { it.copy(posX = posX, posY = posY) }
     }
@@ -68,6 +72,7 @@ class CustomIconsViewModel @Inject constructor(
         updateIconItem(slotId) {
             it.copy(
                 imageUri = null,
+                imageUriOff = null,
                 isClickable = false,
                 function = IconFunction.NONE,
                 label = ""

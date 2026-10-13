@@ -53,6 +53,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         setupTurboAndExhaustControls()
         setupGearLockControls()
         setupSingleTrackControls()
+        setupCabinAcousticsControls()
         setupVersionFooterControls()
         setupActionButtons()
     }
@@ -347,6 +348,119 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
             "Faixa Alta (High): opera de 0 a 4.000+ RPM. Tom estridente de alta rotação e potência total."
         )
         binding.tvSingleTrackDesc.text = descriptions.getOrElse(selectedIndex) { descriptions[1] }
+    }
+
+    private fun setupCabinAcousticsControls() {
+        val isCabinEnabled = engineAudio?.isCabinFilterEnabled ?: preferences.isCabinFilterEnabled
+        val currentMuffle = engineAudio?.cabinMuffle ?: preferences.cabinMuffle
+        val currentTone = engineAudio?.toneBalance ?: preferences.toneBalance
+        val currentVariant = engineAudio?.soundVariant ?: preferences.soundVariant
+
+        // Estado inicial do switch
+        binding.switchCabinFilter.isChecked = isCabinEnabled
+        binding.layoutCabinControls.visibility = if (isCabinEnabled) View.VISIBLE else View.GONE
+
+        binding.switchCabinFilter.setOnCheckedChangeListener { _, isChecked ->
+            preferences.isCabinFilterEnabled = isChecked
+            engineAudio?.setCabinFilterEnabled(isChecked)
+            binding.layoutCabinControls.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        // Slider Muffle (0f..1f -> 0..100)
+        val initialMuffleProgress = (currentMuffle * 100).toInt().coerceIn(0, 100)
+        binding.seekCabinMuffle.progress = initialMuffleProgress
+        updateCabinMuffleText(initialMuffleProgress)
+
+        binding.seekCabinMuffle.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updateCabinMuffleText(progress)
+                if (fromUser) {
+                    val muffleVal = progress / 100f
+                    preferences.cabinMuffle = muffleVal
+                    engineAudio?.setCabinMuffle(muffleVal)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        // Slider Tone Balance (-1f..+1f -> 0..100 com 50 no meio)
+        val initialToneProgress = (((currentTone + 1f) / 2f) * 100).toInt().coerceIn(0, 100)
+        binding.seekToneBalance.progress = initialToneProgress
+        updateToneBalanceText(initialToneProgress)
+
+        binding.seekToneBalance.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updateToneBalanceText(progress)
+                if (fromUser) {
+                    val toneVal = ((progress - 50) / 50f).coerceIn(-1f, 1f)
+                    preferences.toneBalance = toneVal
+                    engineAudio?.setToneBalance(toneVal)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        // Variantes de Carros Poçantes
+        updateVariantButtonsUI(currentVariant)
+        binding.btnVariantNatural.setOnClickListener { selectVariant(0) }
+        binding.btnVariantMuscle.setOnClickListener { selectVariant(1) }
+        binding.btnVariantSupercar.setOnClickListener { selectVariant(2) }
+        binding.btnVariantExecutive.setOnClickListener { selectVariant(3) }
+    }
+
+    private fun updateCabinMuffleText(progress: Int) {
+        val label = when {
+            progress < 25 -> "$progress% (Cabine Aberta / Direto)"
+            progress < 60 -> "$progress% (Isolamento Esportivo Leve)"
+            progress < 85 -> "$progress% (Isolamento Equilibrado)"
+            else -> "$progress% (Cockpit Ultra-Abafado)"
+        }
+        binding.tvCabinMuffleValue.text = label
+    }
+
+    private fun updateToneBalanceText(progress: Int) {
+        val label = when {
+            progress < 45 -> "Grave +${(50 - progress) * 2}% (Rumble V8)"
+            progress > 55 -> "Agudo +${(progress - 50) * 2}% (Rasp Metálico)"
+            else -> "Neutro (Audi RS4 1:1)"
+        }
+        binding.tvToneBalanceValue.text = label
+    }
+
+    private fun selectVariant(variant: Int) {
+        preferences.soundVariant = variant
+        engineAudio?.setSoundVariant(variant)
+        updateVariantButtonsUI(variant)
+    }
+
+    private fun updateVariantButtonsUI(selectedIndex: Int) {
+        val selectedBg = 0xFF00E5FF.toInt()
+        val selectedTextColor = 0xFF000000.toInt()
+        val unselectedBg = 0xFF282D44.toInt()
+        val unselectedTextColor = 0xFFFFFFFF.toInt()
+
+        val buttons = listOf(
+            binding.btnVariantNatural,
+            binding.btnVariantMuscle,
+            binding.btnVariantSupercar,
+            binding.btnVariantExecutive
+        )
+
+        buttons.forEachIndexed { index, btn ->
+            val isSelected = (index == selectedIndex)
+            btn.setBackgroundColor(if (isSelected) selectedBg else unselectedBg)
+            btn.setTextColor(if (isSelected) selectedTextColor else unselectedTextColor)
+        }
+
+        val descriptions = listOf(
+            "Audi RS4 4.2L FSI V8 natural (reprodução 1:1 sem coloração acústica adicional).",
+            "V8 Muscle Americano: ressonância grave cavada em 40-90 Hz com pulso crossplane encorpado.",
+            "Supercarro Esportivo: presença metálica e indução agressiva em rotações elevadas.",
+            "Sedã Executivo de Luxo: filtragem ultra-abafada simulando vidro acústico duplo e isolamento total."
+        )
+        binding.tvVariantDesc.text = descriptions.getOrElse(selectedIndex) { descriptions[0] }
     }
 
     private fun setupVersionFooterControls() {

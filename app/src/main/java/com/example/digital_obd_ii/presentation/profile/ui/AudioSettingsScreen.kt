@@ -54,6 +54,11 @@ fun AudioSettingsScreen(
     var isSingleTrackModeEnabled by remember { mutableStateOf(prefs.isSingleTrackModeEnabled) }
     var singleTrackIndex by remember { mutableIntStateOf(prefs.singleTrackIndex) }
 
+    var isCabinFilterEnabled by remember { mutableStateOf(prefs.isCabinFilterEnabled) }
+    var cabinMuffle by remember { mutableFloatStateOf(prefs.cabinMuffle) }
+    var toneBalance by remember { mutableFloatStateOf(prefs.toneBalance) }
+    var soundVariant by remember { mutableIntStateOf(prefs.soundVariant) }
+
     var isVirtualAccelEnabled by remember { mutableStateOf(prefs.isVirtualAccelerationEnabled) }
     var virtualAccelExponent by remember { mutableFloatStateOf(prefs.virtualAccelerationExponent) }
     var virtualRpmInMin by remember { mutableFloatStateOf(prefs.virtualRpmInMin) }
@@ -79,6 +84,15 @@ fun AudioSettingsScreen(
         V6AudioEngine.setSpeedPredictiveEnabled(prefs.isSpeedPredictiveEnabled)
         V6AudioEngine.setSingleTrackModeEnabled(prefs.isSingleTrackModeEnabled)
         V6AudioEngine.setSingleTrackIndex(prefs.singleTrackIndex)
+        V6AudioEngine.setCabinFilterEnabled(prefs.isCabinFilterEnabled)
+        V6AudioEngine.setCabinMuffle(prefs.cabinMuffle)
+        V6AudioEngine.setToneBalance(prefs.toneBalance)
+        V6AudioEngine.setSoundVariant(prefs.soundVariant)
+        if (prefs.isEngineSoundEnabled) {
+            V6AudioEngine.start(context)
+        } else {
+            V6AudioEngine.stop()
+        }
     }
 
     Scaffold(
@@ -1132,6 +1146,204 @@ fun AudioSettingsScreen(
                             )
                             Text(
                                 text = trackDescriptions.getOrElse(singleTrackIndex) { trackDescriptions[1] },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF00E5FF)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── CARD 4d: ACÚSTICA & CABINE (OPÇÃO EXTRA: SOM REAL vs. SIMULADO) ──
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Simulação de Cabine (Cockpit)",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = if (isCabinFilterEnabled) Color(0xFF00E5FF).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
+                                    ) {
+                                        Text(
+                                            text = if (isCabinFilterEnabled) "SIMULADO" else "SOM REAL",
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isCabinFilterEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = if (isCabinFilterEnabled)
+                                        "Ativado: simula o condutor ouvindo motor e escape de dentro do habitáculo (abafado)."
+                                    else
+                                        "Desativado (Padrão): Som Real e Puro original de pista/escape sem nenhum filtro.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = isCabinFilterEnabled,
+                                onCheckedChange = { checked ->
+                                    isCabinFilterEnabled = checked
+                                    prefs.isCabinFilterEnabled = checked
+                                    V6AudioEngine.setCabinFilterEnabled(checked)
+                                }
+                            )
+                        }
+
+                        if (isCabinFilterEnabled) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                                thickness = 1.dp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 1. Slider: Nível de Abafamento
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Nível de Abafamento / Isolamento",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Text(
+                                    text = "${(cabinMuffle * 100).toInt()}%",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF00E5FF)
+                                )
+                            }
+                            Slider(
+                                value = cabinMuffle,
+                                onValueChange = { muffle ->
+                                    cabinMuffle = muffle
+                                    prefs.cabinMuffle = muffle
+                                    V6AudioEngine.setCabinMuffle(muffle)
+                                },
+                                valueRange = 0f..1f,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color(0xFF00E5FF),
+                                    activeTrackColor = Color(0xFF00E5FF)
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 2. Slider: Balanço de Timbre (Grave ⟷ Agudo)
+                            val toneLabel = when {
+                                toneBalance < -0.1f -> "Grave +${((-toneBalance) * 100).toInt()}% (Rumble)"
+                                toneBalance > 0.1f -> "Agudo +${((toneBalance) * 100).toInt()}% (Rasp)"
+                                else -> "Neutro (1:1)"
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Balanço de Timbre (Grave ⟷ Agudo)",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Text(
+                                    text = toneLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFD600)
+                                )
+                            }
+                            Slider(
+                                value = toneBalance,
+                                onValueChange = { tone ->
+                                    toneBalance = tone
+                                    prefs.toneBalance = tone
+                                    V6AudioEngine.setToneBalance(tone)
+                                },
+                                valueRange = -1f..1f,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color(0xFFFFD600),
+                                    activeTrackColor = Color(0xFFFFD600)
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 3. Seletor de Variantes
+                            Text(
+                                text = "VARIANTE ACÚSTICA DO MOTOR:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF00E5FF)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val variantLabels = listOf(
+                                "Original\n(1:1)",
+                                "Muscle\n(Grave)",
+                                "Supercar\n(Agudo)",
+                                "Executivo\n(Abafado)"
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                variantLabels.forEachIndexed { idx, label ->
+                                    val isSelected = (soundVariant == idx)
+                                    Surface(
+                                        onClick = {
+                                            soundVariant = idx
+                                            prefs.soundVariant = idx
+                                            V6AudioEngine.setSoundVariant(idx)
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) Color(0xFF00E5FF) else MaterialTheme.colorScheme.surface,
+                                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
+                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val variantDescriptions = listOf(
+                                "Audi RS4 4.2L FSI V8 natural (reprodução 1:1 sem coloração acústica adicional).",
+                                "V8 Muscle: ressonância grave cavada em 40-90 Hz com pulso encorpado.",
+                                "Supercarro Esportivo: presença metálica e indução agressiva.",
+                                "Sedã Executivo de Luxo: filtragem ultra-abafada (isolamento de cabine total)."
+                            )
+                            Text(
+                                text = variantDescriptions.getOrElse(soundVariant) { variantDescriptions[0] },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color(0xFF00E5FF)
                             )

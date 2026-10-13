@@ -98,6 +98,14 @@ void EngineAudioEngine::setLimiterRPM(float rpm) {
     m_granularEngine->setLimiterRPM(rpm);
 }
 
+void EngineAudioEngine::setShiftLightRpm(float rpm) {
+    m_granularEngine->setShiftLightRpm(rpm);
+}
+
+void EngineAudioEngine::setShiftLightBlinkMs(int32_t blinkMs) {
+    m_granularEngine->setShiftLightBlinkMs(blinkMs);
+}
+
 void EngineAudioEngine::setShiftLightActive(bool active) {
     m_revLimiter->setShiftLightActive(active);
     m_granularEngine->setShiftLightActive(active);
@@ -147,9 +155,49 @@ void EngineAudioEngine::setSingleTrackIndex(int trackIndex) {
     m_granularEngine->setSingleTrackIndex(trackIndex);
 }
 
+void EngineAudioEngine::setCabinMuffle(float muffle) {
+    m_granularEngine->setCabinMuffle(muffle);
+}
+
+void EngineAudioEngine::setToneBalance(float tone) {
+    m_granularEngine->setToneBalance(tone);
+}
+
+void EngineAudioEngine::setSoundVariant(int variant) {
+    m_granularEngine->setSoundVariant(variant);
+}
+
+void EngineAudioEngine::setCabinFilterEnabled(bool enabled) {
+    m_granularEngine->setCabinFilterEnabled(enabled);
+}
+
+float EngineAudioEngine::getCabinMuffle() const {
+    return m_granularEngine->getCabinMuffle();
+}
+
+float EngineAudioEngine::getToneBalance() const {
+    return m_granularEngine->getToneBalance();
+}
+
+int EngineAudioEngine::getSoundVariant() const {
+    return m_granularEngine->getSoundVariant();
+}
+
+bool EngineAudioEngine::isCabinFilterEnabled() const {
+    return m_granularEngine->isCabinFilterEnabled();
+}
+
 void EngineAudioEngine::triggerLimiterCut() {
     m_revLimiter->triggerCut();
     m_granularEngine->triggerLimiterCut();
+}
+
+void EngineAudioEngine::triggerPop(float volume) {
+    m_granularEngine->triggerPop(volume);
+}
+
+void EngineAudioEngine::triggerBOV(float volume) {
+    m_granularEngine->triggerBOV(volume);
 }
 
 void EngineAudioEngine::setEngineType(int32_t typeId) {

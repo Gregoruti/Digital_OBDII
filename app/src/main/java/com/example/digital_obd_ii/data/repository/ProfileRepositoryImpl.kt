@@ -62,6 +62,8 @@ class ProfileRepositoryImpl @Inject constructor(
         val MULTI_LAYOUTS = stringPreferencesKey("multi_layouts_v3")
 
         val IS_SHIFT_LIGHT_V2 = booleanPreferencesKey("is_shift_light_v2")
+        val RPM_BAR_STYLE = intPreferencesKey("rpm_bar_style")
+        val RPM_BAR_THICKNESS = floatPreferencesKey("rpm_bar_thickness")
         val RPM_CURVATURE_V2 = floatPreferencesKey("rpm_curvature_v2")
         val RPM_BAR_WIDTH_V2 = floatPreferencesKey("rpm_bar_width_v2")
         val RPM_BAR_HEIGHT_V2 = floatPreferencesKey("rpm_bar_height_v2")
@@ -154,6 +156,8 @@ class ProfileRepositoryImpl @Inject constructor(
             elements = activeElements,
 
             isShiftLightMode = preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] ?: true,
+            rpmBarStyle = preferences[PreferencesKeys.RPM_BAR_STYLE] ?: 1,
+            rpmBarThickness = preferences[PreferencesKeys.RPM_BAR_THICKNESS] ?: 22f,
             rpmGlowIntensity = preferences[PreferencesKeys.RPM_GLOW_INTENSITY] ?: if (preferences[PreferencesKeys.IS_GLOW_ENABLED_V2] == false) 0 else 2,
             maxRpmScale = preferences[PreferencesKeys.MAX_RPM_SCALE_V2] ?: 4000,
             isRpmScaleVisible = preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] ?: true,
@@ -226,6 +230,8 @@ class ProfileRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.ELEMENTS_CONFIG] = serializeElements(profile.elements)
 
             preferences[PreferencesKeys.IS_SHIFT_LIGHT_V2] = profile.isShiftLightMode
+            preferences[PreferencesKeys.RPM_BAR_STYLE] = profile.rpmBarStyle
+            preferences[PreferencesKeys.RPM_BAR_THICKNESS] = profile.rpmBarThickness
             preferences[PreferencesKeys.RPM_GLOW_INTENSITY] = profile.rpmGlowIntensity
             preferences[PreferencesKeys.MAX_RPM_SCALE_V2] = profile.maxRpmScale
             preferences[PreferencesKeys.IS_RPM_SCALE_VISIBLE_V2] = profile.isRpmScaleVisible

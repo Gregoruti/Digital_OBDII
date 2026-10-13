@@ -1,5 +1,51 @@
 # CHANGELOG - Digital OBD-II
 
+## [4.7.0] - Atual (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)
+> **Status de Validação:** Validado em Veículo e Dispositivo Físico. Gráficos de alta performance validados no Compose.
+> **Motivação Arquitetural:** Implementação da barra de RPM Analógica (Formato 2 - Estilo Porsche/Esportivo) a pedido do usuário. Exigiu reengenharia do ArchedRpmGauge, implementando trigonometria nativa para posicionamento numérico no Canvas e suporte a configuração de espessura (thickness).
+
+### Adicionado e Otimizado
+- **Layout de RPM Analógico (Formato 2)**:
+  - `Gauges.kt`: Nova lógica de renderização usando trigonometria avançada (`cos`/`sin`) em `NativeCanvas` para distribuir numerais (0-8) radialmente acompanhando a angulação da barra.
+  - Fonte dinâmica aplicada aos numerais (`Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD_ITALIC)`) simulando tacômetros de carros esportivos.
+  - Background estático de Redline introduzido: O trilho da barra agora possui cor rubi (`#401010`) na zona de limite antes mesmo da barra encher.
+  - Espaçamentos e ticks (traços menores) radiais para simulação de display analógico completo.
+- **Controle Dinâmico de Espessura (Thickness)**:
+  - O ViewModel (`VehicleProfileViewModel.kt`) e DataStore foram expandidos para armazenar `rpmBarThickness` (float de 10f a 80f) e o modo `rpmBarStyle` (1 ou 2).
+  - `VisualSettingsScreen.kt`: Novos controles de rádio (Formato 1 vs Formato 2) e um slider para configurar a espessura adicionados ao menu de customização do usuário.
+- **Estabilizações Gerais de Ícones Customizados (v4.6.x)**:
+  - As edições anteriores de UI e manipulação de assets do Engine Sound foram incorporadas à main e unificadas.
+
+## [4.6.4] - 2026-10-05 (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)  
+> **Status de Validação:** Compilado e validado com Gradle (`BUILD SUCCESSFUL`, `0 erros`).  
+> **Motivação Arquitetural:** Handshake concluído — Implementação completa do Formato 2 de RPM (Conta-giros Analógico / Porsche Style) e controle contínuo de espessura da barra (`rpmBarThickness`).
+
+### Handshake e Transferência de Escopo Concluída
+- Handshake assumido pelo **Antigravity** conforme protocolo em `AGENTS.md` e `task.artifact.md`.
+- Concluída a implementação integral das pendências de RPM no domínio, persistência, apresentação e renderização Canvas.
+
+### Adicionado e Otimizado
+- **Domain Layer (`VehicleProfile.kt`)**:
+  - Adicionado `rpmBarStyle: Int = 1` (1 = Linha Fina / Blocos, 2 = Analógico / Porsche Style).
+  - Adicionado `rpmBarThickness: Float = 22f` para personalização direta da grossura da barra.
+- **Data Layer (`ProfileRepositoryImpl.kt`)**:
+  - Chaves `RPM_BAR_STYLE` e `RPM_BAR_THICKNESS` registradas no DataStore com mapeamento e persistência atômica.
+- **Presentation / ViewModel (`VehicleProfileViewModel.kt`)**:
+  - Adicionadas funções `updateRpmBarStyle` e `updateRpmBarThickness`.
+- **UI Settings (`VisualSettingsScreen.kt`)**:
+  - Inserido seletor de estilo de RPM ("Formato 1 - Linha Fina" vs "Formato 2 - Analógico") via `FilterChip`.
+  - Inserido slider de espessura ("Espessura da Barra", `10f` a `80f`).
+  - Preview dinâmico atualizado com suporte completo ao novo estilo e escala.
+- **Componente Gráfico (`Gauges.kt` -> `ArchedRpmGauge`)**:
+  - `rpmBarThickness` agora controla dinamicamente a largura/grossura do traço no Canvas tanto no Formato 1 quanto no Formato 2.
+  - **Formato 2 (Analógico / Porsche Style)**:
+    - **Trilha de Fundo com Redline Estático Fixo**: Trilha de fundo contínua dividida entre o trecho normal (azul atenuado) e o segmento de corte de giro fixo (`redlineStartRpm` até `maxScaleRpm` em vermelho escuro estático), replicando o design de painéis automotivos de alta performance.
+    - **Preenchimento Dinâmico de RPM**: Arco ativo sobreposto que avança suavemente com o giro do motor, alternando para vermelho ao invadir a faixa de corte e suportando modo Shift Light / Blink e Glow calibrado.
+    - **Marcações Radiais (Ticks)**: Tracionamento radial calculado via seno/cosseno no arco, com divisões principais nos milhares, intermediárias nos 500 RPM e secundárias finas, com coloração vermelha na zona de redline.
+    - **Numerais Grandes (0 a 8)**: Números grandes posicionados na parte interna do arco com tipografia `ExtraBold Italic` (SansSerif), acompanhando a curvatura do painel.
+
 ## [4.6.3] - 2026-10-03 (Equipe Antigravity & Android Studio)
 > **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)  
 > **Status de Validação:** Validado com Android Studio Analyzer (`0 erros`).  

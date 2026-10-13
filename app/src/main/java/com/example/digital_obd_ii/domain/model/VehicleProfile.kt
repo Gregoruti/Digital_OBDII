@@ -119,6 +119,8 @@ data class VehicleProfile(
 
     // Barra de RPM
     val isShiftLightMode: Boolean = true,
+    val rpmBarStyle: Int = 1, // 1 = Linha Fina atual, 2 = Analógico (Formato 2)
+    val rpmBarThickness: Float = 22f, // Espessura da barra/arco (v4.6.4)
     val rpmGlowIntensity: Int = 2, // 0 = Desativado, 1 a 4 = Intensidade
     val maxRpmScale: Int = 4000, 
     val isRpmScaleVisible: Boolean = true,

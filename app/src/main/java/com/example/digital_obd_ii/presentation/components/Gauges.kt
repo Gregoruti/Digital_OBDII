@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -233,28 +234,31 @@ fun SevenSegmentText(
 }
 
 /**
- * Gauge de RPM Dinâmico v3.2
+ * Gauge de RPM Dinâmico v4.6.4
  * v2.5.0 - Adicionado suporte a Escala Numérica (0-4 ou 0-8).
+ * v4.6.4 - Formato 2: Conta-giros Analógico Esportivo (fidelidade com tacômetro de alta performance)
+ *          e controle dinâmico de espessura (rpmBarThickness).
  */
 @Composable
 fun ArchedRpmGauge(
     currentRpm: Float,
     isShiftLightMode: Boolean = false,
     glowIntensity: Int = 2,
-    isScaleVisible: Boolean = true, // NOVO v2.5.0
-    maxScaleRpm: Int = 8000,       // NOVO v2.5.0
-    scaleTextSize: Float = 14f,    // NOVO v2.5.0
-    redlineStartRpm: Int = 7000,   // NOVO v2.5.1
+    isScaleVisible: Boolean = true,
+    maxScaleRpm: Int = 8000,
+    scaleTextSize: Float = 14f,
+    redlineStartRpm: Int = 7000,
     curvature: Float = 30f,
     barWidth: Float = 22f,
     barHeight: Float = 40f,
+    rpmBarStyle: Int = 1,          // 1 = Linha Fina / Blocos, 2 = Analógico (Porsche / Civic Si Style)
+    rpmBarThickness: Float = 22f,   // Espessura da barra/arco (v4.6.4)
     isBlinking: Boolean = false,
     blinkIntervalMs: Int = 100,
     colorConfig: RpmColorConfig = RpmColorConfig(),
     modifier: Modifier = Modifier
 ) {
-    // Animação suavizada para evitar "pulos" de barras (v1.9.1)
-    // Usando spring para resposta rápida e natural sem oscilação
+    // Animação suavizada para resposta rápida e orgânica sem oscilação
     val animatedRpm by animateFloatAsState(
         targetValue = currentRpm,
         animationSpec = spring(
@@ -264,169 +268,974 @@ fun ArchedRpmGauge(
         label = "RpmAnimation"
     )
 
-    val blinkAlpha by rememberInfiniteTransition(label = "Blink").animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(blinkIntervalMs),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "BlinkAlpha"
-    )
+    // Chaveia dinamicamente pelo blinkIntervalMs: ao mudar no slider (ex: 100ms -> 200ms),
+    // a transicao infinita e recriada imediatamente com o novo periodo de animacao.
+    val blinkAlpha by key(blinkIntervalMs) {
+        rememberInfiniteTransition(label = "Blink_$blinkIntervalMs").animateFloat(
+            initialValue = 1f,
+            targetValue = 0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(blinkIntervalMs.coerceIn(30, 2000)),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "BlinkAlpha"
+        )
+    }
 
     Canvas(modifier = modifier) {
-        val totalBlocks = 44
-        // v2.5.3: Unificação absoluta da escala. O teto das barras agora segue rigorosamente o maxScaleRpm.
         val maxRpm = maxScaleRpm.toFloat()
-        val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
-
-        val marginPercent = if (curvature <= 0) 0.15f else 0f
-        val drawingWidth = size.width * (1f - (marginPercent * 2))
-        val startOffsetX = size.width * marginPercent
-
-        for (i in 0..totalBlocks) {
-            val fraction = i.toFloat() / totalBlocks.toFloat()
-            val rpmAtBlock = fraction * maxRpm
-            val isActive = i <= blocksActive
-            
-            // v2.5.3: O redline agora é posicionado de forma absoluta baseada no redlineStartRpm.
-            // Se o valor for inválido ou maior que o teto, usa 87.5% como fallback preventivo.
-            val effectiveRedline = if (redlineStartRpm <= 0 || redlineStartRpm >= maxRpm) {
-                (maxRpm * 0.875f)
-            } else {
-                redlineStartRpm.toFloat()
-            }
-            val isRedline = rpmAtBlock >= effectiveRedline
-            
-            val color = when {
-                isBlinking -> colorConfig.blink.copy(alpha = blinkAlpha)
-                isActive && isRedline -> colorConfig.activeRed
-                isActive && !isRedline -> colorConfig.activeBlue
-                !isActive && isRedline -> colorConfig.dimmedRed
-                else -> colorConfig.dimmedBlue
-            }
-
-            if (curvature > 0) {
-                val cx = size.width / 2f
-                val r = size.width * 1.4f
-                val cy = r + 50f
-                val totalSweepRad = Math.toRadians(curvature.toDouble())
-                val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
-                val angle = (startRad + fraction * totalSweepRad).toFloat()
-
-                val innerR = r
-                val outerR = r + barHeight
-                val x1 = cx + (innerR * cos(angle))
-                val y1 = cy + (innerR * sin(angle))
-                val x2 = cx + (outerR * cos(angle))
-                val y2 = cy + (outerR * sin(angle))
-
-                // Efeito Glow (v3.8.0)
-                if (glowIntensity > 0 && isActive) {
-                    val blurRadius = glowIntensity * 7.5f
-                    drawIntoCanvas { canvas ->
-                        val paint = Paint().apply {
-                            isAntiAlias = true
-                            this.color = color.toArgb()
-                            strokeWidth = barWidth * 1.5f
-                            strokeCap = Paint.Cap.BUTT
-                            maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-                        }
-                        canvas.nativeCanvas.drawLine(x1, y1, x2, y2, paint)
-                    }
-                }
-
-                drawLine(color = color, start = Offset(x1, y1), end = Offset(x2, y2), strokeWidth = barWidth, cap = StrokeCap.Butt)
-            } else {
-                val x = startOffsetX + (drawingWidth * fraction)
-                
-                // Efeito Glow (v3.8.0)
-                if (glowIntensity > 0 && isActive) {
-                    val blurRadius = glowIntensity * 7.5f
-                    drawIntoCanvas { canvas ->
-                        val paint = Paint().apply {
-                            isAntiAlias = true
-                            this.color = color.toArgb()
-                            strokeWidth = barWidth * 1.5f
-                            strokeCap = Paint.Cap.BUTT
-                            maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-                        }
-                        canvas.nativeCanvas.drawLine(x, 0f, x, barHeight, paint)
-                    }
-                }
-
-                drawLine(color = color, start = Offset(x, 0f), end = Offset(x, barHeight), strokeWidth = barWidth, cap = StrokeCap.Butt)
-            }
+        val effectiveThickness = if (rpmBarThickness > 0f) rpmBarThickness else barWidth
+        val effectiveRedline = if (redlineStartRpm <= 0 || redlineStartRpm >= maxRpm) {
+            (maxRpm * 0.85f)
+        } else {
+            redlineStartRpm.toFloat()
         }
+        val redlineFraction = (effectiveRedline / maxRpm).coerceIn(0f, 1f)
+        val currentFraction = (animatedRpm / maxRpm).coerceIn(0f, 1f)
 
-        // 3. Desenho da Escala Numérica (v2.5.0)
-        if (isScaleVisible) {
-            val scaleMax = maxScaleRpm.toFloat()
-            val textPaint = Paint().apply {
-                color = android.graphics.Color.WHITE
-                textSize = scaleTextSize * density
-                textAlign = Paint.Align.CENTER
-                typeface = Typeface.DEFAULT_BOLD
-                isAntiAlias = true
-            }
-
-            val stepSize = 500
-            val totalSteps = (maxScaleRpm / stepSize)
-
+        if (rpmBarStyle == 2) {
+            // =========================================================================
+            // FORMATO 2: CONTA-GIROS ANALÓGICO ESPORTIVO (REFERÊNCIA REALISTA DE PAINEL)
+            // =========================================================================
             if (curvature > 0) {
                 val cx = size.width / 2f
-                val r = size.width * 1.4f
-                val cy = r + 50f
-                val totalSweepRad = Math.toRadians(curvature.toDouble())
-                val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
+                
+                // Sweep angular amplo do tacômetro analógico (0 no canto esquerdo, 4 no topo, 8 no canto direito)
+                val sweepDeg = (136f + (curvature.coerceIn(0f, 60f) * 0.35f)).coerceIn(115f, 160f)
+                val totalSweepRad = Math.toRadians(sweepDeg.toDouble())
+                val startRad = (Math.PI * 1.5) - (totalSweepRad / 2.0)
+                val startAngleDeg = (270f - (sweepDeg / 2f))
 
-                // Linha contínua da escala
-                val scaleR = r - 5f
-                val path = Path()
-                for (i in 0..100) {
-                    val f = i / 100f
-                    val angle = (startRad + f * totalSweepRad).toFloat()
-                    val px = cx + (scaleR * cos(angle))
-                    val py = cy + (scaleR * sin(angle))
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                // Raio proporcional do arco do tacômetro contornando a área central
+                val arcR = ((size.width * 0.40f) + (barHeight * 0.9f)).coerceAtMost(size.width * 0.60f)
+                val topY = (effectiveThickness + (14f * density)).coerceAtLeast(18f * density)
+                val cy = topY + arcR
+
+                val halfThickness = effectiveThickness / 2f
+                val outerArcR = arcR + halfThickness
+                val innerArcR = arcR - halfThickness
+                val bezelR = outerArcR + (3.5f * density)
+
+                val arcTopLeft = Offset(cx - arcR, cy - arcR)
+                val arcSize = androidx.compose.ui.geometry.Size(arcR * 2, arcR * 2)
+
+                val outerTopLeft = Offset(cx - outerArcR, cy - outerArcR)
+                val outerSize = androidx.compose.ui.geometry.Size(outerArcR * 2, outerArcR * 2)
+
+                val innerTopLeft = Offset(cx - innerArcR, cy - innerArcR)
+                val innerSize = androidx.compose.ui.geometry.Size(innerArcR * 2, innerArcR * 2)
+
+                val bezelTopLeft = Offset(cx - bezelR, cy - bezelR)
+                val bezelSize = androidx.compose.ui.geometry.Size(bezelR * 2, bezelR * 2)
+
+                val normalSweepDeg = sweepDeg * redlineFraction
+                val redlineSweepDeg = sweepDeg * (1f - redlineFraction)
+
+                // 1. Moldura Externa (Bezel Metálico / Titânio Acetinado)
+                drawArc(
+                    color = Color(0xFF8C95A6).copy(alpha = 0.55f),
+                    startAngle = startAngleDeg - 1.5f,
+                    sweepAngle = sweepDeg + 3.0f,
+                    useCenter = false,
+                    topLeft = bezelTopLeft,
+                    size = bezelSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 2.5f * density,
+                        cap = StrokeCap.Round
+                    )
+                )
+
+                // 2. Fundo do Canal (Background Track)
+                // 2.1 Segmento Normal: Fundo escuro esportivo
+                drawArc(
+                    color = Color(0xFF0F1524),
+                    startAngle = startAngleDeg,
+                    sweepAngle = normalSweepDeg,
+                    useCenter = false,
+                    topLeft = arcTopLeft,
+                    size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                )
+
+                // 2.2 Segmento de Redline Fixo: Bloco Curvo Vermelho Sólido (idêntico à imagem de referência)
+                drawArc(
+                    color = Color(0xFFD6181F),
+                    startAngle = startAngleDeg + normalSweepDeg,
+                    sweepAngle = redlineSweepDeg,
+                    useCenter = false,
+                    topLeft = arcTopLeft,
+                    size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                )
+
+                // 3. Ticks Radiais Densos no Interior do Canal (Estilo Instrumentação de Competição)
+                val stepRpm = if (maxScaleRpm <= 4000) 50 else 100
+                val totalTicks = (maxScaleRpm / stepRpm)
+                val tickPadding = 2f * density
+                val tickInR = innerArcR + tickPadding
+                val tickOutR = outerArcR - tickPadding
+
+                for (i in 0..totalTicks) {
+                    val rpmVal = i * stepRpm
+                    val f = rpmVal.toFloat() / maxRpm
+                    val angle = (startRad + (f * totalSweepRad)).toFloat()
+
+                    val isRedZone = rpmVal >= effectiveRedline
+                    val isMajor = (rpmVal % 1000 == 0)
+                    val isMedium = (rpmVal % 500 == 0 && !isMajor)
+
+                    val tickColor = if (isRedZone) {
+                        Color(0xFF8B0000).copy(alpha = 0.5f) // Sombra sutil de tick sobre o bloco vermelho
+                    } else {
+                        if (isMajor) Color(0xFF5A72A8)
+                        else if (isMedium) Color(0xFF3B4D73)
+                        else Color(0xFF24304A)
+                    }
+
+                    val x1 = cx + (tickInR * cos(angle))
+                    val y1 = cy + (tickInR * sin(angle))
+                    val x2 = cx + (tickOutR * cos(angle))
+                    val y2 = cy + (tickOutR * sin(angle))
+
+                    val tickStroke = if (isMajor) 1.8f * density else 1.0f * density
+
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(x1, y1),
+                        end = Offset(x2, y2),
+                        strokeWidth = tickStroke,
+                        cap = StrokeCap.Butt
+                    )
                 }
-                drawPath(path = path, color = Color.White, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
 
-                // Marcadores e Números
-                for (i in 0..totalSteps) {
-                    val rpmValue = i * stepSize
-                    val fraction = rpmValue / scaleMax
+                // 4. Preenchimento Dinâmico do RPM (Active Track Luminoso)
+                if (currentFraction > 0f) {
+                    val activeSweepDeg = sweepDeg * currentFraction
+                    if (isBlinking) {
+                        drawArc(
+                            color = colorConfig.blink.copy(alpha = blinkAlpha),
+                            startAngle = startAngleDeg,
+                            sweepAngle = activeSweepDeg,
+                            useCenter = false,
+                            topLeft = arcTopLeft,
+                            size = arcSize,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = effectiveThickness,
+                                cap = StrokeCap.Butt
+                            )
+                        )
+                    } else {
+                        val normalActiveSweep = if (currentFraction > redlineFraction) normalSweepDeg else activeSweepDeg
+                        // Arco Ativo Normal (Azul Elétrico Neon)
+                        drawArc(
+                            color = Color(0xFF1E60FF),
+                            startAngle = startAngleDeg,
+                            sweepAngle = normalActiveSweep,
+                            useCenter = false,
+                            topLeft = arcTopLeft,
+                            size = arcSize,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = effectiveThickness,
+                                cap = StrokeCap.Butt
+                            )
+                        )
+
+                        // Arco Ativo Redline (Vermelho Vivo Incandescente)
+                        if (currentFraction > redlineFraction) {
+                            val redlineActiveSweep = sweepDeg * (currentFraction - redlineFraction)
+                            drawArc(
+                                color = Color(0xFFFF2A32),
+                                startAngle = startAngleDeg + normalSweepDeg,
+                                sweepAngle = redlineActiveSweep,
+                                useCenter = false,
+                                topLeft = arcTopLeft,
+                                size = arcSize,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = effectiveThickness,
+                                    cap = StrokeCap.Butt
+                                )
+                            )
+                        }
+                    }
+
+                    // Efeito Glow Luminoso
+                    if (glowIntensity > 0) {
+                        val blurRadius = glowIntensity * 7.5f
+                        val activeColor = if (isBlinking) colorConfig.blink.copy(alpha = blinkAlpha)
+                            else if (currentFraction > redlineFraction) Color(0xFFFF2A32)
+                            else Color(0xFF1E60FF)
+
+                        drawIntoCanvas { canvas ->
+                            val glowPaint = Paint().apply {
+                                isAntiAlias = true
+                                this.color = activeColor.toArgb()
+                                strokeWidth = effectiveThickness * 1.35f
+                                style = Paint.Style.STROKE
+                                strokeCap = Paint.Cap.BUTT
+                                maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawArc(
+                                arcTopLeft.x, arcTopLeft.y,
+                                arcTopLeft.x + arcSize.width, arcTopLeft.y + arcSize.height,
+                                startAngleDeg, activeSweepDeg, false, glowPaint
+                            )
+                        }
+                    }
+
+                    // Leading Edge Indicator (Linha de agulha luminosa na ponta do giro ativo)
+                    val leadAngle = (startRad + (currentFraction * totalSweepRad)).toFloat()
+                    val leadX1 = cx + (innerArcR * cos(leadAngle))
+                    val leadY1 = cy + (innerArcR * sin(leadAngle))
+                    val leadX2 = cx + ((outerArcR + (3f * density)) * cos(leadAngle))
+                    val leadY2 = cy + ((outerArcR + (3f * density)) * sin(leadAngle))
+                    val leadColor = if (currentFraction >= redlineFraction) Color.White else Color(0xFFE0F7FF)
+                    drawLine(
+                        color = leadColor,
+                        start = Offset(leadX1, leadY1),
+                        end = Offset(leadX2, leadY2),
+                        strokeWidth = 2.5f * density,
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // 5. Linhas Limites do Canal (Contorno Branco Fino e Nítido)
+                // 5.1 Borda Externa
+                drawArc(
+                    color = Color.White.copy(alpha = 0.90f),
+                    startAngle = startAngleDeg,
+                    sweepAngle = sweepDeg,
+                    useCenter = false,
+                    topLeft = outerTopLeft,
+                    size = outerSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 1.8f * density,
+                        cap = StrokeCap.Round
+                    )
+                )
+
+                // 5.2 Borda Interna (Linha que separa a barra dos números)
+                drawArc(
+                    color = Color.White.copy(alpha = 0.90f),
+                    startAngle = startAngleDeg,
+                    sweepAngle = sweepDeg,
+                    useCenter = false,
+                    topLeft = innerTopLeft,
+                    size = innerSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 1.8f * density,
+                        cap = StrokeCap.Round
+                    )
+                )
+
+                // 6. Ticks Internos e Numerais (0 a 8) Acompanhando a Curvatura Interna
+                val numTypeface = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    Typeface.create(Typeface.SANS_SERIF, 800, true) // ExtraBold Italic
+                } else {
+                    Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD_ITALIC)
+                }
+
+                val numPaint = Paint().apply {
+                    color = android.graphics.Color.WHITE
+                    textSize = (scaleTextSize * 1.55f) * density
+                    textAlign = Paint.Align.CENTER
+                    typeface = numTypeface
+                    isAntiAlias = true
+                }
+
+                // 6.1 Ticks Internos projetados para baixo da linha interna
+                val tickMajorLen = 13f * density
+                val tickMediumLen = 8f * density
+                val tickMinorLen = 4.5f * density
+                val stepsPerThousand = 4 // Ticks a cada 250 RPM
+                val totalInnerTicks = (maxScaleRpm / 250)
+
+                for (i in 0..totalInnerTicks) {
+                    val rpmVal = i * 250
+                    val f = rpmVal.toFloat() / maxRpm
+                    val angle = (startRad + (f * totalSweepRad)).toFloat()
+
+                    val isMajor = (rpmVal % 1000 == 0)
+                    val isMedium = (rpmVal % 500 == 0 && !isMajor)
+                    val tickLen = when {
+                        isMajor -> tickMajorLen
+                        isMedium -> tickMediumLen
+                        else -> tickMinorLen
+                    }
+                    val tickStroke = when {
+                        isMajor -> 2.4f * density
+                        isMedium -> 1.6f * density
+                        else -> 1.0f * density
+                    }
+
+                    val isRedZone = rpmVal >= effectiveRedline
+                    // Na foto, os ticks na zona de redline são destacados em vermelho!
+                    val tickColor = if (isRedZone) Color(0xFFE51D24) else Color.White
+
+                    val x1 = cx + (innerArcR * cos(angle))
+                    val y1 = cy + (innerArcR * sin(angle))
+                    val x2 = cx + ((innerArcR - tickLen) * cos(angle))
+                    val y2 = cy + ((innerArcR - tickLen) * sin(angle))
+
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(x1, y1),
+                        end = Offset(x2, y2),
+                        strokeWidth = tickStroke,
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // 6.2 Numerais Grandes (0 a 8) internamente
+                if (isScaleVisible) {
+                    val numR = innerArcR - tickMajorLen - (numPaint.textSize * 0.55f)
+                    val numSteps = maxScaleRpm / 1000
+
+                    for (n in 0..numSteps) {
+                        val rpmVal = n * 1000
+                        val f = rpmVal.toFloat() / maxRpm
+                        val angle = (startRad + (f * totalSweepRad)).toFloat()
+
+                        val nx = cx + (numR * cos(angle))
+                        val ny = cy + (numR * sin(angle))
+
+                        drawIntoCanvas { canvas ->
+                            canvas.nativeCanvas.drawText(
+                                n.toString(),
+                                nx,
+                                ny + (numPaint.textSize * 0.35f),
+                                numPaint
+                            )
+                        }
+                    }
+                }
+            } else {
+                // ==========================================
+                // FORMATO 2 EM MODO RETA (HORIZONTAL RACING)
+                // ==========================================
+                val marginPercent = 0.12f
+                val drawingWidth = size.width * (1f - (marginPercent * 2))
+                val startOffsetX = size.width * marginPercent
+                val barY = (barHeight / 2f).coerceAtLeast(30f * density)
+                val halfThickness = effectiveThickness / 2f
+                val topBorderY = barY - halfThickness
+                val bottomBorderY = barY + halfThickness
+
+                val redlineX = startOffsetX + (drawingWidth * redlineFraction)
+
+                // 1. Moldura Externa
+                drawLine(
+                    color = Color(0xFF8C95A6).copy(alpha = 0.55f),
+                    start = Offset(startOffsetX - (2f * density), topBorderY - (3.5f * density)),
+                    end = Offset(startOffsetX + drawingWidth + (2f * density), topBorderY - (3.5f * density)),
+                    strokeWidth = 2.5f * density,
+                    cap = StrokeCap.Round
+                )
+
+                // 2. Fundo Normal e Redline
+                drawLine(
+                    color = Color(0xFF0F1524),
+                    start = Offset(startOffsetX, barY),
+                    end = Offset(redlineX, barY),
+                    strokeWidth = effectiveThickness,
+                    cap = StrokeCap.Butt
+                )
+                drawLine(
+                    color = Color(0xFFD6181F),
+                    start = Offset(redlineX, barY),
+                    end = Offset(startOffsetX + drawingWidth, barY),
+                    strokeWidth = effectiveThickness,
+                    cap = StrokeCap.Butt
+                )
+
+                // 3. Ticks dentro do canal
+                val stepRpm = if (maxScaleRpm <= 4000) 50 else 100
+                val totalTicks = (maxScaleRpm / stepRpm)
+                val tickPadding = 2f * density
+                val tickTopY = topBorderY + tickPadding
+                val tickBottomY = bottomBorderY - tickPadding
+
+                for (i in 0..totalTicks) {
+                    val rpmVal = i * stepRpm
+                    val f = rpmVal.toFloat() / maxRpm
+                    val x = startOffsetX + (drawingWidth * f)
+
+                    val isRedZone = rpmVal >= effectiveRedline
+                    val isMajor = (rpmVal % 1000 == 0)
+                    val isMedium = (rpmVal % 500 == 0 && !isMajor)
+
+                    val tickColor = if (isRedZone) {
+                        Color(0xFF8B0000).copy(alpha = 0.5f)
+                    } else {
+                        if (isMajor) Color(0xFF5A72A8)
+                        else if (isMedium) Color(0xFF3B4D73)
+                        else Color(0xFF24304A)
+                    }
+                    val tickStroke = if (isMajor) 1.8f * density else 1.0f * density
+
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(x, tickTopY),
+                        end = Offset(x, tickBottomY),
+                        strokeWidth = tickStroke,
+                        cap = StrokeCap.Butt
+                    )
+                }
+
+                // 4. Preenchimento Ativo
+                if (currentFraction > 0f) {
+                    val activeX = startOffsetX + (drawingWidth * currentFraction)
+                    if (isBlinking) {
+                        drawLine(
+                            color = colorConfig.blink.copy(alpha = blinkAlpha),
+                            start = Offset(startOffsetX, barY),
+                            end = Offset(activeX, barY),
+                            strokeWidth = effectiveThickness,
+                            cap = StrokeCap.Butt
+                        )
+                    } else {
+                        val normalEndX = if (currentFraction > redlineFraction) redlineX else activeX
+                        drawLine(
+                            color = Color(0xFF1E60FF),
+                            start = Offset(startOffsetX, barY),
+                            end = Offset(normalEndX, barY),
+                            strokeWidth = effectiveThickness,
+                            cap = StrokeCap.Butt
+                        )
+                        if (currentFraction > redlineFraction) {
+                            drawLine(
+                                color = Color(0xFFFF2A32),
+                                start = Offset(redlineX, barY),
+                                end = Offset(activeX, barY),
+                                strokeWidth = effectiveThickness,
+                                cap = StrokeCap.Butt
+                            )
+                        }
+                    }
+
+                    // Glow
+                    if (glowIntensity > 0) {
+                        val blurRadius = glowIntensity * 7.5f
+                        val activeColor = if (isBlinking) colorConfig.blink.copy(alpha = blinkAlpha)
+                            else if (currentFraction > redlineFraction) Color(0xFFFF2A32)
+                            else Color(0xFF1E60FF)
+
+                        drawIntoCanvas { canvas ->
+                            val glowPaint = Paint().apply {
+                                isAntiAlias = true
+                                this.color = activeColor.toArgb()
+                                strokeWidth = effectiveThickness * 1.35f
+                                style = Paint.Style.STROKE
+                                strokeCap = Paint.Cap.BUTT
+                                maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawLine(startOffsetX, barY, activeX, barY, glowPaint)
+                        }
+                    }
+
+                    // Leading edge
+                    val leadColor = if (currentFraction >= redlineFraction) Color.White else Color(0xFFE0F7FF)
+                    drawLine(
+                        color = leadColor,
+                        start = Offset(activeX, topBorderY - (3f * density)),
+                        end = Offset(activeX, bottomBorderY + (3f * density)),
+                        strokeWidth = 2.5f * density,
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // 5. Linhas de Borda
+                drawLine(
+                    color = Color.White.copy(alpha = 0.90f),
+                    start = Offset(startOffsetX, topBorderY),
+                    end = Offset(startOffsetX + drawingWidth, topBorderY),
+                    strokeWidth = 1.8f * density,
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = Color.White.copy(alpha = 0.90f),
+                    start = Offset(startOffsetX, bottomBorderY),
+                    end = Offset(startOffsetX + drawingWidth, bottomBorderY),
+                    strokeWidth = 1.8f * density,
+                    cap = StrokeCap.Round
+                )
+
+                // 6. Ticks Internos e Numerais
+                val tickMajorLen = 13f * density
+                val tickMediumLen = 8f * density
+                val tickMinorLen = 4.5f * density
+                val totalInnerTicks = (maxScaleRpm / 250)
+
+                for (i in 0..totalInnerTicks) {
+                    val rpmVal = i * 250
+                    val f = rpmVal.toFloat() / maxRpm
+                    val x = startOffsetX + (drawingWidth * f)
+
+                    val isMajor = (rpmVal % 1000 == 0)
+                    val isMedium = (rpmVal % 500 == 0 && !isMajor)
+                    val tickLen = when {
+                        isMajor -> tickMajorLen
+                        isMedium -> tickMediumLen
+                        else -> tickMinorLen
+                    }
+                    val tickStroke = when {
+                        isMajor -> 2.4f * density
+                        isMedium -> 1.6f * density
+                        else -> 1.0f * density
+                    }
+
+                    val isRedZone = rpmVal >= effectiveRedline
+                    val tickColor = if (isRedZone) Color(0xFFE51D24) else Color.White
+
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(x, bottomBorderY),
+                        end = Offset(x, bottomBorderY + tickLen),
+                        strokeWidth = tickStroke,
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // 6.2 Numerais
+                if (isScaleVisible) {
+                    val numTypeface = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                        Typeface.create(Typeface.SANS_SERIF, 800, true)
+                    } else {
+                        Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD_ITALIC)
+                    }
+
+                    val numPaint = Paint().apply {
+                        color = android.graphics.Color.WHITE
+                        textSize = (scaleTextSize * 1.55f) * density
+                        textAlign = Paint.Align.CENTER
+                        typeface = numTypeface
+                        isAntiAlias = true
+                    }
+
+                    val numY = bottomBorderY + tickMajorLen + numPaint.textSize
+                    val numSteps = maxScaleRpm / 1000
+
+                    for (n in 0..numSteps) {
+                        val rpmVal = n * 1000
+                        val f = rpmVal.toFloat() / maxRpm
+                        val x = startOffsetX + (drawingWidth * f)
+
+                        drawIntoCanvas { canvas ->
+                            canvas.nativeCanvas.drawText(n.toString(), x, numY, numPaint)
+                        }
+                    }
+                }
+            }
+        } else if (rpmBarStyle == 3) {
+            // ==========================================
+            // FORMATO 1.5: BLOCOS + NÚMEROS CUSTOMIZADOS
+            // ==========================================
+            val totalBlocks = 44
+            val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
+
+            val marginPercent = if (curvature <= 0) 0.15f else 0f
+            val drawingWidth = size.width * (1f - (marginPercent * 2))
+            val startOffsetX = size.width * marginPercent
+
+            // Slider controla a espessura dos blocos
+            val dynamicBarThickness = if (rpmBarThickness > 0f) rpmBarThickness else barHeight
+
+            for (i in 0..totalBlocks) {
+                val fraction = i.toFloat() / totalBlocks.toFloat()
+                val rpmAtBlock = fraction * maxRpm
+                val isActive = i <= blocksActive
+                val isRedline = rpmAtBlock >= effectiveRedline
+
+                val color = when {
+                    isBlinking -> colorConfig.blink.copy(alpha = blinkAlpha)
+                    isActive && isRedline -> colorConfig.activeRed
+                    isActive && !isRedline -> colorConfig.activeBlue
+                    !isActive && isRedline -> colorConfig.dimmedRed
+                    else -> colorConfig.dimmedBlue
+                }
+
+                if (curvature > 0) {
+                    val cx = size.width / 2f
+                    val r = size.width * 1.4f
+                    val cy = r + 50f
+                    val totalSweepRad = Math.toRadians(curvature.toDouble())
+                    val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
                     val angle = (startRad + fraction * totalSweepRad).toFloat()
 
-                    val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
-                    val x1 = cx + (scaleR * cos(angle))
-                    val y1 = cy + (scaleR * sin(angle))
-                    val x2 = cx + ((scaleR + tickLength) * cos(angle))
-                    val y2 = cy + ((scaleR + tickLength) * sin(angle))
+                    val innerR = r
+                    val outerR = r + dynamicBarThickness
+                    val x1 = cx + (innerR * kotlin.math.cos(angle))
+                    val y1 = cy + (innerR * kotlin.math.sin(angle))
+                    val x2 = cx + (outerR * kotlin.math.cos(angle))
+                    val y2 = cy + (outerR * kotlin.math.sin(angle))
 
-                    drawLine(color = Color.White, start = Offset(x1, y1), end = Offset(x2, y2), strokeWidth = 2f)
-
-                    if (rpmValue % 1000 == 0) {
-                        val textR = scaleR + tickLength + (scaleTextSize * density / 1.5f)
-                        val tx = cx + (textR * cos(angle))
-                        val ty = cy + (textR * sin(angle))
-                        drawIntoCanvas { it.nativeCanvas.drawText((rpmValue / 1000).toString(), tx, ty + (textPaint.textSize / 3), textPaint) }
+                    if (glowIntensity > 0 && isActive) {
+                        val blurRadius = glowIntensity * 7.5f
+                        drawIntoCanvas { canvas ->
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.color = color.toArgb()
+                                strokeWidth = effectiveThickness * 1.5f
+                                strokeCap = android.graphics.Paint.Cap.BUTT
+                                maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawLine(x1, y1, x2, y2, paint)
+                        }
                     }
-                }
-            } else {
-                val scaleY = barHeight + 10f
-                drawLine(color = Color.White, start = Offset(startOffsetX, scaleY), end = Offset(startOffsetX + drawingWidth, scaleY), strokeWidth = 2f)
 
-                for (i in 0..totalSteps) {
-                    val rpmValue = i * stepSize
-                    val fraction = rpmValue / scaleMax
+                    drawLine(
+                        color = color,
+                        start = Offset(x1, y1),
+                        end = Offset(x2, y2),
+                        strokeWidth = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                } else {
                     val x = startOffsetX + (drawingWidth * fraction)
 
-                    val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
-                    drawLine(color = Color.White, start = Offset(x, scaleY), end = Offset(x, scaleY + tickLength), strokeWidth = 2f)
+                    if (glowIntensity > 0 && isActive) {
+                        val blurRadius = glowIntensity * 7.5f
+                        drawIntoCanvas { canvas ->
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.color = color.toArgb()
+                                strokeWidth = effectiveThickness * 1.5f
+                                strokeCap = android.graphics.Paint.Cap.BUTT
+                                maskFilter = android.graphics.BlurMaskFilter(blurRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawLine(x, 0f, x, dynamicBarThickness, paint)
+                        }
+                    }
 
-                    if (rpmValue % 1000 == 0) {
-                        drawIntoCanvas { it.nativeCanvas.drawText((rpmValue / 1000).toString(), x, scaleY + tickLength + textPaint.textSize, textPaint) }
+                    drawLine(
+                        color = color,
+                        start = Offset(x, 0f),
+                        end = Offset(x, dynamicBarThickness),
+                        strokeWidth = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                }
+            }
+
+            // 3. Desenho da Escala Numérica Customizada (Pixel Perfect) "Debaixo" da barra
+            if (isScaleVisible) {
+                val stepSize = 1000
+                val totalSteps = (maxScaleRpm / stepSize).coerceAtMost(8)
+
+                if (curvature > 0) {
+                    val cx = size.width / 2f
+                    val r = size.width * 1.4f
+                    val cy = r + 50f
+                    val totalSweepRad = Math.toRadians(curvature.toDouble())
+                    val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
+
+                    // Linha contínua da escala debaixo dos blocos (innerR - padding)
+                    val scaleR = r - 10f
+                    val path = androidx.compose.ui.graphics.Path()
+                    for (i in 0..100) {
+                        val f = i / 100f
+                        val angle = (startRad + f * totalSweepRad).toFloat()
+                        val px = cx + (scaleR * kotlin.math.cos(angle))
+                        val py = cy + (scaleR * kotlin.math.sin(angle))
+                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                    }
+                    drawPath(
+                        path = path,
+                        color = Color.White.copy(alpha = 0.5f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                    )
+
+                    // Numerais e Ticks debaixo
+                    for (i in 0..totalSteps) {
+                        val fraction = (i * stepSize) / maxScaleRpm.toFloat()
+                        val angle = (startRad + fraction * totalSweepRad).toFloat()
+
+                        val tickLength = 12f
+                        val x1 = cx + (scaleR * kotlin.math.cos(angle))
+                        val y1 = cy + (scaleR * kotlin.math.sin(angle))
+                        val x2 = cx + ((scaleR - tickLength) * kotlin.math.cos(angle))
+                        val y2 = cy + ((scaleR - tickLength) * kotlin.math.sin(angle))
+
+                        drawLine(
+                            color = Color.White,
+                            start = Offset(x1, y1),
+                            end = Offset(x2, y2),
+                            strokeWidth = 2.5f * density
+                        )
+
+                        // Numeros desenhados
+                        val textR = scaleR - tickLength - (scaleTextSize * density * 1.2f)
+                        val tx = cx + (textR * kotlin.math.cos(angle))
+                        val ty = cy + (textR * kotlin.math.sin(angle))
+                        
+                        drawIntoCanvas { canvas ->
+                            val p = android.graphics.Path()
+                            getRacingDigitPath(i, p)
+                            
+                            val matrix = android.graphics.Matrix()
+                            val scale = (scaleTextSize * density) / 10f // 10f is native height of custom digit
+                            matrix.setScale(scale, scale)
+                            // center digit
+                            matrix.postTranslate(tx - (5f * scale), ty - (5f * scale))
+                            p.transform(matrix)
+                            
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                style = android.graphics.Paint.Style.STROKE
+                                strokeWidth = 1.8f * density
+                                strokeCap = android.graphics.Paint.Cap.ROUND
+                                strokeJoin = android.graphics.Paint.Join.ROUND
+                                color = android.graphics.Color.WHITE
+                            }
+                            // Glow do numero
+                            paint.setShadowLayer(5f, 0f, 0f, android.graphics.Color.parseColor("#44FFFFFF"))
+                            canvas.nativeCanvas.drawPath(p, paint)
+                        }
+                    }
+                } else {
+                    // Linha Reta
+                    val scaleY = dynamicBarThickness + 10f
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.5f),
+                        start = Offset(startOffsetX, scaleY),
+                        end = Offset(startOffsetX + drawingWidth, scaleY),
+                        strokeWidth = 2f
+                    )
+
+                    for (i in 0..totalSteps) {
+                        val fraction = (i * stepSize) / maxScaleRpm.toFloat()
+                        val x = startOffsetX + (drawingWidth * fraction)
+
+                        val tickLength = 12f
+                        drawLine(
+                            color = Color.White,
+                            start = Offset(x, scaleY),
+                            end = Offset(x, scaleY + tickLength),
+                            strokeWidth = 2.5f * density
+                        )
+
+                        val ty = scaleY + tickLength + (scaleTextSize * density * 0.8f)
+                        drawIntoCanvas { canvas ->
+                            val p = android.graphics.Path()
+                            getRacingDigitPath(i, p)
+                            
+                            val matrix = android.graphics.Matrix()
+                            val scale = (scaleTextSize * density) / 10f 
+                            matrix.setScale(scale, scale)
+                            matrix.postTranslate(x - (5f * scale), ty)
+                            p.transform(matrix)
+                            
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                style = android.graphics.Paint.Style.STROKE
+                                strokeWidth = 1.8f * density
+                                strokeCap = android.graphics.Paint.Cap.ROUND
+                                strokeJoin = android.graphics.Paint.Join.ROUND
+                                color = android.graphics.Color.WHITE
+                            }
+                            paint.setShadowLayer(5f, 0f, 0f, android.graphics.Color.parseColor("#44FFFFFF"))
+                            canvas.nativeCanvas.drawPath(p, paint)
+                        }
+                    }
+                }
+            }
+        } else {
+            // ==========================================
+            // FORMATO 1: LINHA FINA / BLOCOS CLÁSSICO
+            // ==========================================
+            val totalBlocks = 44
+            val blocksActive = ((animatedRpm / maxRpm) * totalBlocks).toInt()
+
+            val marginPercent = if (curvature <= 0) 0.15f else 0f
+            val drawingWidth = size.width * (1f - (marginPercent * 2))
+            val startOffsetX = size.width * marginPercent
+
+            for (i in 0..totalBlocks) {
+                val fraction = i.toFloat() / totalBlocks.toFloat()
+                val rpmAtBlock = fraction * maxRpm
+                val isActive = i <= blocksActive
+                val isRedline = rpmAtBlock >= effectiveRedline
+
+                val color = when {
+                    isBlinking -> colorConfig.blink.copy(alpha = blinkAlpha)
+                    isActive && isRedline -> colorConfig.activeRed
+                    isActive && !isRedline -> colorConfig.activeBlue
+                    !isActive && isRedline -> colorConfig.dimmedRed
+                    else -> colorConfig.dimmedBlue
+                }
+
+                if (curvature > 0) {
+                    val cx = size.width / 2f
+                    val r = size.width * 1.4f
+                    val cy = r + 50f
+                    val totalSweepRad = Math.toRadians(curvature.toDouble())
+                    val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
+                    val angle = (startRad + fraction * totalSweepRad).toFloat()
+
+                    val innerR = r
+                    val outerR = r + barHeight
+                    val x1 = cx + (innerR * cos(angle))
+                    val y1 = cy + (innerR * sin(angle))
+                    val x2 = cx + (outerR * cos(angle))
+                    val y2 = cy + (outerR * sin(angle))
+
+                    // Efeito Glow (v3.8.0)
+                    if (glowIntensity > 0 && isActive) {
+                        val blurRadius = glowIntensity * 7.5f
+                        drawIntoCanvas { canvas ->
+                            val paint = Paint().apply {
+                                isAntiAlias = true
+                                this.color = color.toArgb()
+                                strokeWidth = effectiveThickness * 1.5f
+                                strokeCap = Paint.Cap.BUTT
+                                maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawLine(x1, y1, x2, y2, paint)
+                        }
+                    }
+
+                    drawLine(
+                        color = color,
+                        start = Offset(x1, y1),
+                        end = Offset(x2, y2),
+                        strokeWidth = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                } else {
+                    val x = startOffsetX + (drawingWidth * fraction)
+
+                    // Efeito Glow (v3.8.0)
+                    if (glowIntensity > 0 && isActive) {
+                        val blurRadius = glowIntensity * 7.5f
+                        drawIntoCanvas { canvas ->
+                            val paint = Paint().apply {
+                                isAntiAlias = true
+                                this.color = color.toArgb()
+                                strokeWidth = effectiveThickness * 1.5f
+                                strokeCap = Paint.Cap.BUTT
+                                maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
+                            }
+                            canvas.nativeCanvas.drawLine(x, 0f, x, barHeight, paint)
+                        }
+                    }
+
+                    drawLine(
+                        color = color,
+                        start = Offset(x, 0f),
+                        end = Offset(x, barHeight),
+                        strokeWidth = effectiveThickness,
+                        cap = StrokeCap.Butt
+                    )
+                }
+            }
+
+            // 3. Desenho da Escala Numérica Clássica (v2.5.0)
+            if (isScaleVisible) {
+                val scaleMax = maxScaleRpm.toFloat()
+                val textPaint = Paint().apply {
+                    color = android.graphics.Color.WHITE
+                    textSize = scaleTextSize * density
+                    textAlign = Paint.Align.CENTER
+                    typeface = Typeface.DEFAULT_BOLD
+                    isAntiAlias = true
+                }
+
+                val stepSize = 500
+                val totalSteps = (maxScaleRpm / stepSize)
+
+                if (curvature > 0) {
+                    val cx = size.width / 2f
+                    val r = size.width * 1.4f
+                    val cy = r + 50f
+                    val totalSweepRad = Math.toRadians(curvature.toDouble())
+                    val startRad = (Math.PI * 1.5) - (totalSweepRad / 2)
+
+                    // Linha contínua da escala
+                    val scaleR = r - 5f
+                    val path = Path()
+                    for (i in 0..100) {
+                        val f = i / 100f
+                        val angle = (startRad + f * totalSweepRad).toFloat()
+                        val px = cx + (scaleR * cos(angle))
+                        val py = cy + (scaleR * sin(angle))
+                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                    }
+                    drawPath(
+                        path = path,
+                        color = Color.White,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                    )
+
+                    // Marcadores e Números
+                    for (i in 0..totalSteps) {
+                        val rpmValue = i * stepSize
+                        val fraction = rpmValue / scaleMax
+                        val angle = (startRad + fraction * totalSweepRad).toFloat()
+
+                        val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
+                        val x1 = cx + (scaleR * cos(angle))
+                        val y1 = cy + (scaleR * sin(angle))
+                        val x2 = cx + ((scaleR + tickLength) * cos(angle))
+                        val y2 = cy + ((scaleR + tickLength) * sin(angle))
+
+                        drawLine(
+                            color = Color.White,
+                            start = Offset(x1, y1),
+                            end = Offset(x2, y2),
+                            strokeWidth = 2f
+                        )
+
+                        if (rpmValue % 1000 == 0) {
+                            val textR = scaleR + tickLength + (scaleTextSize * density / 1.5f)
+                            val tx = cx + (textR * cos(angle))
+                            val ty = cy + (textR * sin(angle))
+                            drawIntoCanvas {
+                                it.nativeCanvas.drawText(
+                                    (rpmValue / 1000).toString(),
+                                    tx,
+                                    ty + (textPaint.textSize / 3),
+                                    textPaint
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    val scaleY = barHeight + 10f
+                    drawLine(
+                        color = Color.White,
+                        start = Offset(startOffsetX, scaleY),
+                        end = Offset(startOffsetX + drawingWidth, scaleY),
+                        strokeWidth = 2f
+                    )
+
+                    for (i in 0..totalSteps) {
+                        val rpmValue = i * stepSize
+                        val fraction = rpmValue / scaleMax
+                        val x = startOffsetX + (drawingWidth * fraction)
+
+                        val tickLength = if (rpmValue % 1000 == 0) 12f else 6f
+                        drawLine(
+                            color = Color.White,
+                            start = Offset(x, scaleY),
+                            end = Offset(x, scaleY + tickLength),
+                            strokeWidth = 2f
+                        )
+
+                        if (rpmValue % 1000 == 0) {
+                            drawIntoCanvas {
+                                it.nativeCanvas.drawText(
+                                    (rpmValue / 1000).toString(),
+                                    x,
+                                    scaleY + tickLength + textPaint.textSize,
+                                    textPaint
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -505,6 +1314,152 @@ fun GearMatrix(current: Int, action: GearAction, skew: Float = -12f, modifier: M
                     modifier = Modifier.height(25.dp).padding(horizontal = 2.dp)
                 )
             }
+        }
+    }
+}
+
+
+// --- Helper Function para Numerais Pixel Perfect (Estilo Racing/Digital) ---
+private fun getRacingDigitPath(digit: Int, path: android.graphics.Path) {
+    path.reset()
+    when (digit) {
+        0 -> {
+            path.moveTo(8f, 0f)
+            path.lineTo(3f, 0f)
+            path.lineTo(0f, 10f)
+            path.lineTo(5f, 10f)
+            path.close()
+            path.moveTo(6f, 2f)
+            path.lineTo(4f, 2f)
+            path.lineTo(2f, 8f)
+            path.lineTo(4f, 8f)
+            path.close()
+            path.fillType = android.graphics.Path.FillType.EVEN_ODD
+        }
+        1 -> {
+            path.moveTo(6f, 0f)
+            path.lineTo(3f, 10f)
+            path.lineTo(5f, 10f)
+            path.lineTo(8f, 0f)
+            path.close()
+        }
+        2 -> {
+            path.moveTo(2f, 2f)
+            path.lineTo(4f, 0f)
+            path.lineTo(8f, 0f)
+            path.lineTo(7f, 3f)
+            path.lineTo(4f, 3f)
+            path.lineTo(3f, 6f)
+            path.lineTo(7f, 6f)
+            path.lineTo(6f, 10f)
+            path.lineTo(0f, 10f)
+            path.lineTo(1f, 7f)
+            path.lineTo(4f, 7f)
+            path.lineTo(5f, 4f)
+            path.lineTo(1f, 4f)
+            path.close()
+        }
+        3 -> {
+            path.moveTo(3f, 0f)
+            path.lineTo(8f, 0f)
+            path.lineTo(6f, 4f)
+            path.lineTo(4f, 4f)
+            path.lineTo(5f, 5f)
+            path.lineTo(7f, 5f)
+            path.lineTo(5f, 10f)
+            path.lineTo(0f, 10f)
+            path.lineTo(1f, 8f)
+            path.lineTo(4f, 8f)
+            path.lineTo(5f, 7f)
+            path.lineTo(2f, 7f)
+            path.lineTo(3f, 5f)
+            path.lineTo(5f, 5f)
+            path.lineTo(6f, 2f)
+            path.lineTo(3f, 2f)
+            path.close()
+        }
+        4 -> {
+            path.moveTo(8f, 0f)
+            path.lineTo(6f, 6f)
+            path.lineTo(1f, 6f)
+            path.lineTo(3f, 0f)
+            path.lineTo(1f, 0f)
+            path.lineTo(-1f, 8f)
+            path.lineTo(5f, 8f)
+            path.lineTo(4f, 10f)
+            path.lineTo(6f, 10f)
+            path.lineTo(7f, 8f)
+            path.lineTo(9f, 8f)
+            path.lineTo(10f, 0f)
+            path.close()
+            path.moveTo(6f, 2f)
+            path.lineTo(3f, 2f)
+            path.lineTo(2f, 4f)
+            path.lineTo(6f, 4f)
+            path.close()
+            path.fillType = android.graphics.Path.FillType.EVEN_ODD
+        }
+        5 -> {
+            path.moveTo(8f, 0f)
+            path.lineTo(3f, 0f)
+            path.lineTo(2f, 4f)
+            path.lineTo(6f, 4f)
+            path.lineTo(5f, 7f)
+            path.lineTo(2f, 7f)
+            path.lineTo(1f, 10f)
+            path.lineTo(6f, 10f)
+            path.lineTo(8f, 6f)
+            path.lineTo(4f, 6f)
+            path.lineTo(4.5f, 2f)
+            path.lineTo(8.5f, 2f)
+            path.close()
+        }
+        6 -> {
+            path.moveTo(7f, 0f)
+            path.lineTo(2f, 0f)
+            path.lineTo(0f, 10f)
+            path.lineTo(5f, 10f)
+            path.lineTo(7f, 5f)
+            path.lineTo(3f, 5f)
+            path.lineTo(4f, 2f)
+            path.lineTo(8f, 2f)
+            path.close()
+            path.moveTo(2f, 8f)
+            path.lineTo(4f, 8f)
+            path.lineTo(5f, 6f)
+            path.lineTo(3f, 6f)
+            path.close()
+            path.fillType = android.graphics.Path.FillType.EVEN_ODD
+        }
+        7 -> {
+            path.moveTo(8f, 0f)
+            path.lineTo(2f, 0f)
+            path.lineTo(1.5f, 2f)
+            path.lineTo(6f, 2f)
+            path.lineTo(3f, 10f)
+            path.lineTo(5f, 10f)
+            path.close()
+        }
+        8 -> {
+            path.moveTo(6f, 0f)
+            path.lineTo(2f, 0f)
+            path.lineTo(0f, 5f)
+            path.lineTo(-1f, 10f)
+            path.lineTo(4f, 10f)
+            path.lineTo(6f, 5f)
+            path.lineTo(8f, 0f)
+            path.close()
+            path.moveTo(5f, 2f)
+            path.lineTo(3f, 2f)
+            path.lineTo(2f, 4f)
+            path.lineTo(4f, 4f)
+            path.close()
+            path.moveTo(4f, 6f)
+            path.lineTo(1f, 6f)
+            path.lineTo(0.5f, 8f)
+            path.lineTo(3.5f, 8f)
+            path.close()
+            path.fillType = android.graphics.Path.FillType.EVEN_ODD
         }
     }
 }

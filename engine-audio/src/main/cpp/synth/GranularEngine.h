@@ -33,6 +33,8 @@ public:
     void setGear(int gear);
     void setSpeed(float speedKmh);
     void setLimiterRPM(float limiterRpm);
+    void setShiftLightRpm(float rpm);
+    void setShiftLightBlinkMs(int32_t blinkMs);
     void setShiftLightActive(bool active);
     void setShiftLightSyncEnabled(bool enabled);
     void setPopsEnabled(bool enabled);
@@ -52,6 +54,16 @@ public:
     void triggerLimiterCut();
     void setRunning(bool running);
     bool isRunning() const { return m_isRunning.load(std::memory_order_relaxed); }
+
+    // ─── Cabin Acoustics & Tone Controls (Som Abafado & Grave/Agudo) ───
+    void setCabinMuffle(float muffle);
+    void setToneBalance(float tone);
+    void setSoundVariant(int variant);
+    void setCabinFilterEnabled(bool enabled);
+    float getCabinMuffle() const { return m_cabinMuffle.load(std::memory_order_relaxed); }
+    float getToneBalance() const { return m_toneBalance.load(std::memory_order_relaxed); }
+    int   getSoundVariant() const { return m_soundVariant.load(std::memory_order_relaxed); }
+    bool  isCabinFilterEnabled() const { return m_isCabinFilterEnabled.load(std::memory_order_relaxed); }
 
     // ─── Sample Loading API (via JNI) ───
     void loadTrack(int trackId, const float* data, int32_t numFrames, int channels, float baseRPM);
@@ -75,22 +87,31 @@ private:
     std::atomic<float> m_targetRpm{800.0f};
     std::atomic<float> m_targetThrottle{0.0f};
     std::atomic<float> m_limiterRpm{6500.0f};
+    std::atomic<float> m_shiftLightRpm{6500.0f};
+    std::atomic<int32_t> m_shiftLightBlinkMs{100};
     std::atomic<bool>  m_isShiftLightActive{false};
-    std::atomic<bool>  m_isShiftLightSyncEnabled{true};
-    std::atomic<bool>  m_isPopsEnabled{true};
-    std::atomic<bool>  m_isTurboEnabled{true};
+    std::atomic<bool>  m_isShiftLightSyncEnabled{false};
+    std::atomic<bool>  m_isPopsEnabled{false};
+    std::atomic<bool>  m_isTurboEnabled{false};
     std::atomic<float> m_turboVolume{0.70f};
     std::atomic<bool>  m_isPureSoundMode{false};
     std::atomic<bool>  m_isGearLockEnabled{false};
-    std::atomic<bool>  m_isGearCrossfadeEnabled{true};
+    std::atomic<bool>  m_isGearCrossfadeEnabled{false};
     std::atomic<bool>  m_isSpeedPredictiveEnabled{false};
-    std::atomic<bool>  m_isSingleTrackModeEnabled{false};
-    std::atomic<int>   m_singleTrackIndex{TRACK_LOW};
+    std::atomic<bool>  m_isSingleTrackModeEnabled{true};
+    std::atomic<int>   m_singleTrackIndex{TRACK_IDLE};
     std::atomic<float> m_targetSpeed{0.0f};
     std::atomic<bool>  m_manualLimiterTrigger{false};
     std::atomic<bool>  m_isRunning{false};
 
+    // Cabin acoustic & tone parameters
+    std::atomic<float> m_cabinMuffle{0.70f};      // 0.0f (aberto) a 1.0f (isolado/abafado)
+    std::atomic<float> m_toneBalance{0.0f};       // -1.0f (Grave) a +1.0f (Agudo)
+    std::atomic<int>   m_soundVariant{0};         // 0=Natural, 1=Muscle, 2=Supercar, 3=Executive
+    std::atomic<bool>  m_isCabinFilterEnabled{false};
+
     float m_currentRpm{800.0f};
+    float m_prevRpm{800.0f};
     float m_currentThrottle{0.0f};
     float m_prevThrottle{0.0f};
     float m_currentSpeed{0.0f};
@@ -116,6 +137,103 @@ private:
     // Random generator for organic variety in backfire sound & timing
     std::mt19937 m_rng{1337};
 
+    // Cabin acoustic & tone filter chain
+    struct GranularBiquad {
+        float b0 = 1.0f, b1 = 0.0f, b2 = 0.0f, a1 = 0.0f, a2 = 0.0f;
+        float z1_l = 0.0f, z2_l = 0.0f;
+        float z1_r = 0.0f, z2_r = 0.0f;
+
+        void reset() {
+            z1_l = z2_l = z1_r = z2_r = 0.0f;
+        }
+
+        void setLowPass(float cutoffHz, float q = 0.7071f, float sr = 48000.0f) {
+            cutoffHz = std::max(20.0f, std::min(sr * 0.48f, cutoffHz));
+            float w0 = 6.28318530718f * cutoffHz / sr;
+            float cosw0 = cosf(w0);
+            float sinw0 = sinf(w0);
+            float alpha = sinw0 / (2.0f * q);
+            float a0 = 1.0f + alpha;
+
+            b0 = ((1.0f - cosw0) * 0.5f) / a0;
+            b1 = (1.0f - cosw0) / a0;
+            b2 = ((1.0f - cosw0) * 0.5f) / a0;
+            a1 = (-2.0f * cosw0) / a0;
+            a2 = (1.0f - alpha) / a0;
+        }
+
+        void setPeaking(float centerHz, float q, float gainDb, float sr = 48000.0f) {
+            centerHz = std::max(20.0f, std::min(sr * 0.48f, centerHz));
+            float A = powf(10.0f, gainDb / 40.0f);
+            float w0 = 6.28318530718f * centerHz / sr;
+            float cosw0 = cosf(w0);
+            float sinw0 = sinf(w0);
+            float alpha = sinw0 / (2.0f * q);
+            float a0 = 1.0f + alpha / A;
+
+            b0 = (1.0f + alpha * A) / a0;
+            b1 = (-2.0f * cosw0) / a0;
+            b2 = (1.0f - alpha * A) / a0;
+            a1 = (-2.0f * cosw0) / a0;
+            a2 = (1.0f - alpha / A) / a0;
+        }
+
+        void setLowShelf(float centerHz, float gainDb, float sr = 48000.0f) {
+            centerHz = std::max(20.0f, std::min(sr * 0.48f, centerHz));
+            float A = powf(10.0f, gainDb / 40.0f);
+            float w0 = 6.28318530718f * centerHz / sr;
+            float cosw0 = cosf(w0);
+            float sinw0 = sinf(w0);
+            float sqA = sqrtf(A);
+            float alpha = sinw0 / 2.0f * 1.41421356f;
+            float a0 = (A + 1.0f) + (A - 1.0f) * cosw0 + 2.0f * sqA * alpha;
+
+            b0 = (A * ((A + 1.0f) - (A - 1.0f) * cosw0 + 2.0f * sqA * alpha)) / a0;
+            b1 = (2.0f * A * ((A - 1.0f) - (A + 1.0f) * cosw0)) / a0;
+            b2 = (A * ((A + 1.0f) - (A - 1.0f) * cosw0 - 2.0f * sqA * alpha)) / a0;
+            a1 = (-2.0f * ((A - 1.0f) + (A + 1.0f) * cosw0)) / a0;
+            a2 = ((A + 1.0f) + (A - 1.0f) * cosw0 - 2.0f * sqA * alpha) / a0;
+        }
+
+        void setHighShelf(float centerHz, float gainDb, float sr = 48000.0f) {
+            centerHz = std::max(20.0f, std::min(sr * 0.48f, centerHz));
+            float A = powf(10.0f, gainDb / 40.0f);
+            float w0 = 6.28318530718f * centerHz / sr;
+            float cosw0 = cosf(w0);
+            float sinw0 = sinf(w0);
+            float sqA = sqrtf(A);
+            float alpha = sinw0 / 2.0f * 1.41421356f;
+            float a0 = (A + 1.0f) - (A - 1.0f) * cosw0 + 2.0f * sqA * alpha;
+
+            b0 = (A * ((A + 1.0f) + (A - 1.0f) * cosw0 + 2.0f * sqA * alpha)) / a0;
+            b1 = (-2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosw0)) / a0;
+            b2 = (A * ((A + 1.0f) + (A - 1.0f) * cosw0 - 2.0f * sqA * alpha)) / a0;
+            a1 = (2.0f * ((A - 1.0f) - (A + 1.0f) * cosw0)) / a0;
+            a2 = ((A + 1.0f) - (A - 1.0f) * cosw0 - 2.0f * sqA * alpha) / a0;
+        }
+
+        inline void processStereo(float& inL, float& inR) {
+            float outL = b0 * inL + z1_l;
+            z1_l = b1 * inL - a1 * outL + z2_l;
+            z2_l = b2 * inL - a2 * outL;
+
+            float outR = b0 * inR + z1_r;
+            z1_r = b1 * inR - a1 * outR + z2_r;
+            z2_r = b2 * inR - a2 * outR;
+
+            inL = outL;
+            inR = outR;
+        }
+    };
+
+    GranularBiquad m_cabinLp1;
+    GranularBiquad m_cabinLp2;
+    GranularBiquad m_cabinBody;
+    GranularBiquad m_toneBass;
+    GranularBiquad m_toneTreble;
+    GranularBiquad m_rpmBassAnchor;
+
+    void updateCabinFilters(float rpm);
     void calculateTrackWeights(float rpm, float throttle, float* outWeights);
     void calculateSpeedPredictiveWeights(float rpm, float throttle, float speedKmh, int gear, float* outWeights);
 };

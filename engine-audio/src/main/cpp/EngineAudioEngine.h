@@ -31,6 +31,8 @@ public:
     // ─── Configuration ───
     void setMasterVolume(float volume);
     void setLimiterRPM(float rpm);
+    void setShiftLightRpm(float rpm);
+    void setShiftLightBlinkMs(int32_t blinkMs);
     void setShiftLightActive(bool active);
     void setShiftLightSyncEnabled(bool enabled);
     void setPopsEnabled(bool enabled);
@@ -43,7 +45,19 @@ public:
     void setSingleTrackModeEnabled(bool enabled);
     void setSingleTrackIndex(int trackIndex);
     void triggerLimiterCut();
+    void triggerPop(float volume = 1.0f);
+    void triggerBOV(float volume = 1.0f);
     void setEngineType(int32_t typeId);
+
+    // ─── Cabin Acoustics & Tone Controls (Som Abafado & Grave/Agudo) ───
+    void setCabinMuffle(float muffle);
+    void setToneBalance(float tone);
+    void setSoundVariant(int variant);
+    void setCabinFilterEnabled(bool enabled);
+    float getCabinMuffle() const;
+    float getToneBalance() const;
+    int   getSoundVariant() const;
+    bool  isCabinFilterEnabled() const;
 
     // ─── Granular Sample-Based Audio API ───
     void loadSampleTrack(int trackId, const float* data, int32_t numFrames, int channels, float baseRPM);

@@ -35,6 +35,14 @@ void GranularEngine::setLimiterRPM(float limiterRpm) {
     m_limiterRpm.store(std::max(1000.0f, limiterRpm), std::memory_order_relaxed);
 }
 
+void GranularEngine::setShiftLightRpm(float rpm) {
+    m_shiftLightRpm.store(std::max(1000.0f, rpm), std::memory_order_relaxed);
+}
+
+void GranularEngine::setShiftLightBlinkMs(int32_t blinkMs) {
+    m_shiftLightBlinkMs.store(std::clamp(blinkMs, 40, 1000), std::memory_order_relaxed);
+}
+
 void GranularEngine::setShiftLightActive(bool active) {
     m_isShiftLightActive.store(active, std::memory_order_relaxed);
 }
@@ -106,6 +114,78 @@ void GranularEngine::setSingleTrackModeEnabled(bool enabled) {
 void GranularEngine::setSingleTrackIndex(int trackIndex) {
     m_singleTrackIndex.store(std::clamp(trackIndex, 0, TRACK_COUNT - 1), std::memory_order_relaxed);
     LOGI("GranularEngine: Single-Track Index set to %d", trackIndex);
+}
+
+void GranularEngine::setCabinMuffle(float muffle) {
+    m_cabinMuffle.store(std::clamp(muffle, 0.0f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Cabin muffle set to %.2f", muffle);
+}
+
+void GranularEngine::setToneBalance(float tone) {
+    m_toneBalance.store(std::clamp(tone, -1.0f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Tone balance set to %.2f", tone);
+}
+
+void GranularEngine::setSoundVariant(int variant) {
+    int v = std::clamp(variant, 0, 3);
+    m_soundVariant.store(v, std::memory_order_relaxed);
+    // Presets:
+    // 0: Audi RS4 Natural (muffle 0.70, tone 0.0)
+    // 1: Muscle V8 Grave  (muffle 0.80, tone -0.75)
+    // 2: Supercar Agudo   (muffle 0.50, tone +0.70)
+    // 3: Executive Muffled(muffle 0.92, tone -0.20)
+    if (v == 0) {
+        m_cabinMuffle.store(0.70f, std::memory_order_relaxed);
+        m_toneBalance.store(0.0f, std::memory_order_relaxed);
+    } else if (v == 1) {
+        m_cabinMuffle.store(0.80f, std::memory_order_relaxed);
+        m_toneBalance.store(-0.75f, std::memory_order_relaxed);
+    } else if (v == 2) {
+        m_cabinMuffle.store(0.50f, std::memory_order_relaxed);
+        m_toneBalance.store(0.70f, std::memory_order_relaxed);
+    } else if (v == 3) {
+        m_cabinMuffle.store(0.92f, std::memory_order_relaxed);
+        m_toneBalance.store(-0.20f, std::memory_order_relaxed);
+    }
+    LOGI("GranularEngine: Sound variant set to %d", v);
+}
+
+void GranularEngine::setCabinFilterEnabled(bool enabled) {
+    m_isCabinFilterEnabled.store(enabled, std::memory_order_relaxed);
+    LOGI("GranularEngine: Cabin filter set to %d", enabled ? 1 : 0);
+}
+
+void GranularEngine::updateCabinFilters(float rpm) {
+    float muffle = m_cabinMuffle.load(std::memory_order_relaxed);
+    float tone   = m_toneBalance.load(std::memory_order_relaxed);
+
+    float baseCutoff = 1200.0f - (muffle * 600.0f);
+    float dynamicCutoff = baseCutoff * (1.0f + 0.35f * (rpm / 8000.0f));
+    dynamicCutoff *= (1.0f + tone * 0.40f);
+    dynamicCutoff = std::max(350.0f, std::min(3500.0f, dynamicCutoff));
+
+    m_cabinLp1.setLowPass(dynamicCutoff, 0.7071f);
+    m_cabinLp2.setLowPass(dynamicCutoff * 1.5f, 0.55f);
+
+    float cabinBassGain = 3.5f * muffle;
+    m_cabinBody.setPeaking(82.0f, 1.4f, cabinBassGain);
+
+    float bassDb = (tone < 0.0f) ? (-tone * 7.0f) : (-tone * 4.0f);
+    m_toneBass.setLowShelf(85.0f, bassDb);
+
+    float trebleDb = tone * 6.0f;
+    m_toneTreble.setHighShelf(2200.0f, trebleDb);
+
+    if (rpm > 2200.0f) {
+        float ratio = (rpm - 2200.0f) / 5800.0f;
+        float anchorGain = ratio * 6.5f;
+        m_rpmBassAnchor.setPeaking(65.0f, 1.6f, anchorGain);
+    } else if (rpm < 1200.0f) {
+        float ratio = (1200.0f - rpm) / 500.0f;
+        m_rpmBassAnchor.setPeaking(48.0f, 2.0f, ratio * 4.0f);
+    } else {
+        m_rpmBassAnchor.setPeaking(70.0f, 1.0f, 0.0f);
+    }
 }
 
 void GranularEngine::triggerLimiterCut() {
@@ -457,36 +537,32 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     bool popsEnabled = !pureMode && m_isPopsEnabled.load(std::memory_order_relaxed);
     bool turboEnabled = !pureMode && m_isTurboEnabled.load(std::memory_order_relaxed);
 
-    // ─── 1. Shift Cut / Shift Light (Detecção estrita vinculada à opção do usuário) ───
+    // ─── 1. Shift Cut / Shift Light & Rev Limiter Sincronizado ───
     bool isShiftLight = m_isShiftLightActive.load(std::memory_order_relaxed) && syncEnabled;
     bool manualTrigger = m_manualLimiterTrigger.exchange(false, std::memory_order_relaxed);
     bool shiftLightRisingEdge = (!m_wasShiftLightActive && isShiftLight);
     m_wasShiftLightActive = isShiftLight;
 
-    // IMPORTANTE: NÃO corta áudio em simples troca de marcha se a sincronização com Shift Light estiver desativada!
-    if (syncEnabled && (shiftLightRisingEdge || manualTrigger) && m_currentRpm > 2400.0f) {
-        if (m_shiftCutCooldownFrames <= 0) {
-            m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * 0.070f);
-            m_shiftCutCooldownFrames = static_cast<int32_t>(44100 * 0.350f);
-            if (popsEnabled) {
-                triggerPop(1.0f);
-            }
-            if (turboEnabled && m_currentRpm > 3200.0f) {
-                triggerBOV(0.85f);
-            }
+    // Barreira do Limitador acoplada ao Shift Light:
+    float effectiveLimiterRpm = limiterRpm;
+    if (syncEnabled) {
+        float shiftTrigger = m_shiftLightRpm.load(std::memory_order_relaxed);
+        if (shiftTrigger > 1200.0f) {
+            effectiveLimiterRpm = shiftTrigger;
         }
     }
-    if (m_shiftCutCooldownFrames > 0) {
-        m_shiftCutCooldownFrames -= numFrames;
-    }
 
-    // ─── 2. Rev Limiter (Corte de Redline estilo 2-Step / GT3 Bounce) ───
-    bool isAtLimiter = (m_currentRpm >= limiterRpm);
-    if (isAtLimiter) {
+    // Condição de corte sincronizado com Shift Light:
+    // Dispara quando currentRpm atingir o Shift Light OU quando o sinal do Flash Light estiver ativo
+    bool isAtLimiter = (m_currentRpm >= effectiveLimiterRpm) || (isShiftLight && syncEnabled);
+    if (isAtLimiter || (syncEnabled && (shiftLightRisingEdge || manualTrigger) && m_currentRpm > 2000.0f)) {
         if (m_limiterCutFramesRemaining <= 0 && m_limiterCooldownFrames <= 0) {
             if (popsEnabled || syncEnabled) {
-                m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * 0.065f);
-                m_limiterCooldownFrames = static_cast<int32_t>(44100 * 0.160f);
+                // Pulso de corte de injeção proporcional à frequência do Flash Light (ex: 100ms -> ~10Hz, 200ms -> ~5Hz)
+                int32_t blinkMs = m_shiftLightBlinkMs.load(std::memory_order_relaxed);
+                float blinkSec = std::clamp(static_cast<float>(blinkMs) / 1000.0f, 0.040f, 0.500f);
+                m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * (blinkSec * 0.55f));
+                m_limiterCooldownFrames = static_cast<int32_t>(44100 * (blinkSec * 0.45f));
                 if (popsEnabled) {
                     triggerPop(1.0f);
                 }
@@ -506,50 +582,68 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
 
     // Ganho de combustão contínua
     float targetCombustionGain = 1.0f;
-    if (isLimiterCutActive || (m_shiftCutCooldownFrames > static_cast<int32_t>(44100 * 0.280f))) {
-        targetCombustionGain = 0.0f;
+    if (isLimiterCutActive) {
+        targetCombustionGain = 0.0f; // Corte total de injeção
     } else if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
         targetCombustionGain = 0.35f;
     }
 
     m_combustionGain += (targetCombustionGain - m_combustionGain) * 0.30f;
 
-    // ─── 3. Overrun Pops & Burbles (Tirada de pé rápida em alto giro) ───
-    bool throttleDrop = (m_prevThrottle > 0.35f) && (m_currentThrottle < 0.10f) && (m_currentRpm > 2800.0f);
-    if (throttleDrop) {
-        if (turboEnabled) {
-            triggerBOV(0.95f);
-        }
+    // ─── 2. Blow-off Valve / Válvula de Alívio (Turbo Stututu) ───
+    // Condição A: Queda brusca de RPM (Δ RPM negativo intenso por engate de marcha maior)
+    bool isShiftUp = (m_currentGear > m_prevGear && m_currentGear > 1);
+    bool isSevereRpmDrop = ((m_prevRpm - m_currentRpm) > 450.0f && m_prevRpm > 2400.0f);
+    bool conditionAShiftUp = (isShiftUp || isSevereRpmDrop) && (m_prevThrottle > 0.30f);
 
-        if (popsEnabled) {
+    // Condição B: Acelerador passa de > 0.70 (alta carga) para <= 0.05 rapidamente
+    bool isThrottleSnapClosed = (m_prevThrottle > 0.70f && m_currentThrottle <= 0.05f);
+    bool conditionBThrottleDrop = isThrottleSnapClosed && (m_currentRpm > 2200.0f);
+
+    if (turboEnabled && (conditionAShiftUp || conditionBThrottleDrop)) {
+        if (m_shiftCutCooldownFrames <= 0) {
+            triggerBOV(0.95f);
+            m_shiftCutCooldownFrames = static_cast<int32_t>(44100 * 0.350f);
+        }
+    }
+    if (m_shiftCutCooldownFrames > 0) {
+        m_shiftCutCooldownFrames -= numFrames;
+    }
+
+    // ─── 3. Pops & Bangs (Estouros de Escapamento / Overrun Burbles) ───
+    // Freio motor: Throttle <= 0.03 e RPM em queda gradual
+    bool isEngineBraking = (m_currentThrottle <= 0.03f) && (m_currentRpm < m_prevRpm) && (m_currentRpm > 1800.0f);
+    if (popsEnabled && isEngineBraking) {
+        if (m_overrunPopsRemaining <= 0 && m_popCooldownFrames <= 0) {
+            // Mais frequentes em faixas médias-altas de RPM (3500 - 6500 RPM)
             if (m_currentRpm > 5200.0f) {
-                m_overrunPopsRemaining = 3 + (m_rng() % 2);
-            } else if (m_currentRpm > 3600.0f) {
-                m_overrunPopsRemaining = 2 + (m_rng() % 2);
+                m_overrunPopsRemaining = 3 + (m_rng() % 3);
+            } else if (m_currentRpm > 3500.0f) {
+                m_overrunPopsRemaining = 2 + (m_rng() % 3);
             } else {
                 m_overrunPopsRemaining = 1 + (m_rng() % 2);
             }
-
-            std::uniform_real_distribution<float> delayDist(0.09f, 0.14f);
+            std::uniform_real_distribution<float> delayDist(0.08f, 0.16f);
             m_popCooldownFrames = static_cast<int32_t>(44100 * delayDist(m_rng));
-        } else {
-            m_overrunPopsRemaining = 0;
         }
     }
 
-    // Processa os estalos agendados da rajada de desaceleração APENAS se pops ativados
-    if (popsEnabled && m_overrunPopsRemaining > 0 && m_currentThrottle < 0.12f && m_currentRpm > 2200.0f) {
+    if (popsEnabled && m_overrunPopsRemaining > 0 && m_currentThrottle <= 0.08f && m_currentRpm > 1800.0f) {
         if (m_popCooldownFrames <= 0) {
-            float vol = 0.35f + 0.20f * static_cast<float>(m_overrunPopsRemaining);
-            triggerPop(std::min(1.0f, vol));
+            // Volume e pitch randomizados para eliminar metralhadora artificial
+            std::uniform_real_distribution<float> volDist(0.45f, 1.0f);
+            triggerPop(volDist(m_rng));
 
             m_overrunPopsRemaining--;
             if (m_overrunPopsRemaining > 0) {
-                std::uniform_real_distribution<float> nextDelayDist(0.16f, 0.28f);
+                // Intervalo randômico entre estouros
+                float minDelay = (m_currentRpm > 4500.0f) ? 0.09f : 0.16f;
+                float maxDelay = (m_currentRpm > 4500.0f) ? 0.18f : 0.30f;
+                std::uniform_real_distribution<float> nextDelayDist(minDelay, maxDelay);
                 m_popCooldownFrames = static_cast<int32_t>(44100 * nextDelayDist(m_rng));
             }
         }
-    } else if (!popsEnabled || m_currentThrottle >= 0.12f || m_currentRpm <= 2200.0f) {
+    } else if (!popsEnabled || m_currentThrottle > 0.08f || m_currentRpm <= 1800.0f) {
         m_overrunPopsRemaining = 0;
     }
 
@@ -557,6 +651,7 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
         m_popCooldownFrames -= numFrames;
     }
 
+    m_prevRpm = m_currentRpm;
     m_prevThrottle = m_currentThrottle;
     m_prevGear = m_currentGear;
 
@@ -565,7 +660,9 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
 
     float renderRpm = m_currentRpm;
     if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
-        renderRpm = std::max(800.0f, m_currentRpm - 240.0f);
+        // [BOUNCE] Quique de 150 a 250 RPM contra a barreira do Shift Light
+        float bounce = 150.0f + static_cast<float>(m_rng() % 100);
+        renderRpm = std::max(800.0f, effectiveLimiterRpm - bounce);
     }
 
     // Renderiza faixas contínuas com ganho de combustão
@@ -595,6 +692,22 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     // Renderiza Blow-Off Valve APENAS se turbo ativado
     if (turboEnabled) {
         m_bov.renderMix(buffer, numFrames);
+    }
+
+    // Aplica a modelagem acústica de cabine ("som abafado") e controle de timbre (Grave / Agudo)
+    if (m_isCabinFilterEnabled.load(std::memory_order_relaxed)) {
+        updateCabinFilters(renderRpm);
+        for (int32_t f = 0; f < numFrames; ++f) {
+            float& l = buffer[f * 2];
+            float& r = buffer[f * 2 + 1];
+
+            m_rpmBassAnchor.processStereo(l, r);
+            m_toneBass.processStereo(l, r);
+            m_toneTreble.processStereo(l, r);
+            m_cabinBody.processStereo(l, r);
+            m_cabinLp1.processStereo(l, r);
+            m_cabinLp2.processStereo(l, r);
+        }
     }
 
     // Limiter transparente sem distorção harmônica não-linear (preserva 100% da pureza acústica)

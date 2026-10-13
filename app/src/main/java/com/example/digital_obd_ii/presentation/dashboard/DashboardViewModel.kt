@@ -31,6 +31,8 @@ import com.example.digital_obd_ii.domain.model.CustomIconItem
 import com.example.digital_obd_ii.domain.model.IconFunction
 import com.example.digital_obd_ii.domain.model.TripSummary
 import com.engineaudio.V6AudioEngine
+import com.engineaudio.ui.AudioSettingsPreferences
+
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import com.example.digital_obd_ii.data.database.dao.TripDao
@@ -121,17 +123,66 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun applyAudioPreferences() {
+        try {
+            val prefs = AudioSettingsPreferences(context)
+            V6AudioEngine.setEngineType(prefs.selectedEngineType, context)
+            V6AudioEngine.setMasterVolume(prefs.masterVolume)
+            V6AudioEngine.setLimiterRpm(prefs.limiterRpm)
+            V6AudioEngine.setShiftLightRpm(prefs.shiftLightRpm, syncWithLimiter = prefs.isShiftLightSyncEnabled)
+            V6AudioEngine.setShiftLightSyncEnabled(prefs.isShiftLightSyncEnabled)
+            val currentProfile = _uiState.value.profile
+            val effectiveBlinkMs = if (currentProfile.shiftLightBlinkMs > 0) currentProfile.shiftLightBlinkMs else prefs.shiftLightBlinkMs
+            V6AudioEngine.setShiftLightBlinkMs(effectiveBlinkMs)
+            V6AudioEngine.setPopsEnabled(prefs.isPopsEnabled)
+            V6AudioEngine.setTurboEnabled(prefs.isTurboEnabled)
+            V6AudioEngine.setTurboVolume(prefs.turboVolume)
+            V6AudioEngine.setPureSoundMode(prefs.isPureSoundMode)
+            V6AudioEngine.setGearLockEnabled(prefs.isGearLockEnabled)
+            V6AudioEngine.setGearCrossfadeEnabled(prefs.isGearCrossfadeEnabled)
+            V6AudioEngine.setSpeedPredictiveEnabled(prefs.isSpeedPredictiveEnabled)
+            V6AudioEngine.setSingleTrackModeEnabled(prefs.isSingleTrackModeEnabled)
+            V6AudioEngine.setSingleTrackIndex(prefs.singleTrackIndex)
+            V6AudioEngine.setCabinFilterEnabled(prefs.isCabinFilterEnabled)
+            V6AudioEngine.setCabinMuffle(prefs.cabinMuffle)
+            V6AudioEngine.setToneBalance(prefs.toneBalance)
+            V6AudioEngine.setSoundVariant(prefs.soundVariant)
+        } catch (e: Throwable) {
+            Log.e("DASHBOARD_AUDIO", "Erro ao aplicar preferências de áudio", e)
+        }
+    }
+
+    fun syncAudioState() {
+        try {
+            val prefs = AudioSettingsPreferences(context)
+            val isEnabled = prefs.isEngineSoundEnabled
+            _isAudioRunning.value = isEnabled
+            applyAudioPreferences()
+            if (isEnabled) {
+                V6AudioEngine.start(context)
+                Log.i("DASHBOARD_AUDIO", "Sincronizado: Som LIGADO (${prefs.selectedEngineType.displayName})")
+            } else {
+                V6AudioEngine.stop()
+                Log.i("DASHBOARD_AUDIO", "Sincronizado: Som DESLIGADO")
+            }
+        } catch (e: Throwable) {
+            Log.e("DASHBOARD_AUDIO", "Erro ao sincronizar estado de áudio", e)
+        }
+    }
+
     fun toggleAudio() {
         try {
-            val engine = V6AudioEngine.getInstance(context)
-            if (engine.state == com.engineaudio.EngineState.RUNNING) {
-                V6AudioEngine.stop()
-                _isAudioRunning.value = false
-                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor DESLIGADA")
-            } else {
+            val prefs = AudioSettingsPreferences(context)
+            val newState = !_isAudioRunning.value
+            prefs.isEngineSoundEnabled = newState
+            _isAudioRunning.value = newState
+            if (newState) {
+                applyAudioPreferences()
                 V6AudioEngine.start(context)
-                _isAudioRunning.value = true
-                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor LIGADA")
+                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor LIGADA via ícone (${prefs.selectedEngineType.displayName})")
+            } else {
+                V6AudioEngine.stop()
+                Log.i("DASHBOARD_AUDIO", "Simulação de som do motor DESLIGADA via ícone")
             }
         } catch (e: Throwable) {
             Log.e("DASHBOARD_AUDIO", "Erro ao alternar áudio do motor", e)
@@ -139,10 +190,8 @@ class DashboardViewModel @Inject constructor(
     }
 
     init {
-        Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Som padrão: DESLIGADO.")
-        // Som padrão: DESLIGADO (v4.6.3)
-        V6AudioEngine.stop()
-        _isAudioRunning.value = false
+        Log.d("OBD_RESILIENCE", "DashboardViewModel inicializado. Sincronizando com preferências...")
+        syncAudioState()
         startCollecting()
         startWatchdog()
     }
@@ -179,6 +228,7 @@ class DashboardViewModel @Inject constructor(
                 profileRepository.getProfile().collect { profile ->
                     Log.d("OBD_RESILIENCE", "Perfil Carregado: LastAddress=${profile.lastConnectedDeviceAddress}")
                     _uiState.update { it.copy(profile = profile) }
+                    V6AudioEngine.setShiftLightBlinkMs(profile.shiftLightBlinkMs)
                 }
             }
         }
@@ -281,6 +331,10 @@ class DashboardViewModel @Inject constructor(
 
         val threshold = (target * profile.shiftLightSensitivity).toInt()
         _isBlinking.value = rpm >= threshold
+        if (threshold > 1000) {
+            V6AudioEngine.setShiftLightRpm(threshold.toFloat(), syncWithLimiter = true)
+            V6AudioEngine.setShiftLightBlinkMs(profile.shiftLightBlinkMs)
+        }
     }
 
     private fun autoConnect(address: String) {

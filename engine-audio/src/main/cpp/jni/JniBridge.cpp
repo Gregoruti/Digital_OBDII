@@ -121,6 +121,26 @@ Java_com_engineaudio_V6AudioEngine_nativeSetLimiterRPM(
 }
 
 /**
+ * Set Shift Light RPM threshold.
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetShiftLightRpm(
+        JNIEnv* env, jobject thiz, jfloat rpm) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setShiftLightRpm(static_cast<float>(rpm));
+}
+
+/**
+ * Set Shift Light blink interval in milliseconds (correlates to 2-step bounce frequency).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetShiftLightBlinkMs(
+        JNIEnv* env, jobject thiz, jint blinkMs) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setShiftLightBlinkMs(static_cast<int32_t>(blinkMs));
+}
+
+/**
  * Set Shift Light / Flash Light active state.
  */
 JNIEXPORT void JNICALL
@@ -231,6 +251,46 @@ Java_com_engineaudio_V6AudioEngine_nativeSetSingleTrackIndex(
 }
 
 /**
+ * Define o nível de abafamento da cabine (0.0 = aberto, 1.0 = cabine isolada).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetCabinMuffle(
+        JNIEnv* env, jobject thiz, jfloat muffle) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setCabinMuffle(static_cast<float>(muffle));
+}
+
+/**
+ * Define o balanço de tonalidade (-1.0 = Grave/Muscle, +1.0 = Agudo/Supercar).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetToneBalance(
+        JNIEnv* env, jobject thiz, jfloat tone) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setToneBalance(static_cast<float>(tone));
+}
+
+/**
+ * Define a variante acústica (0=Natural RS4, 1=Muscle Grave, 2=Supercar Agudo, 3=Executive Muffled).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetSoundVariant(
+        JNIEnv* env, jobject thiz, jint variant) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setSoundVariant(static_cast<int>(variant));
+}
+
+/**
+ * Ativa ou desativa a modelagem acústica de cabine ("som abafado").
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetCabinFilterEnabled(
+        JNIEnv* env, jobject thiz, jboolean enabled) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setCabinFilterEnabled(static_cast<bool>(enabled));
+}
+
+/**
  * Trigger immediate limiter cut pulse (backfire / ignition cut).
  */
 JNIEXPORT void JNICALL
@@ -238,6 +298,26 @@ Java_com_engineaudio_V6AudioEngine_nativeTriggerLimiterCut(
         JNIEnv* env, jobject thiz) {
     auto* engine = getEngine(env, thiz);
     if (engine) engine->triggerLimiterCut();
+}
+
+/**
+ * Trigger immediate Pop/Bang (estouro de escape).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeTriggerPop(
+        JNIEnv* env, jobject thiz, jfloat volume) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->triggerPop(static_cast<float>(volume));
+}
+
+/**
+ * Trigger immediate Blow-off Valve (espirro de turbo).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeTriggerBOV(
+        JNIEnv* env, jobject thiz, jfloat volume) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->triggerBOV(static_cast<float>(volume));
 }
 
 /**

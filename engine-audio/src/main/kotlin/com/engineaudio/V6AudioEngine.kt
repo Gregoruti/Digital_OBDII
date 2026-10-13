@@ -113,6 +113,10 @@ class V6AudioEngine(
             instance?.setShiftLightSyncEnabled(enabled)
         }
 
+        fun setShiftLightBlinkMs(blinkMs: Int) {
+            instance?.setShiftLightBlinkMs(blinkMs)
+        }
+
         fun setPopsEnabled(enabled: Boolean) {
             instance?.setPopsEnabled(enabled)
         }
@@ -149,6 +153,22 @@ class V6AudioEngine(
             instance?.setSingleTrackIndex(trackIndex)
         }
 
+        fun setCabinMuffle(muffle: Float) {
+            instance?.setCabinMuffle(muffle)
+        }
+
+        fun setToneBalance(tone: Float) {
+            instance?.setToneBalance(tone)
+        }
+
+        fun setSoundVariant(variant: Int) {
+            instance?.setSoundVariant(variant)
+        }
+
+        fun setCabinFilterEnabled(enabled: Boolean) {
+            instance?.setCabinFilterEnabled(enabled)
+        }
+
         fun setShiftLightActive(active: Boolean) {
             instance?.setShiftLightActive(active)
         }
@@ -156,6 +176,16 @@ class V6AudioEngine(
         fun triggerLimiterCut() {
             instance?.triggerLimiterCut()
         }
+
+        fun triggerPop(volume: Float = 1.0f) {
+            instance?.triggerPop(volume)
+        }
+
+        fun triggerBOV(volume: Float = 1.0f) {
+            instance?.triggerBOV(volume)
+        }
+
+        val physics: EnginePhysics? get() = instance?.physics
 
         fun updateTelemetry(
             rpm: Float,
@@ -206,22 +236,45 @@ class V6AudioEngine(
     private var _limiterRpm: Float = config.limiterRpm
 
     @Volatile
+    private var _shiftLightRpm: Float = 6500f
+
+    @Volatile
+    private var _shiftLightBlinkMs: Int = 100
+
+    @Volatile
     private var _isShiftLightSyncEnabled: Boolean = true
 
     @Volatile
-    private var _isPopsEnabled: Boolean = true
+    private var _isPopsEnabled: Boolean = false
 
     @Volatile
-    private var _isTurboEnabled: Boolean = true
+    private var _isTurboEnabled: Boolean = false
 
     @Volatile
     private var _turboVolume: Float = 0.70f
+
+    /** Motor de física automotiva para cálculo de cinemática, corte de giro e dinâmica acústica. */
+    val physics: EnginePhysics = EnginePhysics(
+        idleRpm = config.idleRpm,
+        maxRpm = config.maxRpm,
+        shiftLightTriggerRpm = 6500f,
+        isShiftLightSyncEnabled = true,
+        isTurboEnabled = false,
+        isPopsEnabled = false,
+        shiftLightBlinkMs = 100
+    )
 
     /** Current lifecycle state of the engine. */
     val state: EngineState get() = _state
 
     /** RPM atual configurado para o corte de rotação física do motor (Rev Limiter). */
     val limiterRpm: Float get() = _limiterRpm
+
+    /** Rotação de disparo configurada para o Shift Light. */
+    val shiftLightRpm: Float get() = _shiftLightRpm
+
+    /** Intervalo configurado de piscamento do Flash Light (ms). */
+    val shiftLightBlinkMs: Int get() = _shiftLightBlinkMs
 
     /** Indica se a vinculação do corte ao Flash Light do painel está ativada. */
     val isShiftLightSyncEnabled: Boolean get() = _isShiftLightSyncEnabled
@@ -233,7 +286,7 @@ class V6AudioEngine(
     private var _isGearLockEnabled: Boolean = false
 
     @Volatile
-    private var _isGearCrossfadeEnabled: Boolean = true
+    private var _isGearCrossfadeEnabled: Boolean = false
 
     @Volatile
     private var _isSpeedPredictiveEnabled: Boolean = false
@@ -248,10 +301,10 @@ class V6AudioEngine(
     val isSpeedPredictiveEnabled: Boolean get() = _isSpeedPredictiveEnabled
 
     @Volatile
-    private var _isSingleTrackModeEnabled: Boolean = false
+    private var _isSingleTrackModeEnabled: Boolean = true
 
     @Volatile
-    private var _singleTrackIndex: Int = 1 // Default TRACK_LOW
+    private var _singleTrackIndex: Int = 0 // Default TRACK_IDLE
 
     /** Indica se o Modo Faixa Única Contínua (0 a 4000+ RPM sem crossfading) está ativado. */
     val isSingleTrackModeEnabled: Boolean get() = _isSingleTrackModeEnabled
@@ -267,6 +320,30 @@ class V6AudioEngine(
 
     @Volatile
     private var _isPureSoundMode: Boolean = false
+
+    @Volatile
+    private var _cabinMuffle: Float = 0.70f
+
+    @Volatile
+    private var _toneBalance: Float = 0.0f
+
+    @Volatile
+    private var _soundVariant: Int = 0
+
+    @Volatile
+    private var _isCabinFilterEnabled: Boolean = false
+
+    /** Nível de abafamento da cabine [0.0 = aberto, 1.0 = isolado]. */
+    val cabinMuffle: Float get() = _cabinMuffle
+
+    /** Balanço tonal [-1.0 = Grave/Muscle, +1.0 = Agudo/Supercar]. */
+    val toneBalance: Float get() = _toneBalance
+
+    /** Variante acústica selecionada [0=Natural, 1=Muscle, 2=Supercar, 3=Executive]. */
+    val soundVariant: Int get() = _soundVariant
+
+    /** Indica se a filtragem acústica de cabine está ativada. */
+    val isCabinFilterEnabled: Boolean get() = _isCabinFilterEnabled
 
     /** Indica se o Modo Puro (sem efeitos extras / randômicos) está ativado. */
     val isPureSoundMode: Boolean get() = _isPureSoundMode
@@ -296,6 +373,7 @@ class V6AudioEngine(
                     try {
                         val prefs = com.engineaudio.ui.AudioSettingsPreferences(context)
                         _isShiftLightSyncEnabled = prefs.isShiftLightSyncEnabled
+                        _shiftLightRpm = prefs.shiftLightRpm
                         _isPopsEnabled = prefs.isPopsEnabled
                         _isTurboEnabled = prefs.isTurboEnabled
                         _turboVolume = prefs.turboVolume
@@ -306,7 +384,22 @@ class V6AudioEngine(
                         _isSingleTrackModeEnabled = prefs.isSingleTrackModeEnabled
                         _singleTrackIndex = prefs.singleTrackIndex
 
+                        _shiftLightBlinkMs = prefs.shiftLightBlinkMs
+
+                        physics.idleRpm = config.idleRpm
+                        physics.maxRpm = config.maxRpm
+                        physics.shiftLightTriggerRpm = _shiftLightRpm
+                        physics.shiftLightBlinkMs = _shiftLightBlinkMs
+                        physics.isShiftLightSyncEnabled = _isShiftLightSyncEnabled
+                        physics.isTurboEnabled = _isTurboEnabled
+                        physics.isPopsEnabled = _isPopsEnabled
+
                         nativeSetShiftLightSyncEnabled(_isShiftLightSyncEnabled)
+                        nativeSetShiftLightRpm(_shiftLightRpm)
+                        nativeSetShiftLightBlinkMs(_shiftLightBlinkMs)
+                        if (_isShiftLightSyncEnabled) {
+                            nativeSetLimiterRPM(_shiftLightRpm)
+                        }
                         nativeSetPopsEnabled(_isPopsEnabled)
                         nativeSetTurboEnabled(_isTurboEnabled)
                         nativeSetTurboVolume(_turboVolume)
@@ -428,13 +521,32 @@ class V6AudioEngine(
     ) {
         if (_isReleased.get() || nativeHandle == 0L) return
         val effectiveShiftLight = isShiftLightActive && _isShiftLightSyncEnabled
-        nativeUpdateTelemetry(
-            rpm.coerceIn(0f, config.maxRpm),
-            throttle.coerceIn(0f, 1f),
-            gear.coerceAtLeast(0),
-            speed.coerceAtLeast(0f),
-            effectiveShiftLight
+
+        // Integração de Física em Tempo Real (Interceptação de Shift Light, BOV e Pops)
+        val snapshot = physics.update(
+            rawRpm = rpm,
+            throttle = throttle,
+            gear = gear,
+            speedKmh = speed,
+            isShiftLightActiveSignal = effectiveShiftLight
         )
+
+        val targetRpm = snapshot.rpm.coerceIn(0f, config.maxRpm)
+        nativeUpdateTelemetry(
+            targetRpm,
+            snapshot.throttle.coerceIn(0f, 1f),
+            snapshot.gear.coerceAtLeast(0),
+            snapshot.speedKmh.coerceAtLeast(0f),
+            snapshot.isShiftLightActive || effectiveShiftLight
+        )
+
+        // Gatilhos de eventos físicos gerados
+        if (snapshot.isBovTriggered) {
+            nativeTriggerBOV(snapshot.bovIntensity)
+        }
+        if (snapshot.isPopTriggered) {
+            nativeTriggerPop(snapshot.popVolume)
+        }
     }
 
     /**
@@ -477,8 +589,68 @@ class V6AudioEngine(
     fun setLimiterRpm(rpm: Float) {
         if (_isReleased.get() || nativeHandle == 0L) return
         _limiterRpm = rpm.coerceIn(1000f, config.maxRpm)
-        nativeSetLimiterRPM(_limiterRpm)
+        if (!_isShiftLightSyncEnabled) {
+            nativeSetLimiterRPM(_limiterRpm)
+        }
         Log.d(TAG, "Rev Limiter ajustado para: $_limiterRpm RPM")
+    }
+
+    /**
+     * Define a rotação de corte do Shift Light e, opcionalmente, acopla o limitador a ela.
+     */
+    fun setShiftLightRpm(rpm: Float, syncWithLimiter: Boolean = false) {
+        val clamped = rpm.coerceIn(1000f, config.maxRpm)
+        _shiftLightRpm = clamped
+        physics.shiftLightTriggerRpm = clamped
+        if (syncWithLimiter) {
+            _isShiftLightSyncEnabled = true
+            physics.isShiftLightSyncEnabled = true
+            if (!_isReleased.get() && nativeHandle != 0L) {
+                nativeSetShiftLightSyncEnabled(true)
+                nativeSetLimiterRPM(clamped)
+            }
+        }
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetShiftLightRpm(clamped)
+        Log.d(TAG, "Shift Light RPM ajustado para: $clamped RPM (syncWithLimiter=$syncWithLimiter)")
+    }
+
+    /**
+     * Força a sincronização imediata do corte acústico de giro com a rotação do Shift Light.
+     */
+    fun syncLimiterWithShiftLight(targetShiftLightRpm: Float? = null) {
+        val target = targetShiftLightRpm ?: _shiftLightRpm
+        setShiftLightRpm(target, syncWithLimiter = true)
+    }
+
+    /**
+     * Define o intervalo de piscamento do Shift Light / Flash Light em milissegundos.
+     * Sincroniza dinamicamente o período acústico de bounce ("ram, ram, ram") do 2-step
+     * com a frequência do Flash Light (ex: 100ms -> ~10Hz, 200ms -> ~5Hz).
+     */
+    fun setShiftLightBlinkMs(blinkMs: Int) {
+        val clamped = blinkMs.coerceIn(40, 1000)
+        _shiftLightBlinkMs = clamped
+        physics.shiftLightBlinkMs = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetShiftLightBlinkMs(clamped)
+        Log.d(TAG, "Shift Light Blink configurado para: ${clamped}ms")
+    }
+
+    /**
+     * Dispara um som imediato de estouro no escape (Pop / Bang).
+     */
+    fun triggerPop(volume: Float = 1.0f) {
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeTriggerPop(volume.coerceIn(0f, 1f))
+    }
+
+    /**
+     * Dispara um som imediato de alívio do turbo (Blow-off Valve / BOV).
+     */
+    fun triggerBOV(volume: Float = 1.0f) {
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeTriggerBOV(volume.coerceIn(0f, 1f))
     }
 
     /**
@@ -515,9 +687,13 @@ class V6AudioEngine(
      */
     fun setShiftLightSyncEnabled(enabled: Boolean) {
         _isShiftLightSyncEnabled = enabled
+        physics.isShiftLightSyncEnabled = enabled
         if (_isReleased.get() || nativeHandle == 0L) return
         nativeSetShiftLightSyncEnabled(enabled)
-        if (!enabled) {
+        if (enabled) {
+            nativeSetLimiterRPM(_shiftLightRpm)
+        } else {
+            nativeSetLimiterRPM(_limiterRpm)
             nativeSetShiftLightActive(false)
         }
     }
@@ -528,6 +704,7 @@ class V6AudioEngine(
      */
     fun setPopsEnabled(enabled: Boolean) {
         _isPopsEnabled = enabled
+        physics.isPopsEnabled = enabled
         if (_isReleased.get() || nativeHandle == 0L) return
         nativeSetPopsEnabled(enabled)
     }
@@ -538,6 +715,7 @@ class V6AudioEngine(
      */
     fun setTurboEnabled(enabled: Boolean) {
         _isTurboEnabled = enabled
+        physics.isTurboEnabled = enabled
         if (_isReleased.get() || nativeHandle == 0L) return
         nativeSetTurboEnabled(enabled)
     }
@@ -627,20 +805,48 @@ class V6AudioEngine(
     }
 
     /**
-     * Compatibilidade retroativa para ajuste direto de RPM se desejado.
+     * Define o nível de abafamento da cabine (0.0 = aberto, 1.0 = cabine isolada).
      */
-    fun setShiftLightRpm(rpm: Float, syncWithLimiter: Boolean = true) {
-        if (syncWithLimiter) {
-            setLimiterRpm(rpm)
-        }
+    fun setCabinMuffle(muffle: Float) {
+        val clamped = muffle.coerceIn(0f, 1f)
+        _cabinMuffle = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetCabinMuffle(clamped)
     }
 
-    fun syncLimiterWithShiftLight(targetShiftLightRpm: Float? = null) {
-        _isShiftLightSyncEnabled = true
-        if (targetShiftLightRpm != null) {
-            setLimiterRpm(targetShiftLightRpm)
-        }
+    /**
+     * Define o balanço de tonalidade (-1.0 = Grave/Muscle, +1.0 = Agudo/Supercar).
+     */
+    fun setToneBalance(tone: Float) {
+        val clamped = tone.coerceIn(-1f, 1f)
+        _toneBalance = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetToneBalance(clamped)
     }
+
+    /**
+     * Define a variante acústica:
+     * 0 = Audi RS4 Natural (V8 4.2 FSI 1:1)
+     * 1 = V8 Muscle Grave (Crossplane Rumble)
+     * 2 = Supercar Agudo (High-Rev Screamer)
+     * 3 = Executive Muffled (Cabine Ultra-Isolada)
+     */
+    fun setSoundVariant(variant: Int) {
+        val clamped = variant.coerceIn(0, 3)
+        _soundVariant = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetSoundVariant(clamped)
+    }
+
+    /**
+     * Ativa ou desativa a filtragem acústica de cabine ("som abafado").
+     */
+    fun setCabinFilterEnabled(enabled: Boolean) {
+        _isCabinFilterEnabled = enabled
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetCabinFilterEnabled(enabled)
+    }
+
 
     /**
      * Release all native resources.
@@ -721,6 +927,8 @@ class V6AudioEngine(
     )
     private external fun nativeSetVolume(volume: Float)
     private external fun nativeSetLimiterRPM(rpm: Float)
+    private external fun nativeSetShiftLightRpm(rpm: Float)
+    private external fun nativeSetShiftLightBlinkMs(blinkMs: Int)
     private external fun nativeSetShiftLightActive(active: Boolean)
     private external fun nativeSetShiftLightSyncEnabled(enabled: Boolean)
     private external fun nativeSetPopsEnabled(enabled: Boolean)
@@ -732,7 +940,13 @@ class V6AudioEngine(
     private external fun nativeSetSpeedPredictiveEnabled(enabled: Boolean)
     private external fun nativeSetSingleTrackModeEnabled(enabled: Boolean)
     private external fun nativeSetSingleTrackIndex(trackIndex: Int)
+    private external fun nativeSetCabinMuffle(muffle: Float)
+    private external fun nativeSetToneBalance(tone: Float)
+    private external fun nativeSetSoundVariant(variant: Int)
+    private external fun nativeSetCabinFilterEnabled(enabled: Boolean)
     private external fun nativeTriggerLimiterCut()
+    private external fun nativeTriggerPop(volume: Float)
+    private external fun nativeTriggerBOV(volume: Float)
     private external fun nativeIsRunning(): Boolean
     private external fun nativeSetEngineType(type: Int)
     private external fun nativeLoadSampleTrack(trackId: Int, samples: FloatArray, numFrames: Int, channels: Int, baseRPM: Float)

@@ -32,8 +32,12 @@ class AudioSettingsPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_SHIFT_LIGHT_SYNC, true)
         set(value) = prefs.edit().putBoolean(KEY_SHIFT_LIGHT_SYNC, value).apply()
 
+    var shiftLightBlinkMs: Int
+        get() = prefs.getInt(KEY_SHIFT_LIGHT_BLINK_MS, 100)
+        set(value) = prefs.edit().putInt(KEY_SHIFT_LIGHT_BLINK_MS, value).apply()
+
     var isTurboEnabled: Boolean
-        get() = prefs.getBoolean(KEY_TURBO_ENABLED, true)
+        get() = prefs.getBoolean(KEY_TURBO_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_TURBO_ENABLED, value).apply()
 
     var turboVolume: Float
@@ -41,7 +45,7 @@ class AudioSettingsPreferences(context: Context) {
         set(value) = prefs.edit().putFloat(KEY_TURBO_VOLUME, value).apply()
 
     var isPopsEnabled: Boolean
-        get() = prefs.getBoolean(KEY_POPS_ENABLED, true)
+        get() = prefs.getBoolean(KEY_POPS_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_POPS_ENABLED, value).apply()
 
     var isPureSoundMode: Boolean
@@ -53,31 +57,48 @@ class AudioSettingsPreferences(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_GEAR_LOCK_ENABLED, value).apply()
 
     var isGearCrossfadeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_GEAR_CROSSFADE_ENABLED, true)
+        get() = prefs.getBoolean(KEY_GEAR_CROSSFADE_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_GEAR_CROSSFADE_ENABLED, value).apply()
+
 
     var isSpeedPredictiveEnabled: Boolean
         get() = prefs.getBoolean(KEY_SPEED_PREDICTIVE_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_SPEED_PREDICTIVE_ENABLED, value).apply()
 
     var isSingleTrackModeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_SINGLE_TRACK_ENABLED, false)
+        get() = prefs.getBoolean(KEY_SINGLE_TRACK_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_SINGLE_TRACK_ENABLED, value).apply()
 
     var singleTrackIndex: Int
-        get() = prefs.getInt(KEY_SINGLE_TRACK_INDEX, 1) // default 1 (Track Low)
+        get() = prefs.getInt(KEY_SINGLE_TRACK_INDEX, 0) // default 0 (Faixa Lenta / Idle)
         set(value) = prefs.edit().putInt(KEY_SINGLE_TRACK_INDEX, value).apply()
+
+    var cabinMuffle: Float
+        get() = prefs.getFloat(KEY_CABIN_MUFFLE, 0.70f)
+        set(value) = prefs.edit().putFloat(KEY_CABIN_MUFFLE, value).apply()
+
+    var toneBalance: Float
+        get() = prefs.getFloat(KEY_TONE_BALANCE, 0.0f)
+        set(value) = prefs.edit().putFloat(KEY_TONE_BALANCE, value).apply()
+
+    var soundVariant: Int
+        get() = prefs.getInt(KEY_SOUND_VARIANT, 0)
+        set(value) = prefs.edit().putInt(KEY_SOUND_VARIANT, value).apply()
+
+    var isCabinFilterEnabled: Boolean
+        get() = prefs.getBoolean(KEY_CABIN_FILTER_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_CABIN_FILTER_ENABLED, value).apply()
 
     var idleRpm: Float
         get() = prefs.getFloat(KEY_IDLE_RPM, 750f)
         set(value) = prefs.edit().putFloat(KEY_IDLE_RPM, value).apply()
 
     var selectedEngineType: EngineType
-        get() = EngineType.fromId(prefs.getInt(KEY_ENGINE_TYPE, EngineType.V6_TWIN_TURBO.id))
+        get() = EngineType.fromId(prefs.getInt(KEY_ENGINE_TYPE, EngineType.AUDI_RS4_V8.id))
         set(value) = prefs.edit().putInt(KEY_ENGINE_TYPE, value.id).apply()
 
     var isVirtualAccelerationEnabled: Boolean
-        get() = prefs.getBoolean(KEY_VIRTUAL_ACCEL_ENABLED, true)
+        get() = prefs.getBoolean(KEY_VIRTUAL_ACCEL_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_VIRTUAL_ACCEL_ENABLED, value).apply()
 
     var virtualAccelerationExponent: Float
@@ -103,6 +124,7 @@ class AudioSettingsPreferences(context: Context) {
         private const val KEY_LIMITER_RPM = "limiter_rpm"
         private const val KEY_SHIFT_LIGHT_RPM = "shift_light_rpm"
         private const val KEY_SHIFT_LIGHT_SYNC = "shift_light_sync"
+        private const val KEY_SHIFT_LIGHT_BLINK_MS = "shift_light_blink_ms"
         private const val KEY_TURBO_ENABLED = "turbo_enabled"
         private const val KEY_TURBO_VOLUME = "turbo_volume"
         private const val KEY_POPS_ENABLED = "pops_enabled"
@@ -119,5 +141,9 @@ class AudioSettingsPreferences(context: Context) {
         private const val KEY_SPEED_PREDICTIVE_ENABLED = "speed_predictive_enabled"
         private const val KEY_SINGLE_TRACK_ENABLED = "single_track_enabled"
         private const val KEY_SINGLE_TRACK_INDEX = "single_track_index"
+        private const val KEY_CABIN_MUFFLE = "cabin_muffle"
+        private const val KEY_TONE_BALANCE = "tone_balance"
+        private const val KEY_SOUND_VARIANT = "sound_variant"
+        private const val KEY_CABIN_FILTER_ENABLED = "cabin_filter_enabled"
     }
 }

@@ -173,6 +173,14 @@ class VehicleProfileViewModel @Inject constructor(
         _uiState.update { it.copy(profile = it.profile.copy(isShiftLightMode = value)) }
     }
 
+    fun updateRpmBarStyle(style: Int) {
+        _uiState.update { it.copy(profile = it.profile.copy(rpmBarStyle = style)) }
+    }
+
+    fun updateRpmBarThickness(thickness: Float) {
+        _uiState.update { it.copy(profile = it.profile.copy(rpmBarThickness = thickness)) }
+    }
+
     fun updateIsSpeedCorrectionEnabled(enabled: Boolean) {
         _uiState.update { it.copy(profile = it.profile.copy(isSpeedCorrectionEnabled = enabled)) }
     }
@@ -234,6 +242,7 @@ class VehicleProfileViewModel @Inject constructor(
 
     fun updateShiftLightBlinkMs(value: Int) {
         _uiState.update { it.copy(profile = it.profile.copy(shiftLightBlinkMs = value)) }
+        saveProfile() // Persiste imediatamente a alteração de frequência no DataStore
     }
 
     // SHIFT LIGHT v2.10.0
