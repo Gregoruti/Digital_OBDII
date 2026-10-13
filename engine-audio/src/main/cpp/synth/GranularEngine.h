@@ -65,6 +65,20 @@ public:
     int   getSoundVariant() const { return m_soundVariant.load(std::memory_order_relaxed); }
     bool  isCabinFilterEnabled() const { return m_isCabinFilterEnabled.load(std::memory_order_relaxed); }
 
+    // ─── Spatial Acoustic Positioning (Balanço por Item: Frontal / Meio / Traseiro) ───
+    void setEnginePosition(float position);
+    void setTurboPosition(float position);
+    void setExhaustPosition(float position);
+    float getEnginePosition() const { return m_enginePosition.load(std::memory_order_relaxed); }
+    float getTurboPosition() const { return m_turboPosition.load(std::memory_order_relaxed); }
+    float getExhaustPosition() const { return m_exhaustPosition.load(std::memory_order_relaxed); }
+
+    // ─── Rev Limiter / Flash Light Loudness & Aggression ───
+    void setLimiterVolumeBoost(float boost);
+    void setLimiterCombustionFloor(float floor);
+    float getLimiterVolumeBoost() const { return m_limiterVolumeBoost.load(std::memory_order_relaxed); }
+    float getLimiterCombustionFloor() const { return m_limiterCombustionFloor.load(std::memory_order_relaxed); }
+
     // ─── Sample Loading API (via JNI) ───
     void loadTrack(int trackId, const float* data, int32_t numFrames, int channels, float baseRPM);
     void addPopSample(const float* data, int32_t numFrames, int channels);
@@ -73,7 +87,7 @@ public:
     bool hasSamples() const { return m_tracks[TRACK_IDLE].isLoaded() || m_tracks[TRACK_LOW].isLoaded(); }
 
     // Disparo manual ou sob evento
-    void triggerPop(float volume = 1.0f);
+    void triggerPop(float volume = 1.0f, bool isLimiterBang = false);
     void triggerBOV(float volume = 1.0f);
 
     // DSP Process
@@ -109,6 +123,15 @@ private:
     std::atomic<float> m_toneBalance{0.0f};       // -1.0f (Grave) a +1.0f (Agudo)
     std::atomic<int>   m_soundVariant{0};         // 0=Natural, 1=Muscle, 2=Supercar, 3=Executive
     std::atomic<bool>  m_isCabinFilterEnabled{false};
+
+    // Spatial acoustic positioning: -1.0 (Frontal), 0.0 (Meio/Distribuído), +1.0 (Traseiro)
+    std::atomic<float> m_enginePosition{0.0f};
+    std::atomic<float> m_turboPosition{0.0f};
+    std::atomic<float> m_exhaustPosition{0.5f}; // Escapamento traseiro por padrão
+
+    // Rev Limiter & Flash Light loudness settings
+    std::atomic<float> m_limiterVolumeBoost{1.25f};      // 1.0f (padrão) a 1.6f (tiro alto)
+    std::atomic<float> m_limiterCombustionFloor{0.85f};  // 0.50f a 1.0f (piso de combustão no limitador)
 
     float m_currentRpm{800.0f};
     float m_prevRpm{800.0f};
@@ -232,6 +255,81 @@ private:
     GranularBiquad m_toneBass;
     GranularBiquad m_toneTreble;
     GranularBiquad m_rpmBassAnchor;
+
+    // Spatial Acoustic Positioning Filter
+    struct AcousticPositioner {
+        GranularBiquad presenceFilter;
+        GranularBiquad distanceFilter;
+        GranularBiquad bassResonance;
+        float lastPosition = -999.0f;
+        float currentPosition = 0.0f;
+
+        void reset() {
+            presenceFilter.reset();
+            distanceFilter.reset();
+            bassResonance.reset();
+            lastPosition = -999.0f;
+            currentPosition = 0.0f;
+        }
+
+        void update(float position) {
+            if (std::abs(position - lastPosition) < 0.005f) return;
+            lastPosition = position;
+            currentPosition = std::clamp(position, -1.0f, 1.0f);
+
+            if (currentPosition < 0.0f) {
+                float frontAmount = -currentPosition;
+                // Frontal: presença direta no parabrisa (3.0kHz), agudos nítidos, corte de subgraves embolados
+                presenceFilter.setPeaking(3000.0f, 1.2f, frontAmount * 5.0f);
+                distanceFilter.setHighShelf(5000.0f, frontAmount * 2.5f);
+                bassResonance.setLowShelf(150.0f, -frontAmount * 4.0f);
+            } else if (currentPosition > 0.0f) {
+                float rearAmount = currentPosition;
+                // Traseiro: abafamento suave de agudos pela distância da cabine, reforço de corpo/muffler traseiro
+                distanceFilter.setHighShelf(3500.0f, -rearAmount * 8.0f);
+                bassResonance.setLowShelf(130.0f, rearAmount * 6.0f);
+                presenceFilter.setPeaking(2500.0f, 1.2f, -rearAmount * 3.5f);
+            } else {
+                // Meio (Neutro / Distribuído)
+                presenceFilter.setPeaking(3000.0f, 1.0f, 0.0f);
+                distanceFilter.setHighShelf(4000.0f, 0.0f);
+                bassResonance.setLowShelf(140.0f, 0.0f);
+            }
+        }
+
+        inline void process(float& l, float& r) {
+            if (std::abs(currentPosition) > 0.01f) {
+                presenceFilter.processStereo(l, r);
+                distanceFilter.processStereo(l, r);
+                bassResonance.processStereo(l, r);
+
+                // Largura e foco de campo estéreo com compensação de nível:
+                if (currentPosition > 0.0f) {
+                    float rearAmount = currentPosition;
+                    float gain = 1.0f + rearAmount * 0.18f;
+                    float width = 1.0f + rearAmount * 0.45f;
+                    float mid = (l + r) * 0.5f;
+                    float side = (l - r) * 0.5f * width;
+                    l = (mid + side) * gain;
+                    r = (mid - side) * gain;
+                } else {
+                    float frontAmount = -currentPosition;
+                    float gain = 1.0f / (1.0f + frontAmount * 0.12f);
+                    float focus = 1.0f - frontAmount * 0.35f;
+                    float mid = (l + r) * 0.5f;
+                    float side = (l - r) * 0.5f * focus;
+                    l = (mid + side) * gain;
+                    r = (mid - side) * gain;
+                }
+            }
+        }
+    };
+
+    AcousticPositioner m_enginePositioner;
+    AcousticPositioner m_turboPositioner;
+    AcousticPositioner m_exhaustPositioner;
+
+    std::vector<float> m_scratchLayer;
 
     void updateCabinFilters(float rpm);
     void calculateTrackWeights(float rpm, float throttle, float* outWeights);

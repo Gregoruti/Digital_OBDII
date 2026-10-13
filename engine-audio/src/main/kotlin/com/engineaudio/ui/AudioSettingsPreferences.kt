@@ -117,6 +117,26 @@ class AudioSettingsPreferences(context: Context) {
         get() = prefs.getFloat(KEY_VIRTUAL_RPM_OUT_MAX, 8000f)
         set(value) = prefs.edit().putFloat(KEY_VIRTUAL_RPM_OUT_MAX, value).apply()
 
+    var enginePosition: Float
+        get() = prefs.getFloat(KEY_ENGINE_POSITION, 0.0f)
+        set(value) = prefs.edit().putFloat(KEY_ENGINE_POSITION, value).apply()
+
+    var turboPosition: Float
+        get() = prefs.getFloat(KEY_TURBO_POSITION, 0.0f)
+        set(value) = prefs.edit().putFloat(KEY_TURBO_POSITION, value).apply()
+
+    var exhaustPosition: Float
+        get() = prefs.getFloat(KEY_EXHAUST_POSITION, 0.5f)
+        set(value) = prefs.edit().putFloat(KEY_EXHAUST_POSITION, value).apply()
+
+    var limiterVolumeBoost: Float
+        get() = prefs.getFloat(KEY_LIMITER_VOLUME_BOOST, 1.25f)
+        set(value) = prefs.edit().putFloat(KEY_LIMITER_VOLUME_BOOST, value).apply()
+
+    var limiterCombustionFloor: Float
+        get() = prefs.getFloat(KEY_LIMITER_COMBUSTION_FLOOR, 0.85f)
+        set(value) = prefs.edit().putFloat(KEY_LIMITER_COMBUSTION_FLOOR, value).apply()
+
     companion object {
         private const val PREFS_NAME = "v6_engine_audio_settings"
         private const val KEY_ENGINE_ENABLED = "engine_enabled"
@@ -145,5 +165,10 @@ class AudioSettingsPreferences(context: Context) {
         private const val KEY_TONE_BALANCE = "tone_balance"
         private const val KEY_SOUND_VARIANT = "sound_variant"
         private const val KEY_CABIN_FILTER_ENABLED = "cabin_filter_enabled"
+        private const val KEY_ENGINE_POSITION = "engine_position"
+        private const val KEY_TURBO_POSITION = "turbo_position"
+        private const val KEY_EXHAUST_POSITION = "exhaust_position"
+        private const val KEY_LIMITER_VOLUME_BOOST = "limiter_volume_boost"
+        private const val KEY_LIMITER_COMBUSTION_FLOOR = "limiter_combustion_floor"
     }
 }

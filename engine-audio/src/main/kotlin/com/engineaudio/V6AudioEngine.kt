@@ -169,6 +169,27 @@ class V6AudioEngine(
             instance?.setCabinFilterEnabled(enabled)
         }
 
+        fun setEnginePosition(position: Float) {
+            instance?.setEnginePosition(position)
+        }
+
+        fun setTurboPosition(position: Float) {
+            instance?.setTurboPosition(position)
+        }
+
+        fun setExhaustPosition(position: Float) {
+            instance?.setExhaustPosition(position)
+        }
+
+        fun setLimiterVolumeBoost(boost: Float) {
+            instance?.setLimiterVolumeBoost(boost)
+        }
+
+        fun setLimiterCombustionFloor(floor: Float) {
+            instance?.setLimiterCombustionFloor(floor)
+        }
+
+
         fun setShiftLightActive(active: Boolean) {
             instance?.setShiftLightActive(active)
         }
@@ -333,6 +354,21 @@ class V6AudioEngine(
     @Volatile
     private var _isCabinFilterEnabled: Boolean = false
 
+    @Volatile
+    private var _enginePosition: Float = 0.0f
+
+    @Volatile
+    private var _turboPosition: Float = 0.0f
+
+    @Volatile
+    private var _exhaustPosition: Float = 0.5f
+
+    @Volatile
+    private var _limiterVolumeBoost: Float = 1.25f
+
+    @Volatile
+    private var _limiterCombustionFloor: Float = 0.85f
+
     /** Nível de abafamento da cabine [0.0 = aberto, 1.0 = isolado]. */
     val cabinMuffle: Float get() = _cabinMuffle
 
@@ -341,6 +377,21 @@ class V6AudioEngine(
 
     /** Variante acústica selecionada [0=Natural, 1=Muscle, 2=Supercar, 3=Executive]. */
     val soundVariant: Int get() = _soundVariant
+
+    /** Posicionamento do motor [-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro]. */
+    val enginePosition: Float get() = _enginePosition
+
+    /** Posicionamento do turbo [-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro]. */
+    val turboPosition: Float get() = _turboPosition
+
+    /** Posicionamento do escape [-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro]. */
+    val exhaustPosition: Float get() = _exhaustPosition
+
+    /** Boost de volume no limitador de rotação [0.5 a 2.0]. */
+    val limiterVolumeBoost: Float get() = _limiterVolumeBoost
+
+    /** Piso de ganho de combustão no limitador [0.2 a 1.0]. */
+    val limiterCombustionFloor: Float get() = _limiterCombustionFloor
 
     /** Indica se a filtragem acústica de cabine está ativada. */
     val isCabinFilterEnabled: Boolean get() = _isCabinFilterEnabled
@@ -847,6 +898,57 @@ class V6AudioEngine(
         nativeSetCabinFilterEnabled(enabled)
     }
 
+    /**
+     * Define o posicionamento espacial acústico do motor (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+     */
+    fun setEnginePosition(position: Float) {
+        val clamped = position.coerceIn(-1.0f, 1.0f)
+        _enginePosition = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetEnginePosition(clamped)
+    }
+
+    /**
+     * Define o posicionamento espacial acústico do turbo (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+     */
+    fun setTurboPosition(position: Float) {
+        val clamped = position.coerceIn(-1.0f, 1.0f)
+        _turboPosition = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetTurboPosition(clamped)
+    }
+
+    /**
+     * Define o posicionamento espacial acústico do escapamento (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+     */
+    fun setExhaustPosition(position: Float) {
+        val clamped = position.coerceIn(-1.0f, 1.0f)
+        _exhaustPosition = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetExhaustPosition(clamped)
+    }
+
+    /**
+     * Define o boost de volume dos disparos do limitador (1.0 = padrão, 1.5 = +50%).
+     */
+    fun setLimiterVolumeBoost(boost: Float) {
+        val clamped = boost.coerceIn(0.5f, 2.0f)
+        _limiterVolumeBoost = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetLimiterVolumeBoost(clamped)
+    }
+
+    /**
+     * Define o piso de ganho de combustão contínua durante o corte do limitador (0.40 a 1.0).
+     */
+    fun setLimiterCombustionFloor(floor: Float) {
+        val clamped = floor.coerceIn(0.2f, 1.0f)
+        _limiterCombustionFloor = clamped
+        if (_isReleased.get() || nativeHandle == 0L) return
+        nativeSetLimiterCombustionFloor(clamped)
+    }
+
+
 
     /**
      * Release all native resources.
@@ -944,6 +1046,11 @@ class V6AudioEngine(
     private external fun nativeSetToneBalance(tone: Float)
     private external fun nativeSetSoundVariant(variant: Int)
     private external fun nativeSetCabinFilterEnabled(enabled: Boolean)
+    private external fun nativeSetEnginePosition(position: Float)
+    private external fun nativeSetTurboPosition(position: Float)
+    private external fun nativeSetExhaustPosition(position: Float)
+    private external fun nativeSetLimiterVolumeBoost(boost: Float)
+    private external fun nativeSetLimiterCombustionFloor(floor: Float)
     private external fun nativeTriggerLimiterCut()
     private external fun nativeTriggerPop(volume: Float)
     private external fun nativeTriggerBOV(volume: Float)

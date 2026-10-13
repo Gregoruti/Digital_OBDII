@@ -187,6 +187,46 @@ bool EngineAudioEngine::isCabinFilterEnabled() const {
     return m_granularEngine->isCabinFilterEnabled();
 }
 
+void EngineAudioEngine::setEnginePosition(float position) {
+    m_granularEngine->setEnginePosition(position);
+}
+
+void EngineAudioEngine::setTurboPosition(float position) {
+    m_granularEngine->setTurboPosition(position);
+}
+
+void EngineAudioEngine::setExhaustPosition(float position) {
+    m_granularEngine->setExhaustPosition(position);
+}
+
+float EngineAudioEngine::getEnginePosition() const {
+    return m_granularEngine->getEnginePosition();
+}
+
+float EngineAudioEngine::getTurboPosition() const {
+    return m_granularEngine->getTurboPosition();
+}
+
+float EngineAudioEngine::getExhaustPosition() const {
+    return m_granularEngine->getExhaustPosition();
+}
+
+void EngineAudioEngine::setLimiterVolumeBoost(float boost) {
+    m_granularEngine->setLimiterVolumeBoost(boost);
+}
+
+void EngineAudioEngine::setLimiterCombustionFloor(float floor) {
+    m_granularEngine->setLimiterCombustionFloor(floor);
+}
+
+float EngineAudioEngine::getLimiterVolumeBoost() const {
+    return m_granularEngine->getLimiterVolumeBoost();
+}
+
+float EngineAudioEngine::getLimiterCombustionFloor() const {
+    return m_granularEngine->getLimiterCombustionFloor();
+}
+
 void EngineAudioEngine::triggerLimiterCut() {
     m_revLimiter->triggerCut();
     m_granularEngine->triggerLimiterCut();

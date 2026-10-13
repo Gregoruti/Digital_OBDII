@@ -1,5 +1,17 @@
 # CHANGELOG - Digital OBD-II
 
+## [4.8.0] - Atual (Equipe Antigravity & Android Studio)
+> **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)
+> **Status de Validação:** Validado (Build com 0 erros no Android Studio). Testes de regressão da UI concluídos e funcionais. Pendente validação dinâmica das acústicas em veículo real.
+> **Motivação Arquitetural:** Correção da regressão na interface de Configurações de Áudio e implementação de lógicas avançadas de DSP (RevLimiter, GranularEngine) para expandir as capacidades simulativas do som do motor de forma livre de alocações na JniBridge.
+
+### Corrigido e Otimizado
+- **Correção de Regressão e Estabilidade de UI**:
+  - Ajustes em `AudioSettingsScreen.kt`, `AudioSettingsBottomSheet.kt` e no layout XML associado. Garantida a estabilidade sem crashes/travamentos durante o inflamento e interações na UI.
+- **Melhorias no Processamento de Som (DSP C++ / JNI)**:
+  - Melhorias focadas no `GranularEngine` e `RevLimiter` no módulo Nativo (C++). Adicionada maior precisão aos "estouros" de limite de rotação e comportamento suave durante as mudanças em fluxo (Throttle vs. RPM).
+  - Configuração fina da ponte `JniBridge.cpp`, unindo com precisão as simulações criadas do lado Kotlin (`EnginePhysics.kt`, `V6AudioEngine.kt`) com a execução de baixa latência em C++ sem gerar vazamento de memória (zero-allocation em real-time thread).
+
 ## [4.7.0] - Atual (Equipe Antigravity & Android Studio)
 > **Assistente / Modelo de IA:** Antigravity (Advanced Agentic Coding)
 > **Status de Validação:** Validado em Veículo e Dispositivo Físico. Gráficos de alta performance validados no Compose.

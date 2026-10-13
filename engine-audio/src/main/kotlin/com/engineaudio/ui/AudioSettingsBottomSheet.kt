@@ -50,6 +50,7 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
         setupEngineTypeControls()
         setupMasterControls()
         setupLimiterAndShiftLightControls()
+        setupSpatialPositioningControls()
         setupTurboAndExhaustControls()
         setupGearLockControls()
         setupSingleTrackControls()
@@ -189,6 +190,25 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
             override fun onStopTrackingTouch(sb: SeekBar) {}
         })
 
+        // Slider Volume & Pancada do Corte / Limitador (0.5x a 2.0x -> 0 a 100 com 50 = 1.0x, 75 = 1.25x)
+        val currentBoost = engineAudio?.limiterVolumeBoost ?: preferences.limiterVolumeBoost
+        val initialBoostProgress = (((currentBoost - 0.5f) / 1.5f) * 100).toInt().coerceIn(0, 100)
+        binding.seekLimiterVolumeBoost.progress = initialBoostProgress
+        updateLimiterBoostText(initialBoostProgress)
+
+        binding.seekLimiterVolumeBoost.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updateLimiterBoostText(progress)
+                if (fromUser) {
+                    val boostVal = 0.5f + (progress / 100f) * 1.5f
+                    preferences.limiterVolumeBoost = boostVal
+                    engineAudio?.setLimiterVolumeBoost(boostVal)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
         // BOTÃO DE TESTAR CORTE DO FLASH LIGHT
         binding.btnSyncShiftLight.setOnClickListener {
             engineAudio?.triggerLimiterCut()
@@ -206,6 +226,96 @@ class AudioSettingsBottomSheet : BottomSheetDialogFragment() {
             updateShiftLightStatusUI(isChecked)
         }
     }
+
+    private fun updateLimiterBoostText(progress: Int) {
+        val boost = 0.5f + (progress / 100f) * 1.5f
+        val pct = (boost * 100).toInt()
+        val desc = when {
+            boost < 0.9f -> "$pct% (Suave)"
+            boost < 1.2f -> "$pct% (Equilibrado)"
+            boost < 1.45f -> "$pct% (Forte / GT3)"
+            else -> "$pct% (Pancada Máxima)"
+        }
+        binding.tvLimiterVolumeBoostValue.text = desc
+    }
+
+    private fun setupSpatialPositioningControls() {
+        val enginePos = engineAudio?.enginePosition ?: preferences.enginePosition
+        val turboPos = engineAudio?.turboPosition ?: preferences.turboPosition
+        val exhaustPos = engineAudio?.exhaustPosition ?: preferences.exhaustPosition
+
+        // Slider 1: Motor (-1.0f .. +1.0f -> progress 0 .. 100 com 50 no meio)
+        val initialEngineProgress = (((enginePos + 1f) / 2f) * 100).toInt().coerceIn(0, 100)
+        binding.seekEnginePosition.progress = initialEngineProgress
+        updatePositionText(binding.tvEnginePositionValue, initialEngineProgress)
+
+        binding.seekEnginePosition.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updatePositionText(binding.tvEnginePositionValue, progress)
+                if (fromUser) {
+                    val pos = ((progress - 50) / 50f).coerceIn(-1f, 1f)
+                    preferences.enginePosition = pos
+                    engineAudio?.setEnginePosition(pos)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        // Slider 2: Turbo (-1.0f .. +1.0f -> progress 0 .. 100 com 50 no meio)
+        val initialTurboProgress = (((turboPos + 1f) / 2f) * 100).toInt().coerceIn(0, 100)
+        binding.seekTurboPosition.progress = initialTurboProgress
+        updatePositionText(binding.tvTurboPositionValue, initialTurboProgress)
+
+        binding.seekTurboPosition.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updatePositionText(binding.tvTurboPositionValue, progress)
+                if (fromUser) {
+                    val pos = ((progress - 50) / 50f).coerceIn(-1f, 1f)
+                    preferences.turboPosition = pos
+                    engineAudio?.setTurboPosition(pos)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        // Slider 3: Escapamento (-1.0f .. +1.0f -> progress 0 .. 100 com 50 no meio)
+        val initialExhaustProgress = (((exhaustPos + 1f) / 2f) * 100).toInt().coerceIn(0, 100)
+        binding.seekExhaustPosition.progress = initialExhaustProgress
+        updatePositionText(binding.tvExhaustPositionValue, initialExhaustProgress)
+
+        binding.seekExhaustPosition.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                updatePositionText(binding.tvExhaustPositionValue, progress)
+                if (fromUser) {
+                    val pos = ((progress - 50) / 50f).coerceIn(-1f, 1f)
+                    preferences.exhaustPosition = pos
+                    engineAudio?.setExhaustPosition(pos)
+                }
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+    }
+
+    private fun updatePositionText(textView: android.widget.TextView, progress: Int) {
+        val pct = (progress - 50) * 2 // -100 .. +100
+        val text = when {
+            pct < -15 -> "Frontal ${-pct}% (Capô)"
+            pct > 15 -> "Traseiro +${pct}% (Escape)"
+            else -> "Meio (Distribuído)"
+        }
+        textView.text = text
+        textView.setTextColor(
+            when {
+                pct < -15 -> 0xFF00E5FF.toInt()
+                pct > 15 -> 0xFFFF9100.toInt()
+                else -> 0xFF76FF03.toInt()
+            }
+        )
+    }
+
 
     private fun updateShiftLightStatusUI(isActive: Boolean) {
         if (isActive) {

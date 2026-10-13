@@ -291,6 +291,56 @@ Java_com_engineaudio_V6AudioEngine_nativeSetCabinFilterEnabled(
 }
 
 /**
+ * Define o posicionamento espacial do motor (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetEnginePosition(
+        JNIEnv* env, jobject thiz, jfloat position) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setEnginePosition(static_cast<float>(position));
+}
+
+/**
+ * Define o posicionamento espacial do turbo (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetTurboPosition(
+        JNIEnv* env, jobject thiz, jfloat position) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setTurboPosition(static_cast<float>(position));
+}
+
+/**
+ * Define o posicionamento espacial do escapamento (-1.0 = Frontal, 0.0 = Meio, +1.0 = Traseiro).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetExhaustPosition(
+        JNIEnv* env, jobject thiz, jfloat position) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setExhaustPosition(static_cast<float>(position));
+}
+
+/**
+ * Define o boost de volume do limitador de rotação (1.0 = padrão, 1.5 = +50% no estouro).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetLimiterVolumeBoost(
+        JNIEnv* env, jobject thiz, jfloat boost) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setLimiterVolumeBoost(static_cast<float>(boost));
+}
+
+/**
+ * Define o piso de combustão do limitador (0.50 a 1.0, padrão 0.85).
+ */
+JNIEXPORT void JNICALL
+Java_com_engineaudio_V6AudioEngine_nativeSetLimiterCombustionFloor(
+        JNIEnv* env, jobject thiz, jfloat floor) {
+    auto* engine = getEngine(env, thiz);
+    if (engine) engine->setLimiterCombustionFloor(static_cast<float>(floor));
+}
+
+/**
  * Trigger immediate limiter cut pulse (backfire / ignition cut).
  */
 JNIEXPORT void JNICALL

@@ -85,18 +85,19 @@ void RevLimiter::process(float* outputBuffer, int32_t numFrames) {
         }
 
         // Gate envelope (smooth open/close to avoid clicks)
-        float gateTarget  = m_gateOpen ? 1.0f : 0.05f;
+        float gateTarget  = m_gateOpen ? 1.0f : 0.25f;
         float gateCoeff   = m_gateOpen ? GATE_ATTACK : GATE_RELEASE;
         m_gateEnvelope   += gateCoeff * (gateTarget - m_gateEnvelope);
 
         // ─── Overrun pops and bangs ───
-        // Active when: throttle near 0, RPM > 2500 (engine braking)
-        bool overrunCondition = (throttle < 0.05f) && (rpm > 2500.0f);
-        float popProb = overrunCondition ? POP_PROBABILITY * (rpm / 6000.0f) : 0.0f;
+        // Active when: throttle near 0, RPM > 2500 (engine braking) OU no limitador
+        bool overrunCondition = ((throttle < 0.05f) && (rpm > 2500.0f)) || nearLimit;
+        float popProb = nearLimit ? 0.08f : (overrunCondition ? POP_PROBABILITY * (rpm / 6000.0f) : 0.0f);
 
         if (m_popEnvelope < 0.01f && fastRand() > (1.0f - popProb)) {
-            // Trigger a pop
-            m_popEnvelope = 0.6f + 0.4f * fabsf(fastRand());
+            // Trigger a pop com boost de limitador
+            float boost = nearLimit ? 1.4f : 1.0f;
+            m_popEnvelope = (0.7f + 0.4f * fabsf(fastRand())) * boost;
         }
 
         // Pop synthesis: shaped noise burst

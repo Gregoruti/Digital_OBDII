@@ -59,6 +59,20 @@ public:
     int   getSoundVariant() const;
     bool  isCabinFilterEnabled() const;
 
+    // ─── Spatial Acoustic Positioning (Balanço por Item: Frontal / Meio / Traseiro) ───
+    void setEnginePosition(float position);
+    void setTurboPosition(float position);
+    void setExhaustPosition(float position);
+    float getEnginePosition() const;
+    float getTurboPosition() const;
+    float getExhaustPosition() const;
+
+    // ─── Rev Limiter / Flash Light Loudness & Aggression ───
+    void setLimiterVolumeBoost(float boost);
+    void setLimiterCombustionFloor(float floor);
+    float getLimiterVolumeBoost() const;
+    float getLimiterCombustionFloor() const;
+
     // ─── Granular Sample-Based Audio API ───
     void loadSampleTrack(int trackId, const float* data, int32_t numFrames, int channels, float baseRPM);
     void addPopSample(const float* data, int32_t numFrames, int channels);

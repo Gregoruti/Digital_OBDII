@@ -155,6 +155,32 @@ void GranularEngine::setCabinFilterEnabled(bool enabled) {
     LOGI("GranularEngine: Cabin filter set to %d", enabled ? 1 : 0);
 }
 
+void GranularEngine::setEnginePosition(float position) {
+    m_enginePosition.store(std::clamp(position, -1.0f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Engine position set to %.2f", position);
+}
+
+void GranularEngine::setTurboPosition(float position) {
+    m_turboPosition.store(std::clamp(position, -1.0f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Turbo position set to %.2f", position);
+}
+
+void GranularEngine::setExhaustPosition(float position) {
+    m_exhaustPosition.store(std::clamp(position, -1.0f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Exhaust position set to %.2f", position);
+}
+
+void GranularEngine::setLimiterVolumeBoost(float boost) {
+    m_limiterVolumeBoost.store(std::clamp(boost, 0.5f, 2.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Limiter volume boost set to %.2f", boost);
+}
+
+void GranularEngine::setLimiterCombustionFloor(float floor) {
+    m_limiterCombustionFloor.store(std::clamp(floor, 0.2f, 1.0f), std::memory_order_relaxed);
+    LOGI("GranularEngine: Limiter combustion floor set to %.2f", floor);
+}
+
+
 void GranularEngine::updateCabinFilters(float rpm) {
     float muffle = m_cabinMuffle.load(std::memory_order_relaxed);
     float tone   = m_toneBalance.load(std::memory_order_relaxed);
@@ -235,13 +261,16 @@ void GranularEngine::clearSamples() {
     m_bov.clear();
     m_overrunPopsRemaining = 0;
     m_lastPopIdx = -1;
+    m_enginePositioner.reset();
+    m_turboPositioner.reset();
+    m_exhaustPositioner.reset();
     LOGI("All sample tracks and one-shots cleared");
 }
 
-void GranularEngine::triggerPop(float volume) {
-    // Se o Modo Puro estiver ativado ou o usuário desativou Pops/Bangs, NENHUM som toca
+void GranularEngine::triggerPop(float volume, bool isLimiterBang) {
+    // Se o Modo Puro estiver ativado, NENHUM som toca
     if (m_isPureSoundMode.load(std::memory_order_relaxed)) return;
-    if (!m_isPopsEnabled.load(std::memory_order_relaxed)) return;
+    if (!isLimiterBang && !m_isPopsEnabled.load(std::memory_order_relaxed)) return;
     if (m_pops.empty()) return;
 
     size_t index = 0;
@@ -561,11 +590,13 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
                 // Pulso de corte de injeção proporcional à frequência do Flash Light (ex: 100ms -> ~10Hz, 200ms -> ~5Hz)
                 int32_t blinkMs = m_shiftLightBlinkMs.load(std::memory_order_relaxed);
                 float blinkSec = std::clamp(static_cast<float>(blinkMs) / 1000.0f, 0.040f, 0.500f);
-                m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * (blinkSec * 0.55f));
-                m_limiterCooldownFrames = static_cast<int32_t>(44100 * (blinkSec * 0.45f));
-                if (popsEnabled) {
-                    triggerPop(1.0f);
-                }
+                // 40% corte rápido de injeção, 60% queima forte com soco sonoro
+                m_limiterCutFramesRemaining = static_cast<int32_t>(44100 * (blinkSec * 0.40f));
+                m_limiterCooldownFrames = static_cast<int32_t>(44100 * (blinkSec * 0.60f));
+
+                // Disparo de tiro estridente do limitador com ganho boosted
+                float popBoost = m_limiterVolumeBoost.load(std::memory_order_relaxed);
+                triggerPop(1.35f * popBoost, true /* isLimiterBang */);
             }
         }
     }
@@ -583,12 +614,16 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
     // Ganho de combustão contínua
     float targetCombustionGain = 1.0f;
     if (isLimiterCutActive) {
-        targetCombustionGain = 0.0f; // Corte total de injeção
+        targetCombustionGain = 0.0f; // Corte total de injeção no pulso
     } else if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
-        targetCombustionGain = 0.35f;
+        // NÃO DESPENCA PARA 0.35f! Mantém o piso configurado (padrão 0.85f) para não abafar o ronco
+        float floorGain = m_limiterCombustionFloor.load(std::memory_order_relaxed);
+        targetCombustionGain = std::clamp(floorGain, 0.40f, 1.0f);
     }
 
-    m_combustionGain += (targetCombustionGain - m_combustionGain) * 0.30f;
+    // Transição super rápida no corte e retorno imediato para dar som estalado e agressivo
+    float gainSpeed = isLimiterCutActive ? 0.75f : 0.60f;
+    m_combustionGain += (targetCombustionGain - m_combustionGain) * gainSpeed;
 
     // ─── 2. Blow-off Valve / Válvula de Alívio (Turbo Stututu) ───
     // Condição A: Queda brusca de RPM (Δ RPM negativo intenso por engate de marcha maior)
@@ -660,9 +695,9 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
 
     float renderRpm = m_currentRpm;
     if ((isLimiterCycleActive || isAtLimiter) && (popsEnabled || syncEnabled)) {
-        // [BOUNCE] Quique de 150 a 250 RPM contra a barreira do Shift Light
-        float bounce = 150.0f + static_cast<float>(m_rng() % 100);
-        renderRpm = std::max(800.0f, effectiveLimiterRpm - bounce);
+        // Micro-jitter orgânico no topo da rotação mantendo a presença harmônica
+        float microJitter = static_cast<float>(m_rng() % 50) - 25.0f;
+        renderRpm = std::max(800.0f, m_currentRpm + microJitter);
     }
 
     // Renderiza faixas contínuas com ganho de combustão
@@ -680,19 +715,56 @@ void GranularEngine::process(float* buffer, int32_t numFrames) {
             float trackGain = weights[i] * m_combustionGain;
             m_tracks[i].renderMix(buffer, numFrames, renderRpm, trackGain, smoothGain);
         }
+
+        // Aplica o posicionamento acústico do Motor (Frontal / Meio / Traseiro)
+        m_enginePositioner.update(m_enginePosition.load(std::memory_order_relaxed));
+        for (int32_t f = 0; f < numFrames; ++f) {
+            m_enginePositioner.process(buffer[f * 2], buffer[f * 2 + 1]);
+        }
     }
 
-    // Renderiza disparos one-shot APENAS se pops ativados
-    if (popsEnabled) {
+    // Garante que o scratch buffer tenha espaço suficiente
+    size_t reqSamples = static_cast<size_t>(numFrames * 2);
+    if (m_scratchLayer.size() < reqSamples) {
+        m_scratchLayer.resize(reqSamples, 0.0f);
+    }
+
+    // Renderiza disparos one-shot APENAS se pops ativados OU em ciclo de corte de limitador
+    if (popsEnabled || isLimiterCycleActive) {
+        std::fill(m_scratchLayer.begin(), m_scratchLayer.begin() + reqSamples, 0.0f);
+        bool hasPops = false;
         for (auto& pop : m_pops) {
-            pop.renderMix(buffer, numFrames);
+            if (pop.isActive()) {
+                pop.renderMix(m_scratchLayer.data(), numFrames);
+                hasPops = true;
+            }
+        }
+        if (hasPops) {
+            m_exhaustPositioner.update(m_exhaustPosition.load(std::memory_order_relaxed));
+            for (int32_t f = 0; f < numFrames; ++f) {
+                float pl = m_scratchLayer[f * 2];
+                float pr = m_scratchLayer[f * 2 + 1];
+                m_exhaustPositioner.process(pl, pr);
+                buffer[f * 2]     += pl;
+                buffer[f * 2 + 1] += pr;
+            }
         }
     }
 
     // Renderiza Blow-Off Valve APENAS se turbo ativado
-    if (turboEnabled) {
-        m_bov.renderMix(buffer, numFrames);
+    if (turboEnabled && m_bov.isActive()) {
+        std::fill(m_scratchLayer.begin(), m_scratchLayer.begin() + reqSamples, 0.0f);
+        m_bov.renderMix(m_scratchLayer.data(), numFrames);
+        m_turboPositioner.update(m_turboPosition.load(std::memory_order_relaxed));
+        for (int32_t f = 0; f < numFrames; ++f) {
+            float tl = m_scratchLayer[f * 2];
+            float tr = m_scratchLayer[f * 2 + 1];
+            m_turboPositioner.process(tl, tr);
+            buffer[f * 2]     += tl;
+            buffer[f * 2 + 1] += tr;
+        }
     }
+
 
     // Aplica a modelagem acústica de cabine ("som abafado") e controle de timbre (Grave / Agudo)
     if (m_isCabinFilterEnabled.load(std::memory_order_relaxed)) {

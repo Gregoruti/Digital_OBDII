@@ -65,6 +65,11 @@ fun AudioSettingsScreen(
     var virtualRpmInMax by remember { mutableFloatStateOf(prefs.virtualRpmInMax) }
     var virtualRpmOutMax by remember { mutableFloatStateOf(prefs.virtualRpmOutMax) }
 
+    var enginePosition by remember { mutableFloatStateOf(prefs.enginePosition) }
+    var turboPosition by remember { mutableFloatStateOf(prefs.turboPosition) }
+    var exhaustPosition by remember { mutableFloatStateOf(prefs.exhaustPosition) }
+    var limiterVolumeBoost by remember { mutableFloatStateOf(prefs.limiterVolumeBoost) }
+
     val minRpm = 1500f
     val maxRpm = selectedEngineType.maxRpm
 
@@ -88,6 +93,10 @@ fun AudioSettingsScreen(
         V6AudioEngine.setCabinMuffle(prefs.cabinMuffle)
         V6AudioEngine.setToneBalance(prefs.toneBalance)
         V6AudioEngine.setSoundVariant(prefs.soundVariant)
+        V6AudioEngine.setEnginePosition(prefs.enginePosition)
+        V6AudioEngine.setTurboPosition(prefs.turboPosition)
+        V6AudioEngine.setExhaustPosition(prefs.exhaustPosition)
+        V6AudioEngine.setLimiterVolumeBoost(prefs.limiterVolumeBoost)
         if (prefs.isEngineSoundEnabled) {
             V6AudioEngine.start(context)
         } else {
@@ -788,6 +797,40 @@ fun AudioSettingsScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // GANHO DE VOLUME NO LIMITADOR (REV LIMITER / 2-STEP BOOST)
+                        val boostPct = (limiterVolumeBoost * 100).toInt()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Ganho de Volume no Limitador / 2-Step",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${boostPct}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF9100)
+                            )
+                        }
+                        Slider(
+                            value = limiterVolumeBoost,
+                            onValueChange = { boost ->
+                                limiterVolumeBoost = boost
+                                prefs.limiterVolumeBoost = boost
+                                V6AudioEngine.setLimiterVolumeBoost(boost)
+                            },
+                            valueRange = 1.0f..2.5f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xFFFF9100),
+                                activeTrackColor = Color(0xFFFF9100)
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         // BOTÃO DE TESTAR CORTE DO FLASH LIGHT
                         Button(
                             onClick = {
@@ -811,6 +854,138 @@ fun AudioSettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
+                    }
+                }
+            }
+
+            // ════════════ CARD: BALANÇO DE SAÍDA POR ITEM (3D COCKPIT) ════════════
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Balanço de Saída por Item",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = "3D COCKPIT",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Ajuste a saída acústica no habitáculo: Frontal (capô/painel), Meio (distribuído) ou Traseiro (escapamento).",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                        )
+
+                        // 1. Motor
+                        val enginePct = (enginePosition * 100).toInt()
+                        val engineLabel = when {
+                            enginePct < -15 -> "Frontal ${-enginePct}% (Capô)"
+                            enginePct > 15 -> "Traseiro +${enginePct}% (Escape)"
+                            else -> "Meio (Distribuído)"
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🏎️ Motor (Admissão / Bloco):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(engineLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                        }
+                        Slider(
+                            value = enginePosition,
+                            onValueChange = { pos ->
+                                enginePosition = pos
+                                prefs.enginePosition = pos
+                                V6AudioEngine.setEnginePosition(pos)
+                            },
+                            valueRange = -1.0f..1.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xFF00E5FF),
+                                activeTrackColor = Color(0xFF00E5FF)
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // 2. Turbo
+                        val turboPct = (turboPosition * 100).toInt()
+                        val turboLabel = when {
+                            turboPct < -15 -> "Frontal ${-turboPct}% (Cofre)"
+                            turboPct > 15 -> "Traseiro +${turboPct}% (Escape)"
+                            else -> "Meio (Distribuído)"
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🌀 Turbo & Válvula BOV:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(turboLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFF76FF03))
+                        }
+                        Slider(
+                            value = turboPosition,
+                            onValueChange = { pos ->
+                                turboPosition = pos
+                                prefs.turboPosition = pos
+                                V6AudioEngine.setTurboPosition(pos)
+                            },
+                            valueRange = -1.0f..1.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xFF76FF03),
+                                activeTrackColor = Color(0xFF76FF03)
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // 3. Escapamento
+                        val exhaustPct = (exhaustPosition * 100).toInt()
+                        val exhaustLabel = when {
+                            exhaustPct < -15 -> "Frontal ${-exhaustPct}% (Capô)"
+                            exhaustPct > 15 -> "Traseiro +${exhaustPct}% (Escape)"
+                            else -> "Meio (Distribuído)"
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("💥 Escapamento & Pops (Tiros):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text(exhaustLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFFFF9100))
+                        }
+                        Slider(
+                            value = exhaustPosition,
+                            onValueChange = { pos ->
+                                exhaustPosition = pos
+                                prefs.exhaustPosition = pos
+                                V6AudioEngine.setExhaustPosition(pos)
+                            },
+                            valueRange = -1.0f..1.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xFFFF9100),
+                                activeTrackColor = Color(0xFFFF9100)
+                            )
+                        )
                     }
                 }
             }
